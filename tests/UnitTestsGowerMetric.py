@@ -108,6 +108,38 @@ def test_weights():
     res = gower(data[0], data[1])
     assert res == ((dist / ranges) @ gower_weights) / 5.0
 
+def test_weights_nan():
+    data = pd.DataFrame(
+        [
+            [10, np.nan, 1],
+            [np.nan, 50, 0],
+            [5, 49, 0],
+            [15, 49, 1],
+        ]
+    )
+    dtypes = np.array([DataType.RATIO_SCALE, DataType.RATIO_SCALE, DataType.BINARY_ASYMMETRIC])
+    weights = np.array([2.0, 3.0, 5.0])
+
+    gower_ignore = MyGowerMetric(
+        dtypes=dtypes,
+        weights=weights,
+        nan_values_handling="ignore"
+    )
+    gower_ignore.fit(data.to_numpy(dtype=float))
+    dist_ignore = gower_ignore(data.iloc[0].to_numpy(float), data.iloc[1].to_numpy(float))
+
+    gower_max_dist = MyGowerMetric(
+        dtypes=dtypes,
+        weights=weights,
+        nan_values_handling="max_dist"
+    )
+    gower_max_dist.fit(data.to_numpy(dtype=float))
+    dist_max_dist = gower_max_dist(data.iloc[0].to_numpy(float), data.iloc[1].to_numpy(float))
+
+    assert dist_ignore != dist_max_dist, (
+        "Distance from 'ignore' and 'max_dist' should be different."
+    )
+
 def test_all_types():
     data = np.array(
         [

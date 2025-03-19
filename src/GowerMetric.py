@@ -269,11 +269,7 @@ class MyGowerMetric:
             or kde_type == "scott"
             or kde_type == "sheather-jones"
         )
-        assert (
-            nan_values_handling == "raise",
-            nan_values_handling == "ignore",
-            nan_values_handling == "max_dist"
-        )
+        assert nan_values_handling in {"raise", "ignore", "max_dist"}
         assert (
             number_of_clusters is None
             or number_of_clusters == -1
