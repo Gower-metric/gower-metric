@@ -2,8 +2,8 @@ import numpy as np
 from sklearn.preprocessing import OrdinalEncoder
 from scipy.spatial.distance import pdist, squareform
 
-from gowermetric.GowerMetric import MyGowerMetric
-from utils import DataType
+from src.GowerMetric import MyGowerMetric
+from src.utils import DataType
 
 import pandas as pd
 
@@ -364,7 +364,7 @@ def test_podani_ord():
         ]
     )
 
-    from MixedVariablesMeasures import Podani
+    from src.less_relevant.MixedVariablesMeasures import Podani
     podani = Podani(dtypes=np.array(
             [DataType.CATEGORICAL_ORDINAL,
              DataType.CATEGORICAL_ORDINAL]))
@@ -397,7 +397,7 @@ def test_podani_measure_categorical():
         ]
     )
 
-    from MixedVariablesMeasures import Podani
+    from src.less_relevant.MixedVariablesMeasures import Podani
     podani = Podani(dtypes=np.array(
             [DataType.CATEGORICAL_NOMINAL,
              DataType.CATEGORICAL_NOMINAL]))
