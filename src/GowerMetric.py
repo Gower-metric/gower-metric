@@ -5,8 +5,8 @@ import warnings
 from numba import njit
 from scipy.stats import rankdata
 
-from utils import DataType
-from weights import GowerMetricWeights
+from .utils import DataType
+from .weights import GowerMetricWeights
 
 # @njit
 def gower_metric_call_func(
