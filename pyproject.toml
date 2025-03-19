@@ -6,7 +6,7 @@ authors = ["Arch4ngel21 <adammichal657@gmail.com>"]
 readme = "README.md"
 license = "MIT"
 packages = [
-    { include = "gowermetric" }
+    { include = "src" }
 ]
 
 [tool.poetry.dependencies]
