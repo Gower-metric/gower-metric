@@ -385,6 +385,18 @@ def test_nan_ignore():
 
     assert np.isclose(res, np.sum(dist / ranges) / 4.0)
 
+def test_fit_single_row():
+    data = np.array([
+        [10, 20, 30]
+    ], dtype=float)
+    dtypes = np.array([DataType.RATIO_SCALE, DataType.CATEGORICAL_NOMINAL, DataType.BINARY_ASYMMETRIC])
+
+    gower = MyGowerMetric(dtypes=dtypes, nan_values_handling="ignore")
+    gower.fit(data)
+
+    dist_self = gower(data[0], data[0])
+    assert dist_self == 0, f"Exepted distance to self is 0, got {dist_self}."
+
 def test_podani_opt_cat_ord():
     data = pd.DataFrame(
         [
@@ -447,7 +459,7 @@ def test_podani_opt_cat_ord_with_nans():
     )
     enc.fit(data)
     data = enc.transform(data)
-    data = np.where(np.isnan(data), np.nan, data.astype(int))
+    data = np.where(np.isnan(data), np.nan, data)
 
     gower.fit(data)
     res = gower(data[2], data[4])
