@@ -49,7 +49,7 @@ def gower_metric_call_func(
         num_int_dist = 1 - np.where(Rt != 0, np.abs(num_int_cols_1 - num_int_cols_2) / Rt, 0)
 
         zero_mask = (Rt == 0.0)
-        num_int_dist[zero_mask] = 0.0
+        num_int_dist[zero_mask] = 1.0
 
         nan_mask = np.isnan(num_int_dist)
         num_int_dist[nan_mask] = 1.0

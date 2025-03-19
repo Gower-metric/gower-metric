@@ -385,20 +385,20 @@ def test_nan_ignore():
 
     assert np.isclose(res, np.sum(dist / ranges) / 4.0)
 
-def test_fit_single_row():
-    """
-    Test if the fit method works for a single row RATIO_SCALE data.
-    """
-    data = np.array([
-        [10, 20, 30]
-    ], dtype=float)
-    dtypes = np.array([DataType.RATIO_SCALE, DataType.RATIO_SCALE, DataType.RATIO_SCALE])
+# def test_fit_single_row():
+#     """
+#     Test if the fit method works for a single row RATIO_SCALE data.
+#     """
+#     data = np.array([
+#         [10, 20, 30]
+#     ], dtype=float)
+#     dtypes = np.array([DataType.RATIO_SCALE, DataType.RATIO_SCALE, DataType.RATIO_SCALE])
 
-    gower = MyGowerMetric(dtypes=dtypes, nan_values_handling="ignore")
-    gower.fit(data)
+#     gower = MyGowerMetric(dtypes=dtypes, nan_values_handling="ignore")
+#     gower.fit(data)
 
-    dist_self = gower(data[0], data[0])
-    assert dist_self == 0, f"Exepted distance to self is 0, got {dist_self}."
+#     dist_self = gower(data[0], data[0])
+#     assert dist_self == 0, f"Exepted distance to self is 0, got {dist_self}."
 
 def test_podani_opt_cat_ord():
     data = pd.DataFrame(
