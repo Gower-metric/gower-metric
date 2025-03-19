@@ -14,7 +14,7 @@ from scipy.optimize import minimize
 from scipy.spatial.distance import pdist
 from scipy.stats import iqr
 
-from utils import DataType
+from .utils import DataType
 
 
 @njit
