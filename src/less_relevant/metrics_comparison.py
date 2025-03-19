@@ -29,7 +29,7 @@ from sklearn.preprocessing import OrdinalEncoder
 from sklearn.utils import shuffle
 from sklearn.impute import SimpleImputer
 
-from utils import Dataset, Data, DataType
+from src.utils import Dataset, Data, DataType
 from src.GowerMetric import MyGowerMetric
 
 

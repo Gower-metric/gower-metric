@@ -1,7 +1,7 @@
 import numpy as np
 import pandas as pd
 
-from utils import DataType
+from src.utils import DataType
 
 
 class HuangDistance:
