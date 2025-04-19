@@ -45,10 +45,13 @@ def gower_metric_call_func(
         num_int_cols_1 = vector_1[num_interval_idx]
         num_int_cols_2 = vector_2[num_interval_idx]
 
-        Rt = np.abs(num_int_cols_1 - num_int_cols_2)
-        num_int_dist = 1 - np.where(Rt != 0, np.abs(num_int_cols_1 - num_int_cols_2) / Rt, 0)
+        diff = np.abs(num_int_cols_1 - num_int_cols_2)
+        Rt = diff.copy()
+        with np.errstate(divide='ignore', invalid='ignore'):
+            ratio = np.divide(diff, Rt, out=np.zeros_like(Rt), where=Rt != 0)
+        num_int_dist = 1 - ratio
 
-        zero_mask = (Rt == 0.0)
+        zero_mask = (Rt == 0.0) | (np.isnan(Rt))
         num_int_dist[zero_mask] = 1.0
 
         nan_mask = np.isnan(num_int_dist)
