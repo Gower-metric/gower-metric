@@ -1,4 +1,9 @@
-from typing import Tuple, Dict, Sequence, Any, Optional
+import math
+import numpy as np
+
+from typing import Tuple, Dict, Sequence, Any, Optional, List
+from collections import Counter
+
 
 def get_ranks_mapping(
     column: Sequence[Any]
@@ -24,3 +29,50 @@ def get_ranks_mapping(
     max_rank = len(unique_values) - 1
 
     return ranks_mapping, min_rank, max_rank
+
+def get_cardinalities_mapping(
+    column: Sequence[Any]
+) -> Tuple[Dict[Any, int], List[int]]:
+    """
+    Count occurrences of each category value in an ordinal column.
+
+    Args:
+        column : Sequence[Any]
+            A sequence of ordinal values (may include NaN).
+            NaN values are ignored in counting.
+
+    Returns:
+        counts_map : Dict[Any, int]
+            Mapping from each unique category value (excluding NaN) to its count.
+        counts_list : List[int]
+            List of counts corresponding to each category value,
+            ordered by sorted category values.
+    """
+    cleaned = [v for v in column if not (isinstance(v, float) and math.isnan(v))]
+    counts_map: Dict[Any, int] = Counter(cleaned)
+
+    unique_vals = sorted(counts_map.keys())
+    counts_list = [counts_map[val] for val in unique_vals]
+
+    return counts_map, counts_list
+
+def collect_ordinal_cardinalities(data: np.ndarray) -> List[np.ndarray]:
+    """
+    Process a 2D array of ordinal columns to get counts per level for each column.
+
+    Args:
+        data : np.ndarray
+            Two-dimensional array with shape (n_samples, n_ordinal_columns).
+            Each column may contain NaN and ordinal categorical values.
+
+    Returns:
+        ordinals_cardinality : List[np.ndarray]
+            A list where each element is a 1D NumPy array of integer counts.
+            counts[i] is the number of occurrences of the i-th sorted category in that column.
+    """
+    ordinals_cardinality: List[np.ndarray] = []
+    for i in range(data.shape[1]):
+        column = data[:, i]
+        _, counts_list = get_cardinalities_mapping(column)
+        ordinals_cardinality.append(np.array(counts_list, dtype=int))
+    return ordinals_cardinality
