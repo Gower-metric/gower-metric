@@ -4,7 +4,7 @@
 - ~~categorical nominal~~
 - ~~categorical ordinal~~
 - binary symmetric
-- binary asymmetric
+- ~~binary asymmetric~~
 - ratio scale
 - ~~numerical interval~~
 
@@ -25,7 +25,7 @@ For now, we ignore NaN values by default.
 - categorical nominal
 - categorical ordinal
 - binary symmetric
-- binary asymmetric
+- ~~binary asymmetric~~
 - ratio scale
 - numerical interval
 - ~~missing values~~

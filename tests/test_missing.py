@@ -15,7 +15,7 @@ async def test_missing_values_skip_nan():
         [np.nan, None],
     ]
     df = pd.DataFrame(data, columns=["num", "cat"])
-    feature_types = {"num": "numeric", "cat": "categorical"}
+    feature_types = {"num": "numeric", "cat": "categorical_nominal"}
 
     g = GowerSimilarity(feature_types).fit(df)
 
