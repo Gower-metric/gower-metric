@@ -2,7 +2,7 @@
 
 ## Different data types:
 - ~~categorical nominal~~
-- categorical ordinal
+- ~~categorical ordinal~~
 - binary symmetric
 - binary asymmetric
 - ratio scale
@@ -31,6 +31,15 @@ For now, we ignore NaN values by default.
 - ~~missing values~~
 - mixed types
 
+## Examples:
+- categorical nominal
+- categorical ordinal
+- binary symmetric
+- binary asymmetric
+- ratio scale
+- numerical interval
+- mixed types
+
 ## Additional features:
 - normalization
-- Podani
+- Podani weight optimization

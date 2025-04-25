@@ -6,11 +6,14 @@ import pandas as pd
 from ..utils.to_array import to_array
 from ..distances.numeric_interval import get_numeric_ranges, numeric_distance_matrix
 from ..distances.categorical_nominal import nominal_distance_matrix
+from ..distances.categorical_ordinal import ordinal_distance_matrix
+
 
 class GowerSimilarity:
     """
     Copmute Gower similarity for mixed data types.    
     """
+
     def __init__(
         self,
         feature_types: Dict[Union[int, str], str],
@@ -31,13 +34,23 @@ class GowerSimilarity:
         # TODO: add support for other type + auto check names
         if not isinstance(feature_types, dict) or not feature_types:
             raise ValueError(
-                "feature_types must be a non-empty dict mapping columns to 'numeric' or 'categorical'."
-            )
+                """feature_types must be a non-empty dict mapping columns to: 'numeric', 'categorical_nominal',
+                'categorical_ordinal'.
+                """)
         self.feature_types = feature_types
+
+        # TODO: add support for other weights selection
         self.feature_weights = feature_weights or {}
 
-        self.numeric_indices = [i for i, t in feature_types.items() if t == "numeric"]
-        self.categorical_indices = [i for i, t in feature_types.items() if t == "categorical"]
+        self.numeric_indices = [
+            i for i, t in feature_types.items() if t == "numeric"
+        ]
+        self.categorical_nominal_indices = [
+            i for i, t in feature_types.items() if t == "categorical_nominal"
+        ]
+        self.categorical_ordinal_indices = [
+            i for i, t in feature_types.items() if t == "categorical_ordinal"
+        ]
         self.numeric_ranges: np.ndarray = np.array([])
         self._is_fitted = False
 
@@ -60,14 +73,20 @@ class GowerSimilarity:
             for k, t in self.feature_types.items():
                 if isinstance(k, str):
                     if k not in cols:
-                        raise ValueError(f"Column name '{k}' not found in DataFrame.")
+                        raise ValueError(
+                            f"Column name '{k}' not found in DataFrame.")
                     ft[cols.index(k)] = t
                 else:
                     ft[k] = t
             self.feature_types = ft
 
             self.numeric_indices = [i for i, t in ft.items() if t == "numeric"]
-            self.categorical_indices = [i for i, t in ft.items() if t == "categorical"]
+            self.categorical_nominal_indices = [
+                i for i, t in ft.items() if t == "categorical_nominal"
+            ]
+            self.categorical_ordinal_indices = [
+                i for i, t in ft.items() if t == "categorical_ordinal"
+            ]
         else:
             arr = np.array(X, dtype=object)
 
@@ -101,20 +120,21 @@ class GowerSimilarity:
         Xn = x.reshape(1, -1)
         Yn = y.reshape(1, -1)
 
-        num_w = (
-            np.array([
-                self.feature_weights.get(i, 1.0) for i in self.numeric_indices
-            ], dtype=float)
-            if self.numeric_indices
-            else None
-        )
-        cat_w = (
-            np.array([
-                self.feature_weights.get(i, 1.0) for i in self.categorical_indices
-            ], dtype=float)
-            if self.categorical_indices
-            else None
-        )
+        num_w = (np.array(
+            [self.feature_weights.get(i, 1.0) for i in self.numeric_indices],
+            dtype=float) if self.numeric_indices else None)
+        cat_nom_w = (np.array([
+            self.feature_weights.get(i, 1.0)
+            for i in self.categorical_nominal_indices
+        ],
+                              dtype=float)
+                     if self.categorical_nominal_indices else None)
+        cat_ord_w = (np.array([
+            self.feature_weights.get(i, 1.0)
+            for i in self.categorical_ordinal_indices
+        ],
+                              dtype=float)
+                     if self.categorical_ordinal_indices else None)
 
         num_sum, num_count = numeric_distance_matrix(
             Xn,
@@ -124,12 +144,18 @@ class GowerSimilarity:
             weights=num_w,
         )
 
-        cat_sum, cat_count = nominal_distance_matrix(
-            Xn, Yn, self.categorical_indices, weights=cat_w
+        cat_nom_sum, cat_nom_count = nominal_distance_matrix(
+            Xn, Yn, self.categorical_nominal_indices, weights=cat_nom_w)
+
+        cat_ord_sum, cat_ord_count = ordinal_distance_matrix(
+            Xn,
+            Yn,
+            self.categorical_ordinal_indices,
+            weights=cat_ord_w,
         )
 
-        total_sum = num_sum + cat_sum
-        total_count = num_count + cat_count
+        total_sum = num_sum + cat_nom_sum + cat_ord_sum
+        total_count = num_count + cat_nom_count + cat_ord_count
         if total_count[0, 0] == 0:
             return float('nan')
 
