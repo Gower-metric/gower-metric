@@ -8,6 +8,7 @@ from ..distances.numeric_interval import get_numeric_ranges, numeric_distance_ma
 from ..distances.categorical_nominal import nominal_distance_matrix
 from ..distances.categorical_ordinal import ordinal_distance_matrix
 from ..distances.binary_asymmetric import binary_asymmetric_distance_matrix
+from ..distances.binary_symmetric import binary_symmetric_distance_matrix
 
 
 class GowerSimilarity:
@@ -36,7 +37,7 @@ class GowerSimilarity:
         if not isinstance(feature_types, dict) or not feature_types:
             raise ValueError(
                 """feature_types must be a non-empty dict mapping columns to: 'numeric', 'categorical_nominal',
-                'categorical_ordinal', 'binary_asymmetric'.
+                'categorical_ordinal', 'binary_asymmetric', 'binary_symmetric'.
                 """)
         self.feature_types = feature_types
 
@@ -55,7 +56,9 @@ class GowerSimilarity:
         self.binary_asymmetric_indices = [
             i for i, t in feature_types.items() if t == "binary_asymmetric"
         ]
-
+        self.binary_symmetric_indices = [
+            i for i, t in feature_types.items() if t == "binary_symmetric"
+        ]
         self.numeric_ranges: np.ndarray = np.array([])
         self._is_fitted = False
 
@@ -94,6 +97,9 @@ class GowerSimilarity:
             ]
             self.binary_asymmetric_indices = [
                 i for i, t in ft.items() if t == "binary_asymmetric"
+            ]
+            self.binary_symmetric_indices = [
+                i for i, t in ft.items() if t == "binary_symmetric"
             ]
         else:
             arr = np.array(X, dtype=object)
@@ -149,7 +155,12 @@ class GowerSimilarity:
         ],
                                dtype=float)
                       if self.binary_asymmetric_indices else None)
-
+        bin_sym_w = (np.array([
+            self.feature_weights.get(i, 1.0)
+            for i in self.binary_symmetric_indices
+        ],
+                              dtype=float)
+                     if self.binary_symmetric_indices else None)
         num_sum, num_count = numeric_distance_matrix(
             Xn,
             Yn,
@@ -175,8 +186,15 @@ class GowerSimilarity:
             weights=bin_asym_w,
         )
 
-        total_sum = num_sum + cat_nom_sum + cat_ord_sum + bin_asym_sum
-        total_count = num_count + cat_nom_count + cat_ord_count + bin_asym_count
+        bin_sym_sum, bin_sym_count = binary_symmetric_distance_matrix(
+            Xn,
+            Yn,
+            self.binary_symmetric_indices,
+            weights=bin_sym_w,
+        )
+
+        total_sum = num_sum + cat_nom_sum + cat_ord_sum + bin_asym_sum + bin_sym_sum
+        total_count = num_count + cat_nom_count + cat_ord_count + bin_asym_count + bin_sym_count
         if total_count[0, 0] == 0:
             return float('nan')
 
