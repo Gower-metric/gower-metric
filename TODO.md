@@ -22,7 +22,7 @@ For now, we ignore NaN values by default.
 - CPCC 
 
 ## Pytest:
-- categorical nominal
+- ~~categorical nominal~~
 - categorical ordinal
 - ~~binary symmetric~~
 - ~~binary asymmetric~~
