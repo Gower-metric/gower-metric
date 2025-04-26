@@ -3,7 +3,7 @@
 ## Different data types:
 - ~~categorical nominal~~
 - ~~categorical ordinal~~
-- binary symmetric
+- ~~binary symmetric~~
 - ~~binary asymmetric~~
 - ratio scale
 - ~~numerical interval~~
@@ -24,7 +24,7 @@ For now, we ignore NaN values by default.
 ## Pytest:
 - categorical nominal
 - categorical ordinal
-- binary symmetric
+- ~~binary symmetric~~
 - ~~binary asymmetric~~
 - ratio scale
 - numerical interval
