@@ -1,13 +1,40 @@
 import numpy as np
+
 from typing import List
+
+
+def scale_method(valid: np.ndarray, method: str) -> float:
+    """
+    Compute the scaling span for a 1D array of valid (non-NaN) values.
+
+    Args:
+        valid: 1D array of floats (no NaNs).
+        method: 'range' or 'iqr'.
+
+    Returns:
+        span (float): max-min for 'range', Q3-Q1 for 'iqr', or 0.0 if constant/empty.
+    """
+    if valid.size == 0:
+        return 0.0
+
+    if method == 'range':
+        span = valid.max() - valid.min()
+    elif method == "iqr":
+        q75, q25 = np.percentile(valid, [75, 25])
+        span = q75 - q25
+    else:
+        raise ValueError(f"Unknown method '{method}' for scaling.")
+
+    return span if span > 0 else 0.0
 
 
 def get_numeric_ranges(
     X: np.ndarray,
     indices: List[int],
+    method: str = 'range',
 ) -> np.ndarray:
     """
-    Compute the range (max - min) for each numeric column in X. Applied only to
+    Compute the range for each numeric column in X based on selected scale method. Applied only to
     ratio-scale and internal-scale data types.
 
     Args:
@@ -24,8 +51,5 @@ def get_numeric_ranges(
     for pos, j in enumerate(indices):
         col = X[:, j].astype(float)
         valid = col[~np.isnan(col)]
-        if valid.size == 0:
-            ranges[pos] = 0.0
-        else:
-            ranges[pos] = valid.max() - valid.min()
+        ranges[pos] = scale_method(valid, method)
     return ranges

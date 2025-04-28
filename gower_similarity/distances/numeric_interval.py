@@ -45,6 +45,7 @@ def numeric_distance_matrix(
 
         if ranges[pos] > 0:
             diff = raw / ranges[pos]
+            diff[diff > 1.0] = 1.0
         else:
             diff = np.zeros_like(raw)
 

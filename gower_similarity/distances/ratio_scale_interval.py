@@ -41,10 +41,10 @@ def ratio_scale_distance_matrix(
         mask_y = ~np.array([is_missing(v) for v in col_y])
         present = mask_x[:, None] & mask_y[None, :]
 
-        # TODO: add IQR, KDE. Maybe create a separate function/file for this??
         raw = np.abs(col_x[:, None] - col_y[None, :])
         if ranges[pos] > 0:
             diff = raw / ranges[pos]
+            diff[diff > 1.0] = 1.0
         else:
             diff = np.zeros_like(raw)
 

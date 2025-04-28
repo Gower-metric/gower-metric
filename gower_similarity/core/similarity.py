@@ -22,6 +22,7 @@ class GowerSimilarity:
         self,
         feature_types: Dict[Union[int, str], str],
         feature_weights: Optional[Dict[Union[int, str], float]] = None,
+        scale: Optional[str] = None,
     ) -> None:
         """
         Initialize GowerSimilarity with explicit feature type and weight mappings.
@@ -31,6 +32,7 @@ class GowerSimilarity:
                         specific type.
             feature_weights: Optional mapping of column indices (or names) to a float weight
                             (default is 1.0 for all features if omitted).
+            scale: Optional scaling method for numeric features. Can be 'range' or 'iqr'.
 
         Raises:
             ValueError: If feature_types is not a non-empty dict.
@@ -66,6 +68,7 @@ class GowerSimilarity:
         ]
         self.ratio_ranges: np.ndarray = np.array([])
         self.numeric_ranges: np.ndarray = np.array([])
+        self.scale_method: Optional[str] = scale.lower() if scale else None
         self._is_fitted = False
 
     def fit(self, X: Union[pd.DataFrame, np.ndarray]) -> "GowerSimilarity":
@@ -113,12 +116,15 @@ class GowerSimilarity:
             X, pd.DataFrame) else np.array(X, dtype=object)
 
         if self.ratio_scale_indices:
-            self.ratio_ranges = get_numeric_ranges(arr, self.ratio_scale_indices)
+            self.ratio_ranges = get_numeric_ranges(arr,
+                                                   self.ratio_scale_indices,
+                                                   self.scale_method)
         else:
             self.ratio_ranges = np.array([])
 
         if self.numeric_indices:
-            self.numeric_ranges = get_numeric_ranges(arr, self.numeric_indices)
+            self.numeric_ranges = get_numeric_ranges(arr, self.numeric_indices,
+                                                     self.scale_method)
         else:
             self.numeric_ranges = np.array([])
 

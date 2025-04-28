@@ -21,12 +21,17 @@ For now, we ignore NaN values by default.
 - save to file
 - CPCC 
 
+## Range scale method:
+- ~~range~~
+- ~~iqr~~
+- kde
+
 ## Pytest:
 - ~~categorical nominal~~
 - categorical ordinal
 - ~~binary symmetric~~
 - ~~binary asymmetric~~
-- ratio scale
+- ~~ratio scale~~
 - numerical interval
 - ~~missing values~~
 - mixed types
@@ -46,3 +51,4 @@ For now, we ignore NaN values by default.
 - Podani weight optimization
 - add automatic check if given data type is correct
 - ~~in numeric/ratio scale add ranges as function parameter rather than compute it every time~~
+- fix weights in count_present
