@@ -4,7 +4,7 @@ import numpy as np
 import pandas as pd
 
 from ..utils.to_array import to_array
-from ..distances.numeric_interval import get_numeric_ranges, numeric_distance_matrix
+from ..distances.numeric_interval import numeric_distance_matrix
 from ..distances.categorical_nominal import nominal_distance_matrix
 from ..distances.categorical_ordinal import ordinal_distance_matrix
 from ..distances.binary_asymmetric import binary_asymmetric_distance_matrix
@@ -78,7 +78,6 @@ class GowerSimilarity:
             self: The fitted instance.
         """
         if isinstance(X, pd.DataFrame):
-            arr = X.to_numpy(dtype=object)
             cols = list(X.columns)
 
             ft: Dict[int, str] = {}
@@ -108,13 +107,6 @@ class GowerSimilarity:
             self.ratio_scale_indices = [
                 i for i, t in ft.items() if t == "ratio_scale_interval"
             ]
-        else:
-            arr = np.array(X, dtype=object)
-
-        if self.numeric_indices:
-            self.numeric_ranges = get_numeric_ranges(arr, self.numeric_indices)
-        else:
-            self.numeric_ranges = np.array([])
 
         self._is_fitted = True
         return self

@@ -1,83 +1,58 @@
 import numpy as np
+from typing import List, Tuple, Optional
 
-from typing import Tuple, List
+from ..utils.ranges import get_numeric_ranges
+from ..utils.missing import is_missing
 
-def get_numeric_ranges(data: np.ndarray, numeric_indices: List[int]) -> np.ndarray:
-    """
-    Compute the ranges (max - min) for each numeric feature, ignoring missing values.
-
-    Args:
-        data (np.ndarray): The input data array.
-        numeric_indices (List[int]): List of indices for numeric features.
-
-    Returns:
-        np.ndarray: An array containing the ranges for each numeric feature.
-    """
-    if data.size == 0 or not numeric_indices:
-        return np.array([], dtype=float)
-    
-    cols = data[:, numeric_indices].astype(np.float64)
-    min_vals = np.nanmin(cols, axis=0)
-    max_vals = np.nanmax(cols, axis=0)
-
-    ranges = max_vals - min_vals
-
-    # TODO: add feature to let user choose how to handle NaN values
-    ranges = np.where(np.isnan(ranges) | np.isclose(ranges, 0.0), 0.0, ranges)
-    return ranges
 
 def numeric_distance_matrix(
     X: np.ndarray,
     Y: np.ndarray,
     numeric_indices: List[int],
-    ranges: np.ndarray,
-    weights: np.ndarray = None,
+    weights: Optional[np.ndarray] = None,
 ) -> Tuple[np.ndarray, np.ndarray]:
     """
-    Compute numeric component of Gower distance between rows of X and Y.
-    
+    Basic range-scaled Gower component for interval-scale (numeric) features. The same logic as
+    in ratio scale.
+
     Args:
-        X (np.ndarray): First input data array.
-        Y (np.ndarray): Second input data array.
-        numeric_indices (List[int]): List of indices for numeric features.
-        ranges (np.ndarray): Ranges for each numeric feature.
-        weights (np.ndarray): Weights for each feature.
-        
+        X: array of shape (n_x, n_features)
+        Y: array of shape (n_y, n_features)
+        numeric_indices: indices of numeric-interval columns
+        weights: optional 1D array of same length as numeric_indices
+
     Returns:
-        Tuple[np.ndarray, np.ndarray]: A tuple containing the distance matrix and the range matrix.
+        sum_diff: (n_x, n_y) weighted sum of per-feature distances
+        count_present: (n_x, n_y) number of non-missing pairs per feature
     """
     n_x, n_y = X.shape[0], Y.shape[0]
     if not numeric_indices:
-        return np.zeros((n_x, n_y)), np.zeros((n_x, n_y))
-    
-    Xnumeric = X[:, numeric_indices].astype(np.float64)
-    Ynumeric = Y[:, numeric_indices].astype(np.float64)
+        return np.zeros((n_x, n_y), float), np.zeros((n_x, n_y), int)
 
-    # mask
-    mask_x = ~np.isnan(Xnumeric)
-    mask_y = ~np.isnan(Ynumeric)
+    ranges = get_numeric_ranges(np.vstack([X, Y]), numeric_indices)
 
-    present = mask_x[:, None, :] & mask_y[None, :, :]
+    sum_diff = np.zeros((n_x, n_y), float)
+    count_present = np.zeros((n_x, n_y), int)
 
-    # abs difference
-    diff = np.abs(Xnumeric[:, None, :] - Ynumeric[None, :, :])
+    for pos, j in enumerate(numeric_indices):
+        col_x = X[:, j].astype(float)
+        col_y = Y[:, j].astype(float)
 
-    # normalize
-    ranges_safe = ranges.copy()
-    ranges_safe[ranges_safe == 0.0] = 1.0
-    diff_norm = diff / ranges_safe
-    diff_norm[..., ranges == 0.0] = 0.0
-    diff_norm[~present] = 0.0
+        mask_x = ~np.array([is_missing(v) for v in col_x])
+        mask_y = ~np.array([is_missing(v) for v in col_y])
+        present = mask_x[:, None] & mask_y[None, :]
 
-    # apply weights
-    if weights is not None:
-        w = weights.reshape(1, 1, -1)
-        diff_weighted = diff_norm * w
-    else:
-        diff_weighted = diff_norm
+        raw = np.abs(col_x[:, None] - col_y[None, :])
 
-    summ_diff = np.sum(diff_weighted, axis=2)
-    count_present = np.sum(present, axis=2)
+        if ranges[pos] > 0:
+            diff = raw / ranges[pos]
+        else:
+            diff = np.zeros_like(raw)
 
-    return summ_diff, count_present
-    
+        diff[~present] = 0.0
+
+        w = weights[pos] if weights is not None else 1.0
+        sum_diff += diff * w
+        count_present += present.astype(int)
+
+    return sum_diff, count_present
