@@ -33,6 +33,7 @@ class GowerSimilarity:
             feature_weights: Optional mapping of column indices (or names) to a float weight
                             (default is 1.0 for all features if omitted).
             scale: Optional scaling method for numeric features. Can be 'range' or 'iqr'.
+                Default is 'range' if omitted.
 
         Raises:
             ValueError: If feature_types is not a non-empty dict.
@@ -68,7 +69,7 @@ class GowerSimilarity:
         ]
         self.ratio_ranges: np.ndarray = np.array([])
         self.numeric_ranges: np.ndarray = np.array([])
-        self.scale_method: Optional[str] = scale.lower() if scale else None
+        self.scale_method: Optional[str] = scale.lower() if scale else 'range'
         self._is_fitted = False
 
     def fit(self, X: Union[pd.DataFrame, np.ndarray]) -> "GowerSimilarity":
