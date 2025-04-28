@@ -4,6 +4,7 @@ import numpy as np
 import pandas as pd
 
 from ..utils.to_array import to_array
+from ..utils.ranges import get_numeric_ranges
 from ..distances.numeric_interval import numeric_distance_matrix
 from ..distances.categorical_nominal import nominal_distance_matrix
 from ..distances.categorical_ordinal import ordinal_distance_matrix
@@ -63,6 +64,7 @@ class GowerSimilarity:
         self.ratio_scale_indices = [
             i for i, t in feature_types.items() if t == "ratio_scale_interval"
         ]
+        self.ratio_ranges: np.ndarray = np.array([])
         self.numeric_ranges: np.ndarray = np.array([])
         self._is_fitted = False
 
@@ -107,6 +109,18 @@ class GowerSimilarity:
             self.ratio_scale_indices = [
                 i for i, t in ft.items() if t == "ratio_scale_interval"
             ]
+        arr = X.to_numpy(dtype=object) if isinstance(
+            X, pd.DataFrame) else np.array(X, dtype=object)
+
+        if self.ratio_scale_indices:
+            self.ratio_ranges = get_numeric_ranges(arr, self.ratio_scale_indices)
+        else:
+            self.ratio_ranges = np.array([])
+
+        if self.numeric_indices:
+            self.numeric_ranges = get_numeric_ranges(arr, self.numeric_indices)
+        else:
+            self.numeric_ranges = np.array([])
 
         self._is_fitted = True
         return self
@@ -168,7 +182,7 @@ class GowerSimilarity:
             Xn,
             Yn,
             self.numeric_indices,
-            self.numeric_ranges,
+            ranges=self.numeric_ranges,
             weights=num_w,
         )
 
@@ -200,6 +214,7 @@ class GowerSimilarity:
             Xn,
             Yn,
             self.ratio_scale_indices,
+            ranges=self.ratio_ranges,
             weights=ratio_w,
         )
         total_sum = num_sum + cat_nom_sum + cat_ord_sum + bin_asym_sum + bin_sym_sum + ratio_sum

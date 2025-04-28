@@ -1,7 +1,6 @@
 import numpy as np
 from typing import List, Tuple, Optional
 
-from ..utils.ranges import get_numeric_ranges
 from ..utils.missing import is_missing
 
 
@@ -9,6 +8,7 @@ def numeric_distance_matrix(
     X: np.ndarray,
     Y: np.ndarray,
     numeric_indices: List[int],
+    ranges: np.ndarray,
     weights: Optional[np.ndarray] = None,
 ) -> Tuple[np.ndarray, np.ndarray]:
     """
@@ -19,6 +19,7 @@ def numeric_distance_matrix(
         X: array of shape (n_x, n_features)
         Y: array of shape (n_y, n_features)
         numeric_indices: indices of numeric-interval columns
+        ranges: 1D array of ranges for each numeric-interval column
         weights: optional 1D array of same length as numeric_indices
 
     Returns:
@@ -28,8 +29,6 @@ def numeric_distance_matrix(
     n_x, n_y = X.shape[0], Y.shape[0]
     if not numeric_indices:
         return np.zeros((n_x, n_y), float), np.zeros((n_x, n_y), int)
-
-    ranges = get_numeric_ranges(np.vstack([X, Y]), numeric_indices)
 
     sum_diff = np.zeros((n_x, n_y), float)
     count_present = np.zeros((n_x, n_y), int)

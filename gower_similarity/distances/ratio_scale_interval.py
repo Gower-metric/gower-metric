@@ -1,13 +1,14 @@
 import numpy as np
 from typing import List, Tuple, Optional
 
-from ..utils.ranges import get_numeric_ranges
 from ..utils.missing import is_missing
+
 
 def ratio_scale_distance_matrix(
     X: np.ndarray,
     Y: np.ndarray,
     ratio_indices: List[int],
+    ranges: np.ndarray,
     weights: Optional[np.ndarray] = None,
 ) -> Tuple[np.ndarray, np.ndarray]:
     """
@@ -17,6 +18,7 @@ def ratio_scale_distance_matrix(
         X: array (n_x, n_features)
         Y: array (n_y, n_features)
         ratio_indices: indices of ratio-scale columns
+        ranges: 1D array of ranges for each ratio-scale column
         weights: optional 1D array of same length as ratio_indices
 
     Returns:
@@ -25,9 +27,8 @@ def ratio_scale_distance_matrix(
     """
     n_x, n_y = X.shape[0], Y.shape[0]
     if not ratio_indices:
-        return np.zeros((n_x, n_y), dtype=float), np.zeros((n_x, n_y), dtype=int)
-
-    ranges = get_numeric_ranges(np.vstack([X, Y]), ratio_indices)
+        return np.zeros((n_x, n_y), dtype=float), np.zeros((n_x, n_y),
+                                                           dtype=int)
 
     sum_diff = np.zeros((n_x, n_y), dtype=float)
     count_present = np.zeros((n_x, n_y), dtype=int)
