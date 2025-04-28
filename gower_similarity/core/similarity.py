@@ -9,6 +9,7 @@ from ..distances.categorical_nominal import nominal_distance_matrix
 from ..distances.categorical_ordinal import ordinal_distance_matrix
 from ..distances.binary_asymmetric import binary_asymmetric_distance_matrix
 from ..distances.binary_symmetric import binary_symmetric_distance_matrix
+from ..distances.ratio_scale_interval import ratio_scale_distance_matrix
 
 
 class GowerSimilarity:
@@ -37,7 +38,7 @@ class GowerSimilarity:
         if not isinstance(feature_types, dict) or not feature_types:
             raise ValueError(
                 """feature_types must be a non-empty dict mapping columns to: 'numeric', 'categorical_nominal',
-                'categorical_ordinal', 'binary_asymmetric', 'binary_symmetric'.
+                'categorical_ordinal', 'binary_asymmetric', 'binary_symmetric', 'ratio_scale_interval'.
                 """)
         self.feature_types = feature_types
 
@@ -58,6 +59,9 @@ class GowerSimilarity:
         ]
         self.binary_symmetric_indices = [
             i for i, t in feature_types.items() if t == "binary_symmetric"
+        ]
+        self.ratio_scale_indices = [
+            i for i, t in feature_types.items() if t == "ratio_scale_interval"
         ]
         self.numeric_ranges: np.ndarray = np.array([])
         self._is_fitted = False
@@ -100,6 +104,9 @@ class GowerSimilarity:
             ]
             self.binary_symmetric_indices = [
                 i for i, t in ft.items() if t == "binary_symmetric"
+            ]
+            self.ratio_scale_indices = [
+                i for i, t in ft.items() if t == "ratio_scale_interval"
             ]
         else:
             arr = np.array(X, dtype=object)
@@ -161,6 +168,10 @@ class GowerSimilarity:
         ],
                               dtype=float)
                      if self.binary_symmetric_indices else None)
+        ratio_w = (np.array([
+            self.feature_weights.get(i, 1.0) for i in self.ratio_scale_indices
+        ],
+                            dtype=float) if self.ratio_scale_indices else None)
         num_sum, num_count = numeric_distance_matrix(
             Xn,
             Yn,
@@ -193,8 +204,14 @@ class GowerSimilarity:
             weights=bin_sym_w,
         )
 
-        total_sum = num_sum + cat_nom_sum + cat_ord_sum + bin_asym_sum + bin_sym_sum
-        total_count = num_count + cat_nom_count + cat_ord_count + bin_asym_count + bin_sym_count
+        ratio_sum, ratio_count = ratio_scale_distance_matrix(
+            Xn,
+            Yn,
+            self.ratio_scale_indices,
+            weights=ratio_w,
+        )
+        total_sum = num_sum + cat_nom_sum + cat_ord_sum + bin_asym_sum + bin_sym_sum + ratio_sum
+        total_count = num_count + cat_nom_count + cat_ord_count + bin_asym_count + bin_sym_count + ratio_count
         if total_count[0, 0] == 0:
             return float('nan')
 

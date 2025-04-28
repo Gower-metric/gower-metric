@@ -5,8 +5,8 @@
 - ~~categorical ordinal~~
 - ~~binary symmetric~~
 - ~~binary asymmetric~~
-- ratio scale
-- ~~numerical interval~~
+- ~~ratio scale~~
+- ~~numerical interval~~ TODO: refactor
 
 ## Handling NaN values:
 - raise
@@ -43,3 +43,4 @@ For now, we ignore NaN values by default.
 ## Additional features:
 - normalization
 - Podani weight optimization
+- add automatic check if given data type is correct
