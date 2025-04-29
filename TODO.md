@@ -9,11 +9,9 @@
 - ~~numerical interval~~
 
 ## Handling NaN values:
-- raise
+- ~~raise~~
 - ~~ignore~~
-- max_dist
-  
-For now, we ignore NaN values by default.
+- ~~max_dist~~
 
 ## Weights:
 - ~~manually set (dictionary)~~

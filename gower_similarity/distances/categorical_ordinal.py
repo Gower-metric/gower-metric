@@ -1,6 +1,7 @@
 import numpy as np
 from typing import List, Tuple, Optional
-from ..utils.missing import is_missing
+
+from ..utils.missing import is_missing, apply_missing_strategy
 from ..utils.cat_ord_ut import get_ranks_mapping, get_cardinalities_mapping
 
 
@@ -8,6 +9,7 @@ def ordinal_distance_matrix(
     X: np.ndarray,
     Y: np.ndarray,
     ordinal_indices: List[int],
+    missing_strategy: str = "ignore",
     weights: Optional[np.ndarray] = None,
 ) -> Tuple[np.ndarray, np.ndarray]:
     """
@@ -17,6 +19,7 @@ def ordinal_distance_matrix(
         X (np.ndarray): First dataset, shape (n_x, n_features).
         Y (np.ndarray): Second dataset, shape (n_y, n_features).
         ordinal_indices (List[int]): Indices of ordinal features.
+        missing_strategy (str): Strategy for handling missing values, default is "ignore".
         weights (Optional[np.ndarray]): Optional weight per ordinal feature.
 
     Returns:
@@ -60,13 +63,13 @@ def ordinal_distance_matrix(
         denom = (max_rank - min_rank - mid[0] - mid[-1])
 
         dist = (diff - mid_x - mid_y) / denom
-        dist[~present] = 0.0
+        dist = np.clip(dist, 0.0, 1.0)
+
+        dist, mask = apply_missing_strategy(dist, present, missing_strategy)
 
         # TODO: later add support for more advanced weights implementation
         w = float(weights[pos]) if weights is not None else 1.0
         sum_diff += dist * w
-        count_present += present.astype(int)
-        
-        # TODO: add normalization
+        count_present += mask
 
     return sum_diff, count_present

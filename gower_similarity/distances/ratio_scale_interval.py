@@ -1,7 +1,7 @@
 import numpy as np
 from typing import List, Tuple, Optional
 
-from ..utils.missing import is_missing
+from ..utils.missing import is_missing, apply_missing_strategy
 
 
 def ratio_scale_distance_matrix(
@@ -9,6 +9,7 @@ def ratio_scale_distance_matrix(
     Y: np.ndarray,
     ratio_indices: List[int],
     ranges: np.ndarray,
+    missing_strategy: str = 'ignore',
     weights: Optional[np.ndarray] = None,
 ) -> Tuple[np.ndarray, np.ndarray]:
     """
@@ -19,6 +20,7 @@ def ratio_scale_distance_matrix(
         Y: array (n_y, n_features)
         ratio_indices: indices of ratio-scale columns
         ranges: 1D array of ranges for each ratio-scale column
+        missing_strategy: one of "ignore", "max_dist", "raise_error"
         weights: optional 1D array of same length as ratio_indices
 
     Returns:
@@ -48,10 +50,10 @@ def ratio_scale_distance_matrix(
         else:
             diff = np.zeros_like(raw)
 
-        diff[~present] = 0.0
+        diff, mask = apply_missing_strategy(diff, present, missing_strategy)
 
         w = weights[pos] if weights is not None else 1.0
         sum_diff += diff * w
-        count_present += present.astype(int)
+        count_present += mask
 
     return sum_diff, count_present

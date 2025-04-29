@@ -23,6 +23,7 @@ class GowerSimilarity:
         feature_types: Dict[Union[int, str], str],
         feature_weights: Optional[Dict[Union[int, str], float]] = None,
         scale: Optional[str] = None,
+        missing_strategy: Optional[str] = None,
     ) -> None:
         """
         Initialize GowerSimilarity with explicit feature type and weight mappings.
@@ -34,6 +35,8 @@ class GowerSimilarity:
                             (default is 1.0 for all features if omitted).
             scale: Optional scaling method for numeric features. Can be 'range' or 'iqr'.
                 Default is 'range' if omitted.
+            missing_strategy: Optional strategy for handling missing values. Can be 'ignore',
+            'max_dist' or 'raise_error'. Default is 'ignore' if omitted.
 
         Raises:
             ValueError: If feature_types is not a non-empty dict.
@@ -70,6 +73,8 @@ class GowerSimilarity:
         self.ratio_ranges: np.ndarray = np.array([])
         self.numeric_ranges: np.ndarray = np.array([])
         self.scale_method: Optional[str] = scale.lower() if scale else 'range'
+        self.missing_strategy: Optional[str] = missing_strategy.lower(
+        ) if missing_strategy else 'ignore'
         self._is_fitted = False
 
     def fit(self, X: Union[pd.DataFrame, np.ndarray]) -> "GowerSimilarity":
@@ -190,16 +195,22 @@ class GowerSimilarity:
             Yn,
             self.numeric_indices,
             ranges=self.numeric_ranges,
+            missing_strategy=self.missing_strategy,
             weights=num_w,
         )
 
         cat_nom_sum, cat_nom_count = nominal_distance_matrix(
-            Xn, Yn, self.categorical_nominal_indices, weights=cat_nom_w)
+            Xn,
+            Yn,
+            self.categorical_nominal_indices,
+            missing_strategy=self.missing_strategy,
+            weights=cat_nom_w)
 
         cat_ord_sum, cat_ord_count = ordinal_distance_matrix(
             Xn,
             Yn,
             self.categorical_ordinal_indices,
+            missing_strategy=self.missing_strategy,
             weights=cat_ord_w,
         )
 
@@ -207,6 +218,7 @@ class GowerSimilarity:
             Xn,
             Yn,
             self.binary_asymmetric_indices,
+            missing_strategy=self.missing_strategy,
             weights=bin_asym_w,
         )
 
@@ -214,6 +226,7 @@ class GowerSimilarity:
             Xn,
             Yn,
             self.binary_symmetric_indices,
+            missing_strategy=self.missing_strategy,
             weights=bin_sym_w,
         )
 
@@ -222,6 +235,7 @@ class GowerSimilarity:
             Yn,
             self.ratio_scale_indices,
             ranges=self.ratio_ranges,
+            missing_strategy=self.missing_strategy,
             weights=ratio_w,
         )
         total_sum = num_sum + cat_nom_sum + cat_ord_sum + bin_asym_sum + bin_sym_sum + ratio_sum

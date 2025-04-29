@@ -1,12 +1,14 @@
 import numpy as np
 from typing import List, Tuple, Optional
 
-from ..utils.missing import is_missing
+from ..utils.missing import is_missing, apply_missing_strategy
+
 
 def nominal_distance_matrix(
     X: np.ndarray,
     Y: np.ndarray,
     categorical_indices: List[int],
+    missing_strategy: str = "ignore",
     weights: Optional[np.ndarray] = None,
 ) -> Tuple[np.ndarray, np.ndarray]:
     """
@@ -16,6 +18,7 @@ def nominal_distance_matrix(
         X (np.ndarray): First dataset, shape (n_x, n_features).
         Y (np.ndarray): Second dataset, shape (n_y, n_features).
         categorical_indices (List[int]): Indices of nominal categorical features.
+        missing_strategy (str): Strategy for handling missing values, default is "ignore".
         weights (Optional[np.ndarray]): Optional weight per categorical feature.
 
     Returns:
@@ -25,7 +28,8 @@ def nominal_distance_matrix(
     """
     n_x, n_y = X.shape[0], Y.shape[0]
     if not categorical_indices:
-        return np.zeros((n_x, n_y), dtype=float), np.zeros((n_x, n_y), dtype=int)
+        return np.zeros((n_x, n_y), dtype=float), np.zeros((n_x, n_y),
+                                                           dtype=int)
 
     sum_diff = np.zeros((n_x, n_y), dtype=float)
     count_present = np.zeros((n_x, n_y), dtype=int)
@@ -39,10 +43,10 @@ def nominal_distance_matrix(
         present = mask_x[:, None] & mask_y[None, :]
 
         diff = (~(col_x[:, None] == col_y[None, :]) & present).astype(float)
+        diff, mask = apply_missing_strategy(diff, present, missing_strategy)
 
         w = weights[pos] if weights is not None else 1.0
         sum_diff += diff * w
-
-        count_present += present.astype(int)
+        count_present += mask
 
     return sum_diff, count_present

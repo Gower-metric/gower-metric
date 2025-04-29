@@ -1,12 +1,14 @@
 import numpy as np
 from typing import List, Tuple, Optional
-from ..utils.missing import is_missing
+
+from ..utils.missing import is_missing, apply_missing_strategy
 
 
 def binary_asymmetric_distance_matrix(
     X: np.ndarray,
     Y: np.ndarray,
     binary_indices: List[int],
+    missing_strategy: str = "ignore",
     weights: Optional[np.ndarray] = None,
 ) -> Tuple[np.ndarray, np.ndarray]:
     """
@@ -21,6 +23,7 @@ def binary_asymmetric_distance_matrix(
         X (np.ndarray): shape (n_x, n_features).
         Y (np.ndarray): shape (n_y, n_features).
         binary_indices (List[int]): indices of asymmetric binary features.
+        missing_strategy (str): strategy for handling missing values, default is 'ignore'.
         weights (Optional[np.ndarray]): optional per-feature weights.
 
     Returns:
@@ -47,12 +50,12 @@ def binary_asymmetric_distance_matrix(
 
         # s_ijt: 1 only if both == 1
         both_one = (col_x[:, None] == 1) & (col_y[None, :] == 1)
+        raw = (~both_one).astype(float)
 
-        # d_ijt: 1 - s_ijt: zero for both_one, one for exactly one
-        diff = (present & ~both_one).astype(float)
+        diff, mask = apply_missing_strategy(raw, present, missing_strategy)
 
         w = float(weights[pos]) if weights is not None else 1.0
         sum_diff += diff * w
-        count_present += present.astype(int)
+        count_present += mask
 
     return sum_diff, count_present

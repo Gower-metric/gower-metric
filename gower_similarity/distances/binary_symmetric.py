@@ -1,12 +1,14 @@
 import numpy as np
 from typing import List, Tuple, Optional
-from ..utils.missing import is_missing
+
+from ..utils.missing import is_missing, apply_missing_strategy
 
 
 def binary_symmetric_distance_matrix(
     X: np.ndarray,
     Y: np.ndarray,
     binary_indices: List[int],
+    missing_strategy: str = "ignore",
     weights: Optional[np.ndarray] = None,
 ) -> Tuple[np.ndarray, np.ndarray]:
     """
@@ -22,6 +24,7 @@ def binary_symmetric_distance_matrix(
         X (np.ndarray): shape (n_x, n_features).
         Y (np.ndarray): shape (n_y, n_features).
         binary_indices (List[int]): Indices of binary symmetric features.
+        missing_strategy (str): Strategy for handling missing values, default is 'ignore'.
         weights (Optional[np.ndarray]): Optional weight per binary feature.
 
     Returns:
@@ -47,8 +50,10 @@ def binary_symmetric_distance_matrix(
         equal = (col_x[:, None] == col_y[None, :])
         diff = (present & ~equal).astype(float)
 
+        diff, mask = apply_missing_strategy(diff, present, missing_strategy)
+
         w = float(weights[pos]) if weights is not None else 1.0
         sum_diff += diff * w
-        count_present += present.astype(int)
+        count_present += mask
 
     return sum_diff, count_present
