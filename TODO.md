@@ -47,6 +47,6 @@
 - normalization
 - Podani for categorical ordinal
 - Podani weight optimization
-- add automatic check if given data type is correct
+- ~~add automatic check if given data type is correct~~
 - ~~in numeric/ratio scale add ranges as function parameter rather than compute it every time~~
 - fix weights in count_present

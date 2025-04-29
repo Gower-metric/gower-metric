@@ -5,6 +5,11 @@ import pandas as pd
 
 from ..utils.to_array import to_array
 from ..utils.ranges import get_numeric_ranges
+from ..utils.validators import (
+    validate_feature_types,
+    validate_scale_method,
+    validate_missing_strategy,
+)
 from ..distances.numeric_interval import numeric_distance_matrix
 from ..distances.categorical_nominal import nominal_distance_matrix
 from ..distances.categorical_ordinal import ordinal_distance_matrix
@@ -41,12 +46,7 @@ class GowerSimilarity:
         Raises:
             ValueError: If feature_types is not a non-empty dict.
         """
-        # TODO: add support for other type + auto check names
-        if not isinstance(feature_types, dict) or not feature_types:
-            raise ValueError(
-                """feature_types must be a non-empty dict mapping columns to: 'numeric', 'categorical_nominal',
-                'categorical_ordinal', 'binary_asymmetric', 'binary_symmetric', 'ratio_scale_interval'.
-                """)
+        validate_feature_types(feature_types)
         self.feature_types = feature_types
 
         # TODO: add support for other weights selection
@@ -72,9 +72,14 @@ class GowerSimilarity:
         ]
         self.ratio_ranges: np.ndarray = np.array([])
         self.numeric_ranges: np.ndarray = np.array([])
-        self.scale_method: Optional[str] = scale.lower() if scale else 'range'
-        self.missing_strategy: Optional[str] = missing_strategy.lower(
-        ) if missing_strategy else 'ignore'
+
+        self.scale_method: Optional[str] = (scale or 'range').lower()
+        validate_scale_method(self.scale_method)
+
+        self.missing_strategy: Optional[str] = (missing_strategy
+                                                or 'ignore').lower()
+        validate_missing_strategy(self.missing_strategy)
+
         self._is_fitted = False
 
     def fit(self, X: Union[pd.DataFrame, np.ndarray]) -> "GowerSimilarity":
