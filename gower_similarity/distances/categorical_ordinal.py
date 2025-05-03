@@ -1,14 +1,14 @@
 import numpy as np
-from typing import List, Tuple, Optional
+from typing import List, Tuple, Optional, Dict, Any
 
 from ..utils.missing import is_missing, apply_missing_strategy
-from ..utils.cat_ord_ut import get_ranks_mapping, get_cardinalities_mapping
 
 
 def ordinal_distance_matrix(
     X: np.ndarray,
     Y: np.ndarray,
     ordinal_indices: List[int],
+    metadata: Dict[int, Dict[str, Any]],
     missing_strategy: str = "ignore",
     calculation_type: str = "kaufman",
     weights: Optional[np.ndarray] = None,
@@ -20,6 +20,8 @@ def ordinal_distance_matrix(
         X (np.ndarray): First dataset, shape (n_x, n_features).
         Y (np.ndarray): Second dataset, shape (n_y, n_features).
         ordinal_indices (List[int]): Indices of ordinal features.
+        metadata (Dict[int, Dict[str, Any]]): Metadata for ordinal features. Computed
+            by GowerSimilarity.fit() on whole data range and passed to the distance function.
         missing_strategy (str): Strategy for handling missing values, default is "ignore".
         calculation_type (str): Type of calculation for ordinal distance, available options are
             "kaufman" and "podani". Default is "kaufman".
@@ -45,15 +47,19 @@ def ordinal_distance_matrix(
         mask_y = np.array([not is_missing(v) for v in col_y], dtype=bool)
         present = mask_x[:, None] & mask_y[None, :]
 
-        combined = np.concatenate([col_x, col_y])
-        ranks_map, min_rank, max_rank = get_ranks_mapping(combined)
+        if metadata and j in metadata:
+            info = metadata[j]
+            ranks_map = info["ranks"]
+            min_rank = info["min"]
+            max_rank = info["max"]
+            counts_arr = info["counts"]
+        else:
+            raise ValueError(
+                f"Missing metadata for ordinal feature at index {j}."
+            )
         
         if min_rank is None:
             continue
-
-        counts_map, _ = get_cardinalities_mapping(combined)
-        counts_arr = np.array([counts_map[val] for val in ranks_map.keys()],
-                              dtype=float)
 
         r_x = np.array([ranks_map.get(v, np.nan) for v in col_x], dtype=float)
         r_y = np.array([ranks_map.get(v, np.nan) for v in col_y], dtype=float)
@@ -68,15 +74,21 @@ def ordinal_distance_matrix(
                 
         else:
             diff = np.abs(r_x[:, None] - r_y[None, :])
-
             mid = (counts_arr - 1) / 2.0
             mid_x = mid[r_x.astype(int)][:, None]
             mid_y = mid[r_y.astype(int)][None, :]
+            podani_denom = (max_rank - min_rank - mid[0] - mid[-1])
 
-            denom = (max_rank - min_rank - mid[0] - mid[-1])
-
-            dist = (diff - mid_x - mid_y) / denom
-            dist = np.clip(dist, 0.0, 1.0)
+            if podani_denom <= 0:
+                # fallback to kaufman if podani denominator is not valid
+                base_denom = (max_rank - min_rank)
+                if base_denom == 0:
+                    dist = np.zeros((n_x, n_y), dtype=float)
+                else:
+                    dist = diff / base_denom
+            else:
+                dist = (diff - mid_x - mid_y) / podani_denom
+                dist = np.clip(dist, 0.0, 1.0)
 
         dist, mask = apply_missing_strategy(dist, present, missing_strategy)
 

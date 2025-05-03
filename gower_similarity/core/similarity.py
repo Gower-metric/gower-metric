@@ -11,6 +11,7 @@ from ..utils.validators import (
     validate_missing_strategy,
     validate_categorical_ordinal_calculation_type,
 )
+from ..utils.cat_ord_ut import get_ranks_mapping, get_cardinalities_mapping
 from ..distances.numeric_interval import numeric_distance_matrix
 from ..distances.categorical_nominal import nominal_distance_matrix
 from ..distances.categorical_ordinal import ordinal_distance_matrix
@@ -149,6 +150,21 @@ class GowerSimilarity:
         else:
             self.numeric_ranges = np.array([])
 
+        self.cat_ord_metadata: Dict[int, Dict[str, Any]] = {}
+        for j in self.categorical_ordinal_indices:
+            col = arr[:, j]
+            ranks_map, mn, mx = get_ranks_mapping(col)
+            counts_map, _ = get_cardinalities_mapping(col)
+            counts_arr = np.asarray([counts_map[v] for v in ranks_map.keys()], dtype=float)
+
+            self.cat_ord_metadata[j] = {
+                "ranks" : ranks_map,
+                "denom" : (mx - mn) if mn is not None else 0,
+                "counts": counts_arr,
+                "min"   : mn,
+                "max"   : mx,
+            }
+
         self._is_fitted = True
         return self
 
@@ -225,6 +241,7 @@ class GowerSimilarity:
             Xn,
             Yn,
             self.categorical_ordinal_indices,
+            metadata=self.cat_ord_metadata,
             missing_strategy=self.missing_strategy,
             calculation_type=self.categorical_ordinal_calculation_type,
             weights=cat_ord_w,
