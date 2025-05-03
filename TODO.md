@@ -27,7 +27,7 @@
 
 ## Pytest:
 - ~~categorical nominal~~
-- categorical ordinal
+- ~~categorical ordinal~~
 - ~~binary symmetric~~
 - ~~binary asymmetric~~
 - ~~ratio scale~~
