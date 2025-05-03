@@ -10,6 +10,7 @@ ALLOWED_FEATURE_TYPES = {
 }
 ALLOWED_SCALE_METHODS = {"range", "iqr"}
 ALLOWED_MISSING_STRATEGIES = {"ignore", "max_dist", "raise_error"}
+ALLOWED_CATEGORICAL_ORDINAL_CALCULATION_TYPES = {"kaufman", "podani"}
 
 
 def validate_feature_types(feature_types: Dict[Any, str]) -> None:
@@ -62,3 +63,22 @@ def validate_missing_strategy(missing_strategy: str) -> None:
         raise ValueError(
             f"missing_strategy must be one of {sorted(ALLOWED_MISSING_STRATEGIES)}, "
             f"got '{missing_strategy}'")
+
+def validate_categorical_ordinal_calculation_type(
+    calculation_type: str
+) -> None:
+    """
+    Validate the calculation type for categorical nominal features.
+
+    Args:
+        calculation_type (str): The calculation type to validate.
+
+    Raises:
+        ValueError: If the calculation type is not valid.
+    """
+    if calculation_type.lower() not in ALLOWED_CATEGORICAL_ORDINAL_CALCULATION_TYPES:
+        raise ValueError(
+            f"calculation_type must be one of "
+            f"{sorted(ALLOWED_CATEGORICAL_ORDINAL_CALCULATION_TYPES)}, "
+            f"got '{calculation_type}'"
+        )

@@ -9,6 +9,7 @@ from ..utils.validators import (
     validate_feature_types,
     validate_scale_method,
     validate_missing_strategy,
+    validate_categorical_ordinal_calculation_type,
 )
 from ..distances.numeric_interval import numeric_distance_matrix
 from ..distances.categorical_nominal import nominal_distance_matrix
@@ -29,6 +30,7 @@ class GowerSimilarity:
         feature_weights: Optional[Dict[Union[int, str], float]] = None,
         scale: Optional[str] = None,
         missing_strategy: Optional[str] = None,
+        categorical_ordinal_calculation_type: Optional[str] = None,
     ) -> None:
         """
         Initialize GowerSimilarity with explicit feature type and weight mappings.
@@ -41,7 +43,9 @@ class GowerSimilarity:
             scale: Optional scaling method for numeric features. Can be 'range' or 'iqr'.
                 Default is 'range' if omitted.
             missing_strategy: Optional strategy for handling missing values. Can be 'ignore',
-            'max_dist' or 'raise_error'. Default is 'ignore' if omitted.
+                'max_dist' or 'raise_error'. Default is 'ignore' if omitted.
+            categorical_ordinal_calculation_type: Optional calculation type for categorical
+                ordinal features. Can be 'kaufman' or 'podani'. Default is 'kaufman' if omitted.
 
         Raises:
             ValueError: If feature_types is not a non-empty dict.
@@ -79,6 +83,12 @@ class GowerSimilarity:
         self.missing_strategy: Optional[str] = (missing_strategy
                                                 or 'ignore').lower()
         validate_missing_strategy(self.missing_strategy)
+
+        self.categorical_ordinal_calculation_type: Optional[str] = (
+            categorical_ordinal_calculation_type or 'kaufman').lower()
+        validate_categorical_ordinal_calculation_type(
+            self.categorical_ordinal_calculation_type
+        )
 
         self._is_fitted = False
 
@@ -216,6 +226,7 @@ class GowerSimilarity:
             Yn,
             self.categorical_ordinal_indices,
             missing_strategy=self.missing_strategy,
+            calculation_type=self.categorical_ordinal_calculation_type,
             weights=cat_ord_w,
         )
 
