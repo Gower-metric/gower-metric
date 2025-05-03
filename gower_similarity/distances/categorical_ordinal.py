@@ -10,6 +10,7 @@ def ordinal_distance_matrix(
     Y: np.ndarray,
     ordinal_indices: List[int],
     missing_strategy: str = "ignore",
+    calculation_type: str = "kaufman",
     weights: Optional[np.ndarray] = None,
 ) -> Tuple[np.ndarray, np.ndarray]:
     """
@@ -20,6 +21,8 @@ def ordinal_distance_matrix(
         Y (np.ndarray): Second dataset, shape (n_y, n_features).
         ordinal_indices (List[int]): Indices of ordinal features.
         missing_strategy (str): Strategy for handling missing values, default is "ignore".
+        calculation_type (str): Type of calculation for ordinal distance, available options are
+            "kaufman" and "podani". Default is "kaufman".
         weights (Optional[np.ndarray]): Optional weight per ordinal feature.
 
     Returns:
@@ -44,26 +47,36 @@ def ordinal_distance_matrix(
 
         combined = np.concatenate([col_x, col_y])
         ranks_map, min_rank, max_rank = get_ranks_mapping(combined)
-        _, counts_list = get_cardinalities_mapping(combined)
-        counts_arr = np.array(counts_list, dtype=float)
+        
+        if min_rank is None:
+            continue
 
-        r_x = np.array(
-            [ranks_map[v] if not is_missing(v) else np.nan for v in col_x],
-            dtype=float)
-        r_y = np.array(
-            [ranks_map[v] if not is_missing(v) else np.nan for v in col_y],
-            dtype=float)
+        counts_map, _ = get_cardinalities_mapping(combined)
+        counts_arr = np.array([counts_map[val] for val in ranks_map.keys()],
+                              dtype=float)
 
-        diff = np.abs(r_x[:, None] - r_y[None, :])
+        r_x = np.array([ranks_map.get(v, np.nan) for v in col_x], dtype=float)
+        r_y = np.array([ranks_map.get(v, np.nan) for v in col_y], dtype=float)
 
-        mid = (counts_arr - 1) / 2.0
-        mid_x = mid[r_x.astype(int)][:, None]
-        mid_y = mid[r_y.astype(int)][None, :]
+        if calculation_type == "kaufman":
+            denom = (max_rank - min_rank)
 
-        denom = (max_rank - min_rank - mid[0] - mid[-1])
+            if denom == 0:
+                dist = np.zeros((n_x, n_y), dtype=float)
+            else:
+                dist = np.abs(r_x[:, None] - r_y[None, :]) / denom
+                
+        else:
+            diff = np.abs(r_x[:, None] - r_y[None, :])
 
-        dist = (diff - mid_x - mid_y) / denom
-        dist = np.clip(dist, 0.0, 1.0)
+            mid = (counts_arr - 1) / 2.0
+            mid_x = mid[r_x.astype(int)][:, None]
+            mid_y = mid[r_y.astype(int)][None, :]
+
+            denom = (max_rank - min_rank - mid[0] - mid[-1])
+
+            dist = (diff - mid_x - mid_y) / denom
+            dist = np.clip(dist, 0.0, 1.0)
 
         dist, mask = apply_missing_strategy(dist, present, missing_strategy)
 

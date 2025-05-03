@@ -23,6 +23,7 @@
 - ~~range~~
 - ~~iqr~~
 - kde
+- kNN
 
 ## Pytest:
 - ~~categorical nominal~~
@@ -45,8 +46,8 @@
 
 ## Additional features:
 - normalization
-- Podani for categorical ordinal
-- Podani weight optimization
+- ~~Podani for categorical ordinal~~
+- ~~Podani weight optimization~~
 - ~~add automatic check if given data type is correct~~
 - ~~in numeric/ratio scale add ranges as function parameter rather than compute it every time~~
 - fix weights in count_present
