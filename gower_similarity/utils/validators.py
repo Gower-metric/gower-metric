@@ -13,6 +13,7 @@ ALLOWED_SCALE_WINDOWS = {None, "kde"}
 ALLOWED_SCALE_WINDOWS_TYPES = {None, "silverman"}
 ALLOWED_MISSING_STRATEGIES = {"ignore", "max_dist", "raise_error"}
 ALLOWED_CATEGORICAL_ORDINAL_CALCULATION_TYPES = {"kaufman", "podani"}
+ALLOWED_WEIGHTS_TYPES = {None, "uniform"}
 
 
 def validate_feature_types(feature_types: Dict[Any, str]) -> None:
@@ -112,4 +113,25 @@ def validate_scale_window_and_type(scale_window: str, scale_window_type: str) ->
         raise ValueError(
             f"scale_window_type must be one of {sorted(ALLOWED_SCALE_WINDOWS_TYPES)}, "
             f"got {scale_window_type!r} when scale_window='kde'"
+        )
+    
+def validate_weights_type(weights: Any) -> None:
+    """
+    Validate the weights type.
+
+    Args:
+        weights (Any): The weights to validate.
+
+    Raises:
+        ValueError: If the weights type is not valid.
+    """
+    if weights is None or isinstance(weights, str):
+        if weights not in ALLOWED_WEIGHTS_TYPES:
+            raise ValueError(
+                f"weights must be one of {sorted(ALLOWED_WEIGHTS_TYPES)}, got {weights!r}"
+            )
+    elif not isinstance(weights, dict):
+        raise ValueError(
+            "weights must be None, a string, or a dictionary mapping feature "
+            "indices to weights, got {type(weights).__name__}"
         )

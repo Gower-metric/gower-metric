@@ -14,7 +14,7 @@
 - ~~max_dist~~
 
 ## Weights:
-- ~~manually set (dictionary)~~
+- ~~manually set (dictionary), the same as "uniform"~~
 - precomputed (+ load from file)
 - save to file
 - CPCC 
@@ -52,10 +52,11 @@
 - mixed types
 
 ## Additional features:
-- normalization
+- ~~normalization~~
+- continous variables
 - ~~Podani for categorical ordinal~~
 - ~~Podani weight optimization~~
 - ~~add automatic check if given data type is correct~~
 - ~~in numeric/ratio scale add ranges as function parameter rather than compute it every time~~
-- fix weights in count_present
+- ~~fix weights in count_present~~
 - numba speedup

@@ -12,8 +12,10 @@ from ..utils.validators import (
     validate_missing_strategy,
     validate_categorical_ordinal_calculation_type,
     validate_scale_window_and_type,
+    validate_weights_type,
 )
 from ..utils.cat_ord_ut import get_ranks_mapping, get_cardinalities_mapping
+from ..weights.weights import get_weights
 from ..distances.numeric_interval import numeric_distance_matrix
 from ..distances.categorical_nominal import nominal_distance_matrix
 from ..distances.categorical_ordinal import ordinal_distance_matrix
@@ -30,7 +32,7 @@ class GowerSimilarity:
     def __init__(
         self,
         feature_types: Dict[Union[int, str], str],
-        feature_weights: Optional[Dict[Union[int, str], float]] = None,
+        feature_weights: Optional[Union[Dict[Union[int, str], float], str]] = None,
         scale: Optional[str] = None,
         missing_strategy: Optional[str] = None,
         categorical_ordinal_calculation_type: Optional[str] = None,
@@ -42,9 +44,11 @@ class GowerSimilarity:
 
         Args:
             feature_types: Mapping of column indices (or DataFrame column names) to
-                        specific type.
-            feature_weights: Optional mapping of column indices (or names) to a float weight
-                            (default is 1.0 for all features if omitted).
+                specific type.
+            feature_weights: Optional mapping of column indices (or names) to a float weight.
+                If None or "uniform", all features will have equal weight of 1. Otherwise,
+                the weights must be a dictionary mapping feature indices to weights, i.e.
+                {0: 1.0, 1: 2.0, ...}.
             scale: Optional scaling method for numeric features. Can be 'range' or 'iqr'.
                 Default is 'range' if omitted.
             missing_strategy: Optional strategy for handling missing values. Can be 'ignore',
@@ -62,8 +66,8 @@ class GowerSimilarity:
         validate_feature_types(feature_types)
         self.feature_types = feature_types
 
-        # TODO: add support for other weights selection
         self.feature_weights = feature_weights or {}
+        validate_weights_type(self.feature_weights)
 
         self.numeric_indices = [
             i for i, t in feature_types.items() if t == "numeric"
@@ -190,6 +194,12 @@ class GowerSimilarity:
                 "max"   : mx,
             }
 
+        n_feats = arr.shape[1]
+        self.weights = get_weights(
+            n_features=n_feats,
+            config=self.feature_weights,
+        )
+
         self._is_fitted = True
         return self
 
@@ -215,37 +225,13 @@ class GowerSimilarity:
         Xn = x.reshape(1, -1)
         Yn = y.reshape(1, -1)
 
-        num_w = (np.array(
-            [self.feature_weights.get(i, 1.0) for i in self.numeric_indices],
-            dtype=float) if self.numeric_indices else None)
-        cat_nom_w = (np.array([
-            self.feature_weights.get(i, 1.0)
-            for i in self.categorical_nominal_indices
-        ],
-                              dtype=float)
-                     if self.categorical_nominal_indices else None)
-        cat_ord_w = (np.array([
-            self.feature_weights.get(i, 1.0)
-            for i in self.categorical_ordinal_indices
-        ],
-                              dtype=float)
-                     if self.categorical_ordinal_indices else None)
-        bin_asym_w = (np.array([
-            self.feature_weights.get(i, 1.0)
-            for i in self.binary_asymmetric_indices
-        ],
-                               dtype=float)
-                      if self.binary_asymmetric_indices else None)
-        bin_sym_w = (np.array([
-            self.feature_weights.get(i, 1.0)
-            for i in self.binary_symmetric_indices
-        ],
-                              dtype=float)
-                     if self.binary_symmetric_indices else None)
-        ratio_w = (np.array([
-            self.feature_weights.get(i, 1.0) for i in self.ratio_scale_indices
-        ],
-                            dtype=float) if self.ratio_scale_indices else None)
+        num_w = self.weights[self.numeric_indices]
+        cat_nom_w = self.weights[self.categorical_nominal_indices]
+        cat_ord_w = self.weights[self.categorical_ordinal_indices]
+        bin_asym_w = self.weights[self.binary_asymmetric_indices]
+        bin_sym_w = self.weights[self.binary_symmetric_indices]
+        ratio_w = self.weights[self.ratio_scale_indices]
+
         num_sum, num_count = numeric_distance_matrix(
             Xn,
             Yn,
