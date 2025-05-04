@@ -5,11 +5,13 @@ import pandas as pd
 
 from ..utils.to_array import to_array
 from ..utils.ranges import get_numeric_ranges
+from ..utils.kde_types.silverman import silverman_bandwidth
 from ..utils.validators import (
     validate_feature_types,
     validate_scale_method,
     validate_missing_strategy,
     validate_categorical_ordinal_calculation_type,
+    validate_scale_window_and_type,
 )
 from ..utils.cat_ord_ut import get_ranks_mapping, get_cardinalities_mapping
 from ..distances.numeric_interval import numeric_distance_matrix
@@ -32,6 +34,8 @@ class GowerSimilarity:
         scale: Optional[str] = None,
         missing_strategy: Optional[str] = None,
         categorical_ordinal_calculation_type: Optional[str] = None,
+        scale_window: Optional[str] = None,
+        scale_window_type: Optional[str] = None,
     ) -> None:
         """
         Initialize GowerSimilarity with explicit feature type and weight mappings.
@@ -47,6 +51,10 @@ class GowerSimilarity:
                 'max_dist' or 'raise_error'. Default is 'ignore' if omitted.
             categorical_ordinal_calculation_type: Optional calculation type for categorical
                 ordinal features. Can be 'kaufman' or 'podani'. Default is 'kaufman' if omitted.
+            scale_window: Optional scaling window for numeric or ratio features. Can be None or 'kde'.
+                Default is None if omitted.
+            scale_window_type: Optional type of scaling window. Can be None or 'silverman'.
+                Default is None if omitted, not recommended to use without scale_window.
 
         Raises:
             ValueError: If feature_types is not a non-empty dict.
@@ -90,6 +98,10 @@ class GowerSimilarity:
         validate_categorical_ordinal_calculation_type(
             self.categorical_ordinal_calculation_type
         )
+
+        self.scale_window: Optional[str] = scale_window if scale_window else None
+        self.scale_window_type: Optional[str] = scale_window_type if scale_window_type else None
+        validate_scale_window_and_type(self.scale_window, self.scale_window_type)
 
         self._is_fitted = False
 
@@ -149,6 +161,19 @@ class GowerSimilarity:
                                                      self.scale_method)
         else:
             self.numeric_ranges = np.array([])
+
+        if self.scale_window == "kde" and self.scale_window_type == "silverman":
+            self._h_ratio = np.array([
+                silverman_bandwidth(arr[:, j])
+                for j in self.ratio_scale_indices
+            ], dtype=float)
+            self._h_numeric = np.array([
+                silverman_bandwidth(arr[:, j])
+                for j in self.numeric_indices
+            ], dtype=float)
+        else:
+            self._h_ratio = None
+            self._h_numeric = None
 
         self.cat_ord_metadata: Dict[int, Dict[str, Any]] = {}
         for j in self.categorical_ordinal_indices:
@@ -228,6 +253,8 @@ class GowerSimilarity:
             ranges=self.numeric_ranges,
             missing_strategy=self.missing_strategy,
             weights=num_w,
+            scale_window=self.scale_window,
+            h=self._h_numeric,
         )
 
         cat_nom_sum, cat_nom_count = nominal_distance_matrix(
@@ -270,6 +297,8 @@ class GowerSimilarity:
             ranges=self.ratio_ranges,
             missing_strategy=self.missing_strategy,
             weights=ratio_w,
+            scale_window=self.scale_window,
+            h=self._h_ratio,
         )
         total_sum = num_sum + cat_nom_sum + cat_ord_sum + bin_asym_sum + bin_sym_sum + ratio_sum
         total_count = num_count + cat_nom_count + cat_ord_count + bin_asym_count + bin_sym_count + ratio_count
@@ -290,3 +319,7 @@ class GowerSimilarity:
             float: Gower similarity in [0,1], defined as 1 - distance(a, b).
         """
         return 1.0 - self.distance(a, b)
+    
+    def __call__(self, *args, **kwds):
+        # TODO: add numba support
+        pass

@@ -46,7 +46,6 @@ def get_numeric_ranges(
         max(X[:, idx]) - min(X[:, idx]), for now we ignore NaNs.
         If all values are NaN or constant, range is set to 0.0.
     """
-    # TODO: add feature to let user choose how to handle NaN values
     ranges = np.empty(len(indices), dtype=float)
     for pos, j in enumerate(indices):
         col = X[:, j].astype(float)

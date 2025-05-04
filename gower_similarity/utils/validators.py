@@ -9,6 +9,8 @@ ALLOWED_FEATURE_TYPES = {
     "ratio_scale_interval",
 }
 ALLOWED_SCALE_METHODS = {"range", "iqr"}
+ALLOWED_SCALE_WINDOWS = {None, "kde"}
+ALLOWED_SCALE_WINDOWS_TYPES = {None, "silverman"}
 ALLOWED_MISSING_STRATEGIES = {"ignore", "max_dist", "raise_error"}
 ALLOWED_CATEGORICAL_ORDINAL_CALCULATION_TYPES = {"kaufman", "podani"}
 
@@ -81,4 +83,33 @@ def validate_categorical_ordinal_calculation_type(
             f"calculation_type must be one of "
             f"{sorted(ALLOWED_CATEGORICAL_ORDINAL_CALCULATION_TYPES)}, "
             f"got '{calculation_type}'"
+        )
+    
+def validate_scale_window_and_type(scale_window: str, scale_window_type: str) -> None:
+    """
+    Validate the scale window and it's type at the same time.
+
+    Args:
+        scale_window (str): The scale window to validate.
+        scale_window_type (str): The scale window type to validate.
+
+    Raises:
+        ValueError: If the scale window is not valid.
+    """
+    if scale_window not in ALLOWED_SCALE_WINDOWS:
+        raise ValueError(
+            f"scale_window must be one of {sorted(ALLOWED_SCALE_WINDOWS)}, got {scale_window!r}"
+        )
+
+    if scale_window is None:
+        if scale_window_type is not None:
+            raise ValueError(
+                f"scale_window_type must be None when scale_window is None, got {scale_window_type!r}"
+            )
+        return
+
+    if scale_window == "kde" and scale_window_type not in ALLOWED_SCALE_WINDOWS_TYPES:
+        raise ValueError(
+            f"scale_window_type must be one of {sorted(ALLOWED_SCALE_WINDOWS_TYPES)}, "
+            f"got {scale_window_type!r} when scale_window='kde'"
         )
