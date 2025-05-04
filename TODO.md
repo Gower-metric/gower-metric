@@ -22,7 +22,12 @@
 ## Range scale method:
 - ~~range~~
 - ~~iqr~~
-- kde
+- kde: 
+    - ~~silverman~~
+    - scott
+    - sheather-jones
+    - cv_grid
+    - cv_optuna
 - kNN
 
 ## Pytest:
@@ -31,7 +36,9 @@
 - ~~binary symmetric~~
 - ~~binary asymmetric~~
 - ~~ratio scale~~
+  - kde silverman
 - numerical interval
+  - kde silverman
 - ~~missing values~~
 - mixed types
 
@@ -51,3 +58,4 @@
 - ~~add automatic check if given data type is correct~~
 - ~~in numeric/ratio scale add ranges as function parameter rather than compute it every time~~
 - fix weights in count_present
+- numba speedup

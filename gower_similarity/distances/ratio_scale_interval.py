@@ -11,6 +11,8 @@ def ratio_scale_distance_matrix(
     ranges: np.ndarray,
     missing_strategy: str = 'ignore',
     weights: Optional[np.ndarray] = None,
+    scale_window: Optional[str] = None,
+    h: Optional[np.ndarray] = None,
 ) -> Tuple[np.ndarray, np.ndarray]:
     """
     Basic range-scaled Gower component for ratio-scale features.
@@ -22,6 +24,8 @@ def ratio_scale_distance_matrix(
         ranges: 1D array of ranges for each ratio-scale column
         missing_strategy: one of "ignore", "max_dist", "raise_error"
         weights: optional 1D array of same length as ratio_indices
+        scale_window: optional scaling window method
+        h: optional 1D array of bandwidths for KDE scaling
 
     Returns:
         sum_diff: (n_x, n_y) weighted sum of per-feature distances
@@ -49,6 +53,9 @@ def ratio_scale_distance_matrix(
             diff[diff > 1.0] = 1.0
         else:
             diff = np.zeros_like(raw)
+
+        if scale_window == 'kde' and h is not None:
+            diff[raw <= h[pos]] = 0.0
 
         diff, mask = apply_missing_strategy(diff, present, missing_strategy)
 
