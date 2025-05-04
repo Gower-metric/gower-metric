@@ -36,7 +36,7 @@
 - ~~binary symmetric~~
 - ~~binary asymmetric~~
 - ~~ratio scale~~
-  - kde silverman
+  - ~~kde silverman~~
 - numerical interval
   - kde silverman
 - ~~missing values~~

@@ -1,8 +1,10 @@
 import numpy as np
 import pandas as pd
 import pytest
+import itertools
 
 from gower_similarity.core.similarity import GowerSimilarity
+from gower_similarity.utils.kde_types.silverman import silverman_bandwidth
 
 @pytest.mark.asyncio
 async def test_ratio_scale_range_ndarray():
@@ -30,3 +32,34 @@ async def test_ratio_scale_range_ndarray():
             assert pytest.approx(sim, rel=1e-6) == 1.0 - expected[i, j]
 
 # TODO: add test as above for iqr
+
+@pytest.mark.asyncio
+async def test_ratio_scale_kde_window_h():
+    # result >> h
+    data = np.array([[0.0], [100.0], [200.0]], dtype=float)
+
+    col = data[:,0]
+    manual_h = silverman_bandwidth(col)
+
+    gs_kde = GowerSimilarity(
+        {0: 'ratio_scale_interval'},
+        scale='range',
+        scale_window='kde',
+        scale_window_type='silverman'
+    )
+    gs_kde.fit(data)
+
+    assert isinstance(gs_kde._h_ratio, np.ndarray)
+    assert gs_kde._h_ratio.shape == (1,)
+    assert pytest.approx(gs_kde._h_ratio[0], rel=1e-6) == manual_h
+
+    gs_plain = GowerSimilarity(
+        {0: 'ratio_scale_interval'},
+        scale='range'
+    )
+    gs_plain.fit(data)
+
+    for xi, xj in itertools.product(data, data):
+        d1 = gs_plain.distance(xi, xj)
+        d2 = gs_kde.distance(xi, xj)
+        assert pytest.approx(d2, rel=1e-6) == d1
