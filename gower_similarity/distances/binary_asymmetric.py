@@ -32,7 +32,7 @@ def binary_asymmetric_distance_matrix(
     """
     n_x, n_y = X.shape[0], Y.shape[0]
     sum_diff = np.zeros((n_x, n_y), dtype=float)
-    count_present = np.zeros((n_x, n_y), dtype=int)
+    count_present = np.zeros((n_x, n_y), dtype=float)
 
     if not binary_indices:
         return sum_diff, count_present
@@ -56,6 +56,6 @@ def binary_asymmetric_distance_matrix(
 
         w = float(weights[pos]) if weights is not None else 1.0
         sum_diff += diff * w
-        count_present += mask
+        count_present += mask.astype(float) * w
 
     return sum_diff, count_present

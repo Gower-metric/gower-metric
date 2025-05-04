@@ -37,7 +37,7 @@ def ratio_scale_distance_matrix(
                                                            dtype=int)
 
     sum_diff = np.zeros((n_x, n_y), dtype=float)
-    count_present = np.zeros((n_x, n_y), dtype=int)
+    count_present = np.zeros((n_x, n_y), dtype=float)
 
     for pos, j in enumerate(ratio_indices):
         col_x = X[:, j].astype(float)
@@ -61,6 +61,6 @@ def ratio_scale_distance_matrix(
 
         w = weights[pos] if weights is not None else 1.0
         sum_diff += diff * w
-        count_present += mask
+        count_present += mask.astype(float) * w
 
     return sum_diff, count_present

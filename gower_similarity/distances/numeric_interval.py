@@ -37,7 +37,7 @@ def numeric_distance_matrix(
         return np.zeros((n_x, n_y), float), np.zeros((n_x, n_y), int)
 
     sum_diff = np.zeros((n_x, n_y), float)
-    count_present = np.zeros((n_x, n_y), int)
+    count_present = np.zeros((n_x, n_y), float)
 
     for pos, j in enumerate(numeric_indices):
         col_x = X[:, j].astype(float)
@@ -62,6 +62,6 @@ def numeric_distance_matrix(
 
         w = weights[pos] if weights is not None else 1.0
         sum_diff += diff * w
-        count_present += mask
+        count_present += mask.astype(float) * w
 
     return sum_diff, count_present

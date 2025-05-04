@@ -18,8 +18,6 @@ def binary_symmetric_distance_matrix(
     - δ_ijt (present) = 1 if both values are non-missing, else 0.
     - Distance d_ijt = 1 - s_ijt for δ_ijt = 1; ignored otherwise.
 
-    TODO: add table of values pairs to explain the output.
-
     Args:
         X (np.ndarray): shape (n_x, n_features).
         Y (np.ndarray): shape (n_y, n_features).
@@ -33,7 +31,7 @@ def binary_symmetric_distance_matrix(
     """
     n_x, n_y = X.shape[0], Y.shape[0]
     sum_diff = np.zeros((n_x, n_y), dtype=float)
-    count_present = np.zeros((n_x, n_y), dtype=int)
+    count_present = np.zeros((n_x, n_y), dtype=float)
 
     if not binary_indices:
         return sum_diff, count_present
@@ -54,6 +52,6 @@ def binary_symmetric_distance_matrix(
 
         w = float(weights[pos]) if weights is not None else 1.0
         sum_diff += diff * w
-        count_present += mask
+        count_present += mask.astype(float) * w
 
     return sum_diff, count_present

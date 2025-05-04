@@ -34,7 +34,7 @@ def ordinal_distance_matrix(
     """
     n_x, n_y = X.shape[0], Y.shape[0]
     sum_diff = np.zeros((n_x, n_y), dtype=float)
-    count_present = np.zeros((n_x, n_y), dtype=int)
+    count_present = np.zeros((n_x, n_y), dtype=float)
 
     if not ordinal_indices:
         return sum_diff, count_present
@@ -92,9 +92,8 @@ def ordinal_distance_matrix(
 
         dist, mask = apply_missing_strategy(dist, present, missing_strategy)
 
-        # TODO: later add support for more advanced weights implementation
         w = float(weights[pos]) if weights is not None else 1.0
         sum_diff += dist * w
-        count_present += mask
+        count_present += mask.astype(float) * w
 
     return sum_diff, count_present
