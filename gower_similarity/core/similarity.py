@@ -164,11 +164,11 @@ class GowerSimilarity:
 
         if self.scale_window == "kde" and self.scale_window_type == "silverman":
             self._h_ratio = np.array([
-                silverman_bandwidth(arr[:, j])
+                silverman_bandwidth(arr[:, j].astype(float))
                 for j in self.ratio_scale_indices
             ], dtype=float)
             self._h_numeric = np.array([
-                silverman_bandwidth(arr[:, j])
+                silverman_bandwidth(arr[:, j].astype(float))
                 for j in self.numeric_indices
             ], dtype=float)
         else:
