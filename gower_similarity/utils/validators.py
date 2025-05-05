@@ -9,11 +9,12 @@ ALLOWED_FEATURE_TYPES = {
     "ratio_scale_interval",
 }
 ALLOWED_SCALE_METHODS = {"range", "iqr"}
-ALLOWED_SCALE_WINDOWS = {None, "kde"}
+ALLOWED_SCALE_WINDOWS = {None, "kde", "kNN"}
 ALLOWED_SCALE_WINDOWS_TYPES = {None, "silverman"}
 ALLOWED_MISSING_STRATEGIES = {"ignore", "max_dist", "raise_error"}
 ALLOWED_CATEGORICAL_ORDINAL_CALCULATION_TYPES = {"kaufman", "podani"}
 ALLOWED_WEIGHTS_TYPES = {None, "uniform"}
+ALLOWED_K_NEIGHBOURS_TYPES = {None, int}
 
 
 def validate_feature_types(feature_types: Dict[Any, str]) -> None:
@@ -134,4 +135,26 @@ def validate_weights_type(weights: Any) -> None:
         raise ValueError(
             "weights must be None, a string, or a dictionary mapping feature "
             "indices to weights, got {type(weights).__name__}"
+        )
+    
+def validate_k_neighbours(k_neighbours: Any) -> None:
+    """
+    Validate the k-neighbours type.
+
+    Args:
+        k_neighbours (Any): The k-neighbours to validate.
+
+    Raises:
+        ValueError: If the k-neighbours type is not valid.
+    """
+    if k_neighbours is None or isinstance(k_neighbours, str):
+        if k_neighbours not in ALLOWED_K_NEIGHBOURS_TYPES:
+            raise ValueError(
+                f"k_neighbours must be one of {sorted(ALLOWED_K_NEIGHBOURS_TYPES)}, "
+                f"got {k_neighbours!r}"
+            )
+    elif not isinstance(k_neighbours, int):
+        raise ValueError(
+            "k_neighbours must be None, a string, or an integer, got "
+            f"{type(k_neighbours).__name__}"
         )

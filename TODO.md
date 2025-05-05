@@ -28,7 +28,7 @@
     - sheather-jones
     - cv_grid
     - cv_optuna
-- kNN
+- ~~kNN~~
 
 ## Pytest:
 - ~~categorical nominal~~
@@ -41,6 +41,7 @@
   - kde silverman
 - ~~missing values~~
 - mixed types
+- ~~kNN bandwidth~~
 
 ## Examples:
 - categorical nominal
@@ -54,6 +55,7 @@
 ## Additional features:
 - ~~normalization~~
 - continous variables
+- refactor calculate bandwidth for kde and kNN
 - ~~Podani for categorical ordinal~~
 - ~~Podani weight optimization~~
 - ~~add automatic check if given data type is correct~~

@@ -6,6 +6,7 @@ import pandas as pd
 from ..utils.to_array import to_array
 from ..utils.ranges import get_numeric_ranges
 from ..utils.kde_types.silverman import silverman_bandwidth
+from ..utils.knn_bandwidth import knn_bandwidth
 from ..utils.validators import (
     validate_feature_types,
     validate_scale_method,
@@ -13,6 +14,7 @@ from ..utils.validators import (
     validate_categorical_ordinal_calculation_type,
     validate_scale_window_and_type,
     validate_weights_type,
+    validate_k_neighbours,
 )
 from ..utils.cat_ord_ut import get_ranks_mapping, get_cardinalities_mapping
 from ..weights.weights import get_weights
@@ -38,6 +40,7 @@ class GowerSimilarity:
         categorical_ordinal_calculation_type: Optional[str] = None,
         scale_window: Optional[str] = None,
         scale_window_type: Optional[str] = None,
+        k_neighbours: Optional[int] = None,
     ) -> None:
         """
         Initialize GowerSimilarity with explicit feature type and weight mappings.
@@ -55,10 +58,13 @@ class GowerSimilarity:
                 'max_dist' or 'raise_error'. Default is 'ignore' if omitted.
             categorical_ordinal_calculation_type: Optional calculation type for categorical
                 ordinal features. Can be 'kaufman' or 'podani'. Default is 'kaufman' if omitted.
-            scale_window: Optional scaling window for numeric or ratio features. Can be None or 'kde'.
-                Default is None if omitted.
+            scale_window: Optional scaling window for numeric or ratio features. Can be None, 'kde'
+                or 'kNN'. Default is None if omitted.
             scale_window_type: Optional type of scaling window. Can be None or 'silverman'.
                 Default is None if omitted, not recommended to use without scale_window.
+            k_neighbours: Optional number of nearest neighbors for 'kNN' scaling window.
+                Default is None if omitted. If k_neighbours is None or less than 1, it will be
+                set to the square root of the number of points.
 
         Raises:
             ValueError: If feature_types is not a non-empty dict.
@@ -106,6 +112,9 @@ class GowerSimilarity:
         self.scale_window: Optional[str] = scale_window if scale_window else None
         self.scale_window_type: Optional[str] = scale_window_type if scale_window_type else None
         validate_scale_window_and_type(self.scale_window, self.scale_window_type)
+
+        self.k_neighbours = k_neighbours if k_neighbours else None
+        validate_k_neighbours(self.k_neighbours)
 
         self._is_fitted = False
 
@@ -173,6 +182,15 @@ class GowerSimilarity:
             ], dtype=float)
             self._h_numeric = np.array([
                 silverman_bandwidth(arr[:, j].astype(float))
+                for j in self.numeric_indices
+            ], dtype=float)
+        elif self.scale_window == "kNN":
+            self._h_ratio = np.array([
+                knn_bandwidth(arr[:, j].astype(float), k=self.k_neighbours)
+                for j in self.ratio_scale_indices
+            ], dtype=float)
+            self._h_numeric = np.array([
+                knn_bandwidth(arr[:, j].astype(float), k=self.k_neighbours)
                 for j in self.numeric_indices
             ], dtype=float)
         else:
