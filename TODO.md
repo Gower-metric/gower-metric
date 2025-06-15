@@ -54,7 +54,7 @@
 
 ## Additional features:
 - ~~normalization~~
-- continous variables
+- continous distances
 - refactor calculate bandwidth for kde and kNN
 - ~~Podani for categorical ordinal~~
 - ~~Podani weight optimization~~

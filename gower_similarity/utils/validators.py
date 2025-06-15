@@ -15,6 +15,7 @@ ALLOWED_MISSING_STRATEGIES = {"ignore", "max_dist", "raise_error"}
 ALLOWED_CATEGORICAL_ORDINAL_CALCULATION_TYPES = {"kaufman", "podani"}
 ALLOWED_WEIGHTS_TYPES = {None, "uniform"}
 ALLOWED_K_NEIGHBOURS_TYPES = {None, int}
+ALLOWED_CONDITIONAL_DISTANCES = {None, False, True}
 
 
 def validate_feature_types(feature_types: Dict[Any, str]) -> None:
@@ -86,7 +87,7 @@ def validate_categorical_ordinal_calculation_type(
             f"{sorted(ALLOWED_CATEGORICAL_ORDINAL_CALCULATION_TYPES)}, "
             f"got '{calculation_type}'"
         )
-    
+
 def validate_scale_window_and_type(scale_window: str, scale_window_type: str) -> None:
     """
     Validate the scale window and it's type at the same time.
@@ -115,7 +116,7 @@ def validate_scale_window_and_type(scale_window: str, scale_window_type: str) ->
             f"scale_window_type must be one of {sorted(ALLOWED_SCALE_WINDOWS_TYPES)}, "
             f"got {scale_window_type!r} when scale_window='kde'"
         )
-    
+
 def validate_weights_type(weights: Any) -> None:
     """
     Validate the weights type.
@@ -136,7 +137,7 @@ def validate_weights_type(weights: Any) -> None:
             "weights must be None, a string, or a dictionary mapping feature "
             "indices to weights, got {type(weights).__name__}"
         )
-    
+
 def validate_k_neighbours(k_neighbours: Any) -> None:
     """
     Validate the k-neighbours type.
@@ -157,4 +158,21 @@ def validate_k_neighbours(k_neighbours: Any) -> None:
         raise ValueError(
             "k_neighbours must be None, a string, or an integer, got "
             f"{type(k_neighbours).__name__}"
+        )
+
+def validate_conditional_distances(conditional_distances: bool) -> None:
+    """
+    Validate the conditional distances flag.
+
+    Args:
+        conditional_distances (bool): Flag to validate
+
+    Raises:
+        ValueError: If conditional_distances flag different from bool
+    """
+
+    if conditional_distances not in ALLOWED_CONDITIONAL_DISTANCES:
+        raise ValueError(
+            f"Conditional_distances flag must be one of {ALLOWED_CONDITIONAL_DISTANCES}, "
+            f"got {conditional_distances}"
         )

@@ -299,3 +299,6 @@ As demonstrated by the results, the custom Gower metric implementation achieves 
 However, this does not imply that the Gower metric is inherently the best for all scenarios. One should consider whether minimizing the metric value always translates to the most meaningful clustering or classification results. Over-reliance on achieving minimal distance values might lead to an over-clustering effect, identifying patterns where none should exist.
 
 Thus, the best approach is to select a distance metric that best aligns with the specific problem at hand.
+
+## References
+- [Distances with mixed type variables some modified Gower's coefficients](https://arxiv.org/abs/2101.02481)

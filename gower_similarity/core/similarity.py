@@ -15,6 +15,7 @@ from ..utils.validators import (
     validate_scale_window_and_type,
     validate_weights_type,
     validate_k_neighbours,
+    validate_conditional_distances,
 )
 from ..utils.cat_ord_ut import get_ranks_mapping, get_cardinalities_mapping
 from ..weights.weights import get_weights
@@ -41,6 +42,7 @@ class GowerSimilarity:
         scale_window: Optional[str] = None,
         scale_window_type: Optional[str] = None,
         k_neighbours: Optional[int] = None,
+        conditional_distances: Optional[bool] = None,
     ) -> None:
         """
         Initialize GowerSimilarity with explicit feature type and weight mappings.
@@ -65,6 +67,8 @@ class GowerSimilarity:
             k_neighbours: Optional number of nearest neighbors for 'kNN' scaling window.
                 Default is None if omitted. If k_neighbours is None or less than 1, it will be
                 set to the square root of the number of points.
+            conditional_distances: Default to None. If set to True, two-step approach will be 
+                triggered to calculate formula. More information in references -> chapter 3.
 
         Raises:
             ValueError: If feature_types is not a non-empty dict.
@@ -115,6 +119,9 @@ class GowerSimilarity:
 
         self.k_neighbours = k_neighbours if k_neighbours else None
         validate_k_neighbours(self.k_neighbours)
+
+        self.conditional_distances = conditional_distances
+        validate_conditional_distances(self.conditional_distances)
 
         self._is_fitted = False
 
@@ -205,11 +212,11 @@ class GowerSimilarity:
             counts_arr = np.asarray([counts_map[v] for v in ranks_map.keys()], dtype=float)
 
             self.cat_ord_metadata[j] = {
-                "ranks" : ranks_map,
-                "denom" : (mx - mn) if mn is not None else 0,
+                "ranks": ranks_map,
+                "denom": (mx - mn) if mn is not None else 0,
                 "counts": counts_arr,
-                "min"   : mn,
-                "max"   : mx,
+                "min": mn,
+                "max": mx,
             }
 
         n_feats = arr.shape[1]
@@ -323,7 +330,7 @@ class GowerSimilarity:
             float: Gower similarity in [0,1], defined as 1 - distance(a, b).
         """
         return 1.0 - self.distance(a, b)
-    
+
     def __call__(self, *args, **kwds):
         # TODO: add numba support
         pass

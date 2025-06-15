@@ -55,7 +55,7 @@ def numeric_distance_matrix(
         else:
             diff = np.zeros_like(raw)
 
-        if scale_window == 'kde' and h is not None:
+        if scale_window in ('kde', 'kNN') and h is not None:
             diff[raw <= h[pos]] = 0.0
 
         diff, mask = apply_missing_strategy(diff, present, missing_strategy)
