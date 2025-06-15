@@ -226,6 +226,12 @@ class GowerSimilarity:
         )
 
         self._is_fitted = True
+
+        self.p_cat = (
+            len(self.binary_symmetric_indices) + 
+            len(self.binary_asymmetric_indices) + 
+            len(self.categorical_nominal_indices)
+        )
         return self
 
     def distance(self, a: Any, b: Any) -> float:
@@ -257,66 +263,164 @@ class GowerSimilarity:
         bin_sym_w = self.weights[self.binary_symmetric_indices]
         ratio_w = self.weights[self.ratio_scale_indices]
 
-        num_sum, num_count = numeric_distance_matrix(
-            Xn,
-            Yn,
-            self.numeric_indices,
-            ranges=self.numeric_ranges,
-            missing_strategy=self.missing_strategy,
-            weights=num_w,
-            scale_window=self.scale_window,
-            h=self._h_numeric,
-        )
+        if not self.conditional_distances:
+            num_sum, num_count = numeric_distance_matrix(
+                Xn,
+                Yn,
+                self.numeric_indices,
+                ranges=self.numeric_ranges,
+                missing_strategy=self.missing_strategy,
+                weights=num_w,
+                scale_window=self.scale_window,
+                h=self._h_numeric,
+            )
 
-        cat_nom_sum, cat_nom_count = nominal_distance_matrix(
-            Xn,
-            Yn,
-            self.categorical_nominal_indices,
-            missing_strategy=self.missing_strategy,
-            weights=cat_nom_w)
+            cat_nom_sum, cat_nom_count = nominal_distance_matrix(
+                Xn,
+                Yn,
+                self.categorical_nominal_indices,
+                missing_strategy=self.missing_strategy,
+                weights=cat_nom_w)
 
-        cat_ord_sum, cat_ord_count = ordinal_distance_matrix(
-            Xn,
-            Yn,
-            self.categorical_ordinal_indices,
-            metadata=self.cat_ord_metadata,
-            missing_strategy=self.missing_strategy,
-            calculation_type=self.categorical_ordinal_calculation_type,
-            weights=cat_ord_w,
-        )
+            cat_ord_sum, cat_ord_count = ordinal_distance_matrix(
+                Xn,
+                Yn,
+                self.categorical_ordinal_indices,
+                metadata=self.cat_ord_metadata,
+                missing_strategy=self.missing_strategy,
+                calculation_type=self.categorical_ordinal_calculation_type,
+                weights=cat_ord_w,
+            )
 
-        bin_asym_sum, bin_asym_count = binary_asymmetric_distance_matrix(
-            Xn,
-            Yn,
-            self.binary_asymmetric_indices,
-            missing_strategy=self.missing_strategy,
-            weights=bin_asym_w,
-        )
+            bin_asym_sum, bin_asym_count = binary_asymmetric_distance_matrix(
+                Xn,
+                Yn,
+                self.binary_asymmetric_indices,
+                missing_strategy=self.missing_strategy,
+                weights=bin_asym_w,
+            )
 
-        bin_sym_sum, bin_sym_count = binary_symmetric_distance_matrix(
-            Xn,
-            Yn,
-            self.binary_symmetric_indices,
-            missing_strategy=self.missing_strategy,
-            weights=bin_sym_w,
-        )
+            bin_sym_sum, bin_sym_count = binary_symmetric_distance_matrix(
+                Xn,
+                Yn,
+                self.binary_symmetric_indices,
+                missing_strategy=self.missing_strategy,
+                weights=bin_sym_w,
+            )
 
-        ratio_sum, ratio_count = ratio_scale_distance_matrix(
-            Xn,
-            Yn,
-            self.ratio_scale_indices,
-            ranges=self.ratio_ranges,
-            missing_strategy=self.missing_strategy,
-            weights=ratio_w,
-            scale_window=self.scale_window,
-            h=self._h_ratio,
-        )
-        total_sum = num_sum + cat_nom_sum + cat_ord_sum + bin_asym_sum + bin_sym_sum + ratio_sum
-        total_count = num_count + cat_nom_count + cat_ord_count + bin_asym_count + bin_sym_count + ratio_count
-        if total_count[0, 0] == 0:
-            return float('nan')
+            ratio_sum, ratio_count = ratio_scale_distance_matrix(
+                Xn,
+                Yn,
+                self.ratio_scale_indices,
+                ranges=self.ratio_ranges,
+                missing_strategy=self.missing_strategy,
+                weights=ratio_w,
+                scale_window=self.scale_window,
+                h=self._h_ratio,
+            )
+            total_sum = num_sum + cat_nom_sum + cat_ord_sum + bin_asym_sum + bin_sym_sum + ratio_sum
+            total_count = num_count + cat_nom_count + cat_ord_count + bin_asym_count + bin_sym_count + ratio_count
+            if total_count[0, 0] == 0:
+                return float('nan')
 
-        return float(total_sum[0, 0] / total_count[0, 0])
+            return float(total_sum[0, 0] / total_count[0, 0])
+        else:
+            bin_asym_sum, bin_asym_count = binary_asymmetric_distance_matrix(
+                Xn,
+                Yn,
+                self.binary_asymmetric_indices,
+                missing_strategy=self.missing_strategy,
+                weights=bin_asym_w,
+            )
+
+            bin_sym_sum, bin_sym_count = binary_symmetric_distance_matrix(
+                Xn,
+                Yn,
+                self.binary_symmetric_indices,
+                missing_strategy=self.missing_strategy,
+                weights=bin_sym_w,
+            )
+
+            cat_nom_sum, cat_nom_count = nominal_distance_matrix(
+                Xn,
+                Yn,
+                self.categorical_nominal_indices,
+                missing_strategy=self.missing_strategy,
+                weights=cat_nom_w
+            )
+            cat_sum = 0.0
+            cat_cnt  = 0.0
+
+            if self.binary_asymmetric_indices:
+                s,c = binary_asymmetric_distance_matrix(
+                    Xn, Yn,
+                    self.binary_asymmetric_indices,
+                    missing_strategy=self.missing_strategy,
+                    weights=bin_asym_w,
+                )
+                cat_sum += s[0,0]; cat_cnt += c[0,0]
+
+            if self.binary_symmetric_indices:
+                s,c = binary_symmetric_distance_matrix(
+                    Xn, Yn,
+                    self.binary_symmetric_indices,
+                    missing_strategy=self.missing_strategy,
+                    weights=bin_sym_w,
+                )
+                cat_sum += s[0,0]; cat_cnt += c[0,0]
+
+            if self.categorical_nominal_indices:
+                s,c = nominal_distance_matrix(
+                    Xn, Yn,
+                    self.categorical_nominal_indices,
+                    missing_strategy=self.missing_strategy,
+                    weights=cat_nom_w,
+                )
+                cat_sum += s[0,0]; cat_cnt += c[0,0]
+
+            if cat_cnt == 0:
+                return float("nan")
+
+            cat_dist = cat_sum / cat_cnt
+            threshold = 1.0 / self.p_cat
+
+            if cat_dist > threshold:
+                return 1.0
+
+            num_sum, num_count = numeric_distance_matrix(
+                Xn, Yn,
+                self.numeric_indices,
+                ranges=self.numeric_ranges,
+                missing_strategy=self.missing_strategy,
+                weights=num_w,
+                scale_window=self.scale_window,
+                h=self._h_numeric,
+            )
+            cat_ord_sum, cat_ord_count = ordinal_distance_matrix(
+                Xn, Yn,
+                self.categorical_ordinal_indices,
+                metadata=self.cat_ord_metadata,
+                missing_strategy=self.missing_strategy,
+                calculation_type=self.categorical_ordinal_calculation_type,
+                weights=cat_ord_w,
+            )
+            ratio_sum, ratio_count = ratio_scale_distance_matrix(
+                Xn, Yn,
+                self.ratio_scale_indices,
+                ranges=self.ratio_ranges,
+                missing_strategy=self.missing_strategy,
+                weights=ratio_w,
+                scale_window=self.scale_window,
+                h=self._h_ratio,
+            )
+
+            total_sum = num_sum + cat_ord_sum + ratio_sum
+            total_cnt = num_count + cat_ord_count + ratio_count
+
+            if total_cnt[0,0] == 0:
+                return float("nan")
+            return float(total_sum[0,0] / total_cnt[0,0])
+
 
     def similarity(self, a: Any, b: Any) -> float:
         """

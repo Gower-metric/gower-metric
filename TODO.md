@@ -42,6 +42,7 @@
 - ~~missing values~~
 - mixed types
 - ~~kNN bandwidth~~
+- ~~conditional distances~~
 
 ## Examples:
 - categorical nominal
@@ -54,7 +55,9 @@
 
 ## Additional features:
 - ~~normalization~~
-- continous distances
+- ~~continous distances~~:
+  - ~~1/pcat~~
+  - auto expand to k/pcat, where k > 1
 - refactor calculate bandwidth for kde and kNN
 - ~~Podani for categorical ordinal~~
 - ~~Podani weight optimization~~
