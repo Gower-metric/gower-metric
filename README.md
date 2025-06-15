@@ -301,4 +301,5 @@ However, this does not imply that the Gower metric is inherently the best for al
 Thus, the best approach is to select a distance metric that best aligns with the specific problem at hand.
 
 ## References
-- [Distances with mixed type variables some modified Gower's coefficients](https://arxiv.org/abs/2101.02481)
+- [Distances with mixed type variables some modified Gower's coefficients (2021)](https://arxiv.org/abs/2101.02481)
+- [A General Coefficient of Similarity and Some of Its Properties (1971)](https://www.jstor.org/stable/2528823)
