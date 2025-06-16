@@ -11,12 +11,37 @@ Part of [CRAN project](https://cran.r-project.org/web/packages/gower/index.html)
 
 We made comparison on two subsets created from `iris.csv` file. First contains rows 0-9, second 5-14. Then we compare then accordingly, row 0 with row 5, row 1 with row 6, etc. The result is list with 10 elements. 
 
-Environment | 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 |
-| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| CRAN gower | 0.34606061 | 0.17939394 | 0.14303030 | 0.09636364 | 0.20424242 | 0.23636364 | 0.16000000 | 0.19939394 | 0.19818182 | 0.45030303 |
-| Python | 0.34606061 | 0.17939394 | 0.14303030 | 0.09636364 | 0.20424242 | 0.23636364 | 0.16000000 | 0.19939394 | 0.19818182 | 0.45030303 |
+| row | CRAN gower |   Pythoh   |
+|:---:|:----------:|:----------:|
+| 0   | 0.34606061 | 0.34606061 |
+| 1   | 0.17939394 | 0.17939394 |
+| 2   | 0.14303030 | 0.14303030 |
+| 3   | 0.09636364 | 0.09636364 |
+| 4   | 0.20424242 | 0.20424242 |
+| 5   | 0.23636364 | 0.23636364 |
+| 6   | 0.16000000 | 0.16000000 |
+| 7   | 0.19939394 | 0.19939394 |
+| 8   | 0.19818182 | 0.19818182 |
+| 9   | 0.45030303 | 0.45030303 |
 
-Every row contains 4 numeric and 1 categorical variable. Overall range is calculated on both sets. Scale method is set to `range`. In original algorithm, missing data are not mentioned, thus authors skip them.
+Every row contains 4 numeric and 1 categorical data type. Overall range is calculated on both sets, combined. Scale method is set to `range`. In original algorithm, missing data are not mentioned, thus authors skip them. They are not present in our data.
+
 
 ## Daisy gower
+| row | Daisy Gower (6) | Daisy Gower (7) | Python (6)      | Python (7)      |
+|:---:|:---------------:|:---------------:|:---------------:|:---------------:|
+| 1   | 0.07683616      | 0.04444444      | 0.07683616      | 0.04444444      |
+| 2   | 0.12961394      | 0.05833333      | 0.12961394      | 0.05833333      |
+| 3   | 0.12744821      | 0.03394539      | 0.12744821      | 0.03394539      |
+| 4   | 0.13455744      | 0.03672316      | 0.13455744      | 0.03672316      |
+| 5   | 0.07405838      | 0.04722222      | 0.07405838      | 0.04722222      |
+| 6   | 0.00000000      | 0.10461394      | 0.00000000      | 0.10461394      |
+| 7   | 0.10461394      | 0.00000000      | 0.10461394      | 0.00000000      |
+| 8   | 0.08733522      | 0.03394539      | 0.08733522      | 0.03394539      |
+| 9   | 0.16572505      | 0.06111111      | 0.16572505      | 0.06111111      |
+| 10  | 0.12622411      | 0.06172316      | 0.12622411      | 0.06172316      |
 
+In example above, we compare the same dataset using daisy module from R and our Python implementation. Please be aware, that rows ids in R are 1-based compared to 0-based Python. Results are different due to calculating range scaling on all data not only first 20 rows. 
+
+## Speed
+Here we compare speed between our Python and R implementation.
