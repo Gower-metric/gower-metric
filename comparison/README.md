@@ -49,4 +49,4 @@ Here we compare speed between our Python and R implementation. All calculation a
 ### CRAN gower
 Firstly, we consider cran gower based on openMP C implementation. We compare first row with second, second with third, etc. Results below.
 
-![CRAN gower speed comparison](comparison/images/cran_gower_similarity_comparison.png)
+![CRAN gower speed comparison](./imgs/cran_gower_similarity_comparison.png)
