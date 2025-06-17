@@ -50,3 +50,10 @@ Here we compare speed between our Python and R implementation. All calculation a
 Firstly, we consider cran gower based on openMP C implementation. We compare first row with second, second with third, etc. Results below.
 
 ![CRAN gower speed comparison](./imgs/cran_gower_similarity_comparison.png)
+
+### Daisy gower
+In contrary, using daisy module we can compare all rows with each other, which creates a matrix of distance. In our case, we reduced used data to 1000 rows, due to pure Python optimization (for now). Results below.
+
+![Daisy gower speed comparison](./imgs/daisy_gower_distance_comparison.png)
+
+For now, there is no feature to calculate whole matrix automatically, you have to do it manually. We will add this feature in the future. For now, we boosted performance by using [Joblib](https://joblib.readthedocs.io/en/latest/index.html) framework.
