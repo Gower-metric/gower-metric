@@ -6,7 +6,7 @@ from time import perf_counter
 
 from gower_similarity.core.similarity import GowerSimilarity
 
-df = pd.read_csv("comparison/data/adult_reduced.csv").head(1000)
+df = pd.read_csv("your_path/adult_reduced.csv").head(1000)
 
 feature_types = {
     "age": "ratio_scale_interval",
