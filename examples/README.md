@@ -26,6 +26,7 @@ f_types = {
 }
 gs = GowerSimilarity(f_types).fit(data)
 ```
+Note: using numpy array with no numerical data, please set `dtype=object` to avoid issues with data types.
 - pandas DataFrame: pd.DataFrame
 ```python
 import pandas as pd
@@ -47,3 +48,56 @@ gs = GowerSimilarity(f_types).fit(iris)
 Do not worry, under the hood, we convert pandas DataFrame to numpy array, so you can use the same API for both data types.
 
 ## Calculating similarity and distance between rows
+Created API allows you to calculate similarity and distance between rows using separate methods.
+
+```python
+import numpy as np
+
+from gower_similarity.core.similarity import GowerSimilarity
+
+data = np.array([['A'], ['B'], ['C'], ['A']], dtype=object)
+gs = GowerSimilarity({0: 'categorical_nominal'}).fit(data)
+
+row_0 = data[0]
+row_3 = data[3]
+
+similarity = gs.similarity(row_0, row_3)
+distance = gs.distance(row_0, row_3)
+```
+
+## Creating matrix
+For now, there is no API endpoint to create whole matrix using provided data. However, you can do it manually using previous methods in a loop.
+
+```python
+import pandas as pd
+import numpy as np
+
+from gower_similarity.core.similarity import GowerSimilarity
+
+df = pd.DataFrame({
+    "age": [23, 45, 23, 31],
+    "gender": ["Female", "Male", "Female", "Male"],
+    "income": [35000, 81000, 40000, 30000],
+    "education": ["low", "medium", "high", "low"],
+    "married": [0, 1, 1, 0],
+    "infected": [1, 1, 0, 0],
+})
+
+feature_types = {
+    "age": "ratio_scale_interval",
+    "gender": "categorical_nominal",
+    "income": "numeric",
+    "education": "categorical_ordinal",
+    "married": "binary_symmetric",
+    "infected": "binary_asymmetric",
+}
+
+gs = GowerSimilarity(feature_types, scale="range").fit(df)
+
+n = len(df)
+matrix = np.zeros((n, n))
+for i in range(n):
+    for j in range(n):
+        matrix[i, j] = gs.distance(df.iloc[i], df.iloc[j])
+```
+To make matrix based on similarity, just use `gs.similarity` instead of `gs.distance`.
