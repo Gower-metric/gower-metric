@@ -105,6 +105,37 @@ To make matrix based on similarity, just use `gs.similarity` instead of `gs.dist
 ## Advanced usage
 We also provide basic weighting functionality. You can set weights for each feature type in the `GowerSimilarity` constructor. The weights should be provided as a dictionary where keys are feature names and values are weights. Example script can be found in `examples/scripts/weight.py`.
 
+### Weights
+To set weights, you can create a dictionary and pass it to the `GowerSimilarity` constructor as follows:
+
+```python
+import pandas as pd
+
+from gower_similarity.core.similarity import GowerSimilarity
+
+df = pd.read_csv("comparison/data/adult_reduced.csv").head(5)
+
+feature_types = {
+    "age": "ratio_scale_interval",
+    "education_num": "ratio_scale_interval",
+    "race": "categorical_nominal",
+    "sex": "categorical_nominal",
+    "hours_per_week": "ratio_scale_interval",
+}
+
+feature_weights = {
+    0: 1.0,
+    1: 2.0,
+    2: 3.0,
+    3: 4.0,
+    4: 5.0,
+}
+
+gs = GowerSimilarity(feature_types, feature_weights=feature_weights).fit(df)
+```
+
+Please note that specific values are assigned to column index, not name.
+
 ### Why use joblib?
 
 Let's go back to `adult_reduced.csv` example and reduce dataset to first 5 000 rows. If you want to calculate similarity for all rows, it can take a while. To speed up the process, we can use `joblib` to parallelize the computation.

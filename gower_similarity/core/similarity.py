@@ -35,7 +35,7 @@ class GowerSimilarity:
     def __init__(
         self,
         feature_types: Dict[Union[int, str], str],
-        feature_weights: Optional[Union[Dict[Union[int, str], float], str]] = None,
+        feature_weights: Optional[Union[Dict[int, float], str]] = None,
         scale: Optional[str] = None,
         missing_strategy: Optional[str] = None,
         categorical_ordinal_calculation_type: Optional[str] = None,

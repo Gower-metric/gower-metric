@@ -24,6 +24,7 @@ KDEpy = "^1.1.11"
 optuna = "^4.1.0"
 hdbscan = "^0.8.39"
 pytest-asyncio = "^0.26.0"
+joblib = "^1.5.1"
 
 [tool.poetry.dev-dependencies]
 black = "^22.8.0"
