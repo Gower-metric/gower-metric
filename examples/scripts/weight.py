@@ -2,7 +2,6 @@ import numpy as np
 import pandas as pd
 
 from joblib import Parallel, delayed, cpu_count
-from time import perf_counter
 from tqdm.auto import tqdm
 
 from gower_similarity.core.similarity import GowerSimilarity

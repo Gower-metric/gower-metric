@@ -103,7 +103,7 @@ for i in range(n):
 To make matrix based on similarity, just use `gs.similarity` instead of `gs.distance`.
 
 ## Advanced usage
-We also provide basic weighting functionality. You can set weights for each feature type in the `GowerSimilarity` constructor. The weights should be provided as a dictionary where keys are feature names and values are weights. Example script can be found in `examples/scripts/weight.py`.
+We also provide basic weighting functionality. You can set weights for each feature type in the `GowerSimilarity` constructor. The weights should be provided as a dictionary where keys are columns indexes and values are weights. Example script can be found in `examples/scripts/weight.py`.
 
 ### Weights
 To set weights, you can create a dictionary and pass it to the `GowerSimilarity` constructor as follows:
@@ -138,7 +138,7 @@ Please note that specific values are assigned to column index, not name.
 
 ### Why use joblib?
 
-Let's go back to `adult_reduced.csv` example and reduce dataset to first 5 000 rows. If you want to calculate similarity for all rows, it can take a while. To speed up the process, we can use `joblib` to parallelize the computation.
+Let's go back to `adult_reduced.csv` example and reduce dataset to first 5 000 rows. If you want to calculate similarity for all rows, it can take a while. To speed up the process, you can use `joblib` to parallelize the computation.
 
 No joblib | joblib | joblib half matrix |
 | :---: | :---: | :---: |
