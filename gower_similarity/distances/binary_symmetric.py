@@ -50,7 +50,7 @@ def binary_symmetric_distance_matrix(
 
         diff, mask = apply_missing_strategy(diff, present, missing_strategy)
 
-        w = float(weights[pos]) if weights is not None else 1.0
+        w = weights[pos] if weights is not None else 1.0
         sum_diff += diff * w
         count_present += mask.astype(float) * w
 

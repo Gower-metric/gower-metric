@@ -92,7 +92,7 @@ def ordinal_distance_matrix(
 
         dist, mask = apply_missing_strategy(dist, present, missing_strategy)
 
-        w = float(weights[pos]) if weights is not None else 1.0
+        w = weights[pos] if weights is not None else 1.0
         sum_diff += dist * w
         count_present += mask.astype(float) * w
 

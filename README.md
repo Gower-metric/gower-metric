@@ -9,6 +9,10 @@ To preserve data integrity, tailored formulas for mixed data types are necessary
 
 Implementation of Gower's Metric in Python.
 
+## How to Python Gower
+
+Before we dive into details about Gower's metric, please feel free to check out [example](./examples/) and [comparison](./comparison/) sections.
+
 ## Gower characteristics
 
 In 1971, Gower introduced a general similarity coefficient that encompasses several existing measures as special cases, making it adaptable to various scenarios.
