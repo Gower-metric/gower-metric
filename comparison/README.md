@@ -57,3 +57,7 @@ In contrary, using daisy module we can compare all rows with each other, which c
 ![Daisy gower speed comparison](./imgs/daisy_gower_distance_comparison.png)
 
 For now, there is no feature to calculate whole matrix automatically, you have to do it manually. We will add this feature in the future. For now, we boosted performance by using [Joblib](https://joblib.readthedocs.io/en/latest/index.html) framework.
+
+## Weights and handling NaN values
+
+In addition to the above comparisons, we also tested how our Python implementation handles weights and NaN values compared to the daisy module in R. Both scripts can be found in the `comparison/scripts/daisy/weights` and `comparison/scripts/daisy/nan_values` directories.
