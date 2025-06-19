@@ -101,3 +101,16 @@ for i in range(n):
         matrix[i, j] = gs.distance(df.iloc[i], df.iloc[j])
 ```
 To make matrix based on similarity, just use `gs.similarity` instead of `gs.distance`.
+
+## Advanced usage
+We also provide basic weighting functionality. You can set weights for each feature type in the `GowerSimilarity` constructor. The weights should be provided as a dictionary where keys are feature names and values are weights. Example script can be found in `examples/scripts/weight.py`.
+
+### Why use joblib?
+
+Let's go back to `adult_reduced.csv` example and reduce dataset to first 5 000 rows. If you want to calculate similarity for all rows, it can take a while. To speed up the process, we can use `joblib` to parallelize the computation.
+
+No joblib | joblib | joblib half matrix |
+| :---: | :---: | :---: |
+| 1199.16 s | 169.11 s | 86.39 s |
+
+Used script can be found in `examples/scripts/matrix_speedup.py`.
