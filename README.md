@@ -9,6 +9,14 @@ To preserve data integrity, tailored formulas for mixed data types are necessary
 
 Implementation of Gower's Metric in Python.
 
+## Compatibility
+
+| | Python 3.9 | Python 3.10 | Python 3.11 | Python 3.12 | Python 3.13 |
+|:---:|:----------:|:-----------:|:-----------:|:-----------:|:-----------:|
+| Linux | ![yes] | ![yes] | ![yes] | ![yes] | ![yes] |
+| Windows | ![yes] | ![yes] | ![yes] | ![yes] | ![yes] |
+| macOS | ![yes] | ![yes] | ![yes] | ![yes] | ![yes] |
+
 ## How to Python Gower
 
 Before we dive into details about Gower's metric, please feel free to check out [example](./examples/) and [comparison](./comparison/) sections.
