@@ -10,10 +10,10 @@ packages = [
 ]
 
 [tool.poetry.dependencies]
-python = "^3.9"
+python = "^3.10"
 
-numpy = "^2.0.1"
-pandas = "^2.2.3"
+numpy = "^2.2.6"
+pandas = "^2.3.0"
 
 [tool.poetry.dev-dependencies]
 black = "^22.8.0"

@@ -1,9 +1,9 @@
 requires = ["tox>=4"]
 
-env_list = ["3.9", "3.10", "3.11", "3.12", "3.13"]
+env_list = ["3.10", "3.11", "3.12", "3.13"]
 
 deps = ["poetry>=2.0"]
-commands_pre = ["poetry install --no-root --no-interaction"]
+commands_pre = ["poetry install --sync --no-root --no-interaction"]
 
 [env_run_base]
 description = "run tests"
