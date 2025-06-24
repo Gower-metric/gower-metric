@@ -60,7 +60,12 @@ def ratio_scale_distance_matrix(
         diff, mask = apply_missing_strategy(diff, present, missing_strategy)
 
         w = weights[pos] if weights is not None else 1.0
-        sum_diff += diff * w
-        count_present += mask.astype(float) * w
+
+        if w != 1.0:
+            sum_diff += diff * w
+            count_present += mask.astype(float) * w
+        else:
+            sum_diff += diff
+            count_present += mask.astype(float)
 
     return sum_diff, count_present

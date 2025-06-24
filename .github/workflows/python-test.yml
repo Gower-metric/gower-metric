@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - main
+      - refactor_newapi
   workflow_dispatch:
 
 jobs:
@@ -11,7 +12,7 @@ jobs:
     strategy:
       fail-fast: true
       matrix:
-        python-version: ["3.12"]
+        python-version: ["3.9", "3.10", "3.11", "3.12"]
         os: [macos-latest, ubuntu-latest, windows-latest]
     runs-on: ${{ matrix.os }}
     steps:
@@ -38,4 +39,4 @@ jobs:
 
       - name: Run tests with pytest
         run: |
-            poetry run pytest tests/UnitTestsGowerMetric.py tests/test_metrics.py
+            poetry run pytest tests
