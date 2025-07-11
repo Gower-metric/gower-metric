@@ -136,6 +136,10 @@ gs = GowerSimilarity(feature_types, feature_weights=feature_weights).fit(df)
 
 Please note that specific values are assigned to column index, not name.
 
+### Compatibility with other libraries
+
+For time writing this section, there is no full compatibility with other libraries. However, one can use our custom API to calculate similarity and distance between rows, as well as create a matrix. In `examples/scripts/scktlrn_knn.ipynb` we provide quick guide how to integrate our library with scikit-learn kNN algorithm. 
+
 ### Why use joblib?
 
 Let's go back to `adult_reduced.csv` example and reduce dataset to first 5 000 rows. If you want to calculate similarity for all rows, it can take a while. To speed up the process, you can use `joblib` to parallelize the computation.
