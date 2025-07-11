@@ -138,7 +138,7 @@ Please note that specific values are assigned to column index, not name.
 
 ### Compatibility with other libraries
 
-For time writing this section, there is no full compatibility with other libraries. However, one can use our custom API to calculate similarity and distance between rows, as well as create a matrix. In `examples/scripts/scktlrn_knn.ipynb` we provide quick guide how to integrate our library with scikit-learn kNN algorithm. 
+For time writing this section, there is no full compatibility with other libraries. However, one can use our custom API to calculate similarity and distance between rows, as well as create a matrix. In `examples/scripts/scktlrn_knn.ipynb` we provide quick guide how to integrate our library with scikit-learn kNN algorithm. What is more, we also provide the script with explanation how to use our library with scikit-learn HDBSCAN algorithm in `examples/scripts/scktlrn_hdbscan.ipynb`.
 
 ### Why use joblib?
 
