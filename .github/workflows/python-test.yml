@@ -76,6 +76,10 @@ jobs:
             gower
             cluster
             base
+          
+      - name: Install rpy2 in existing venv
+        run: |
+            poetry run pip install rpy2
 
       - name: Run tests with pytest
         run: |
