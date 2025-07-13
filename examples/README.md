@@ -140,6 +140,23 @@ Please note that specific values are assigned to column index, not name.
 
 For time writing this section, there is no full compatibility with other libraries. However, one can use our custom API to calculate similarity and distance between rows, as well as create a matrix. In `examples/scripts/scktlrn_knn.ipynb` we provide quick guide how to integrate our library with scikit-learn kNN algorithm. What is more, we also provide the script with explanation how to use our library with scikit-learn HDBSCAN algorithm in `examples/scripts/scktlrn_hdbscan.ipynb`.
 
+### Scikit-learn pairwise_distances
+
+One would want to simplify the process of creating a matrix using scikit-learn's `pairwise_distances` function. It is possible to achieve that, however it requires some additional steps.
+
+```python
+# after we fit our gower, we have to create help function which will be passed to pairwise_distances
+def _gower_distance(x, y):
+    """
+    Compute Gower distance between two vectors.
+    """
+    return gs.distance(x, y)
+
+matrix = pairwise_distances(df, metric=_gower_distance, n_jobs=-1, ensure_all_finite=False)
+```
+
+It is worth to mention that one of gower's idea is to handle missing data as user wants thus `ensure_all_finite = False` is required to allow missing data in the input DataFrame. Full code can be found in `examples/scripts/scktlrn_pairwise_distances.ipynb`.
+
 ### Why use joblib?
 
 Let's go back to `adult_reduced.csv` example and reduce dataset to first 5 000 rows. If you want to calculate similarity for all rows, it can take a while. To speed up the process, you can use `joblib` to parallelize the computation.

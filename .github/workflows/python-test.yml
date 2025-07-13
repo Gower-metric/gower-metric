@@ -73,9 +73,14 @@ jobs:
         with:
           r-version: '4.5.1'
           install-r-packages: |
-            gower
             cluster
             base
+          
+      - name: Install directly gower from GitHub
+        run: |
+          Rscript -e "if(!require(drat)) install.packages('drat')"
+          Rscript -e "drat::addRepo('markvanderloo')"
+          Rscript -e "install.packages('gower',type='source')"
           
       - name: Install rpy2 in existing venv
         run: |
