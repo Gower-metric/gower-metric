@@ -145,17 +145,37 @@ For time writing this section, there is no full compatibility with other librari
 One would want to simplify the process of creating a matrix using scikit-learn's `pairwise_distances` function. It is possible to achieve that, however it requires some additional steps.
 
 ```python
-# after we fit our gower, we have to create help function which will be passed to pairwise_distances
+from sklearn.metrics import pairwise_distances
+
+# after we fit our gower, we have to create additional function to compute distance
 def _gower_distance(x, y):
     """
     Compute Gower distance between two vectors.
     """
     return gs.distance(x, y)
 
-matrix = pairwise_distances(df, metric=_gower_distance, n_jobs=-1, ensure_all_finite=False)
+matrix = pairwise_distances(df, metric = _gower_distance, n_jobs = -1, ensure_all_finite = False)
 ```
 
 It is worth to mention that one of gower's idea is to handle missing data as user wants thus `ensure_all_finite = False` is required to allow missing data in the input DataFrame. Full code can be found in `examples/scripts/scktlrn_pairwise_distances.ipynb`.
+
+### SciPy spatial distance
+
+The idea is very similar to the one used in scikit-learn. You can use `scipy.spatial.distance.pdist` to calculate distance between rows.
+```python
+from scipy.spatial.distance import pdist, squareform
+
+def _gower_distance(x, y):
+        """
+        Compute Gower distance between two vectors.
+        """
+        return gs.distance(x, y)
+    
+array_scipy = pdist(df, metric = _gower_distance)
+matrix_scipy = squareform(array_scipy)
+```
+
+Script can be found in `examples/scripts/scipy_pdist.ipynb`.
 
 ### Why use joblib?
 

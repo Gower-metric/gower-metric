@@ -150,39 +150,34 @@ git clone https://github.com/mwardynski/gower-similarity.git
 
 In order to import class, which calculate Gower's metric, you need to import it as follows:
 ```python
-from gowermetric.GowerMetric import MyGowerMetric
+from gower_similarity.core.similarity import GowerSimilarity
 ```
 
 then initialize passing the variable types:
 ```python
-gower = MyGowerMetric(
-    dtypes=np.array(
-        [DataType.CATEGORICAL_NOMINAL,
-            DataType.CATEGORICAL_ORDINAL,
-            DataType.RATIO_SCALE,
-            DataType.RATIO_SCALE,
-            DataType.RATIO_SCALE,
-            DataType.BINARY_SYMMETRIC,
-            DataType.BINARY_SYMMETRIC,
-            DataType.BINARY_ASYMMETRIC]
-    ),
-    nan_values_handling="max_dist"
-)
+data = [[1, 'a', 3.5], [2, 'b', 4.0], [3, 'a', 2.5], [4, 'c', 5.0]]
+
+feature_types = {
+    0: "ratio_scale_interval",
+    1: "categorical_nominal",
+    2: "ratio_scale_interval"
+}
+
+gs = GowerSimilarity(feature_types=feature_types)
 ```
 
 fit it to the data:
 ```python
-gower.fit(data)
+gs.fit(data)
 ```
 
 and finally run for two samples from the dataset:
 ```python
-res = gower(data[2], data[4])
+similarity = gs.similarity(data[0], data[1])
+distance = gs.distance(data[0], data[1])
 ```
 
-[HINT] To calculate the pairwise distances for the entire dataset, you can use an auxiliary function, like: `scipy.spatial.distance.pdist` or `sklearn.metrics.pairwise.pairwise_distances`.
-
-[HINT_2] Inside `utils.py` file, you can find a function that helps to convert the dataset to the format that can be used by the `MyGowerMetric` class.
+[HINT] To calculate the pairwise distances for the entire dataset, you can do it manually or use an auxiliary function, like: `scipy.spatial.distance.pdist` or `sklearn.metrics.pairwise_distances`.
 
 ## Results for metrics comparison
 

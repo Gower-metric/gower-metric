@@ -38,7 +38,7 @@ jobs:
 
       - name: Install scikit-learn
         run: |
-            poetry run pip install scikit-learn
+            poetry run pip install scikit-learn scipy
 
       - name: Run tests with pytest
         run: |
