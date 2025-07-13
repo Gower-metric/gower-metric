@@ -75,12 +75,10 @@ jobs:
       - uses: r-lib/actions/setup-r@v2
         with:
           r-version: '4.5.1'
-          install-r-packages: |
-            cluster
-            base
           
       - name: Install directly gower from GitHub
         run: |
+          Rscript -e "if(!require(cluster)) install.packages('cluster')"
           Rscript -e "if(!require(drat)) install.packages('drat')"
           Rscript -e "drat::addRepo('markvanderloo')"
           Rscript -e "install.packages('gower',type='source')"
