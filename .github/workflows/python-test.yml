@@ -36,6 +36,9 @@ jobs:
         run:  |
             poetry sync
 
+      - name: Install scikit-learn
+        run: |
+            poetry run pip install scikit-learn
 
       - name: Run tests with pytest
         run: |
