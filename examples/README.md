@@ -184,6 +184,32 @@ matrix_scipy = squareform(array_scipy)
 
 Script can be found in `examples/scripts/scipy_pdist.ipynb`.
 
+### SciPy cophenetic correlation coefficient
+
+You can also use build in `scipy.cluster.hierarchy.cophenet` to calculate cophenetic correlation coefficient for the distance matrix created with Gower's similarity API. 
+
+```python
+from scipy.spatial.distance import pdist
+from scipy.cluster.hierarchy import single, cophenet
+
+from gower_similarity.core.similarity import GowerSimilarity
+
+# create additional function to compute distance using custom API
+def _gower_distance(x, y):
+    """
+    Compute Gower distance between two vectors.
+    """
+    return gs.distance(x, y)
+
+Z = single(pdist(df, metric=_gower_distance))
+c, coph_dists = cophenet(Z, pdist(df, metric=_gower_distance))
+```
+
+> [!Note]
+> In order to display the results as a matrix, one should use `scipy.spatial.distance.squareform` module.
+
+Script can be found in `examples/scripts/scipy_cophenet.ipynb`.
+
 ### Why use joblib?
 
 Let's go back to `adult_reduced.csv` example and reduce dataset to first 5 000 rows. If you want to calculate similarity for all rows, it can take a while. To speed up the process, you can use `joblib` to parallelize the computation.
