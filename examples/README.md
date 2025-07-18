@@ -10,11 +10,13 @@ To make library work properly, user HAS TO provide accurate feature types. Long 
 - ratio_scale_interval
 - numeric
 
-Please do remember, there is no automatic feature type detection. One must be aware of data they use and provide. Any potential mistakes could occur due to mislabeling feature types, so please be careful and double-check your input data types.
+> [!Important]
+> Please do remember, there is no automatic feature type detection. One must be aware of data they use and provide. Any potential mistakes could occur due to mislabeling feature types, so please be careful and double-check your input data types.
 
 ## Input data type - format
-There are two supported input data types:
-- numpy array: np.array
+There are two supported input data types.
+
+### Numpy array
 ```python
 import numpy as np
 
@@ -26,8 +28,10 @@ f_types = {
 }
 gs = GowerSimilarity(f_types).fit(data)
 ```
-Note: using numpy array with no numerical data, please set `dtype=object` to avoid issues with data types.
-- pandas DataFrame: pd.DataFrame
+> [!Note]
+> Using numpy array with no numerical data, please set `dtype = object` to avoid issues with data types.
+
+### Pandas DataFrame
 ```python
 import pandas as pd
 
@@ -100,7 +104,8 @@ for i in range(n):
     for j in range(n):
         matrix[i, j] = gs.distance(df.iloc[i], df.iloc[j])
 ```
-To make matrix based on similarity, just use `gs.similarity` instead of `gs.distance`.
+> [!Tip]
+> To make matrix based on similarity, just use `gs.similarity` instead of `gs.distance`.
 
 ## Advanced usage
 We also provide basic weighting functionality. You can set weights for each feature type in the `GowerSimilarity` constructor. The weights should be provided as a dictionary where keys are columns indexes and values are weights. Example script can be found in `examples/scripts/weight.py`.
@@ -156,8 +161,10 @@ def _gower_distance(x, y):
 
 matrix = pairwise_distances(df, metric = _gower_distance, n_jobs = -1, ensure_all_finite = False)
 ```
+> [!Warning]
+> It is worth to mention that one of gower's idea is to handle missing data as user wants thus `ensure_all_finite = False` is required to allow missing data in the input DataFrame. 
 
-It is worth to mention that one of gower's idea is to handle missing data as user wants thus `ensure_all_finite = False` is required to allow missing data in the input DataFrame. Full code can be found in `examples/scripts/scktlrn_pairwise_distances.ipynb`.
+Full code can be found in `examples/scripts/scktlrn_pairwise_distances.ipynb`.
 
 ### SciPy spatial distance
 

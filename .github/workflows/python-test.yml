@@ -76,7 +76,7 @@ jobs:
         with:
           r-version: '4.5.1'
           
-      - name: Install directly gower from GitHub
+      - name: Install R packages
         run: |
           Rscript -e "if(!require(cluster)) install.packages('cluster')"
           Rscript -e "if(!require(drat)) install.packages('drat')"
