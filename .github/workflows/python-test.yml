@@ -62,9 +62,6 @@ jobs:
           path: ./.venv
           key: ${{ matrix.os }}-venv-${{ hashFiles('**/uv.lock') }}
 
-      - name: Install the project dependencies
-        run: uv sync
-
       - uses: r-lib/actions/setup-r@v2
         with:
           r-version: '4.5.1'
@@ -75,10 +72,9 @@ jobs:
           Rscript -e "if(!require(drat)) install.packages('drat')"
           Rscript -e "drat::addRepo('markvanderloo')"
           Rscript -e "install.packages('gower',type='source')"
-          
-      - name: Install rpy2 in existing venv
-        run: |
-            uv run pip install rpy2
+
+      - name: Install the project dependencies
+        run: uv sync
 
       - name: Run tests with pytest
         run: |

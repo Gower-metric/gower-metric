@@ -110,7 +110,7 @@ The problem of finding the optimal weights is expressed as follows:
 
 How should one select the weights for Gower’s distance metric in order to optimize the Cophenetic Correlation Coefficient (CPCC) of the resulting hierarchical clustering?
 
-Implementation based on `scipy.cluster.hierarchy.cophenet` which uses the formula:
+Implementation based on [scipy.cluster.hierarchy.cophenet](https://docs.scipy.org/doc/scipy/reference/generated/scipy.cluster.hierarchy.cophenet.html) which uses the formula:
 
 $C = \frac{\sum_{i<j}(x(i,j)-\bar{x})(t(i,j)-\bar{t})}{\sqrt{(\sum_{i<j}(x(i,j)-\bar{x})^2)(\sum_{i<j}(t(i,j)-\bar{t})^2)}}$
 
