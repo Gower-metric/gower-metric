@@ -1,27 +1,25 @@
-[tool.poetry]
+[project]
+authors = [
+    {name = "Arch4ngel21", email = "adammichal657@gmail.com"},
+]
+license = {text = "MIT"}
+requires-python = "<4.0,>=3.10"
+dependencies = [
+    "numpy<3.0.0,>=2.2.6",
+    "pandas<3.0.0,>=2.3.0",
+]
 name = "gowermetric"
 version = "0.1.0"
 description = ""
-authors = ["Arch4ngel21 <adammichal657@gmail.com>"]
 readme = "README.md"
-license = "MIT"
-packages = [
-    { include = "gower_similarity" }
+
+[dependency-groups]
+dev = [
+    "pytest",
+    "pytest-asyncio<2.0.0,>=1.0.0",
+    "setuptools",
+    "black>=22.8.0",
 ]
-
-[tool.poetry.dependencies]
-python = "^3.10"
-
-numpy = "^2.2.6"
-pandas = "^2.3.0"
-
-[tool.poetry.dev-dependencies]
-black = "^22.8.0"
-unittest2 = "^1.1.0"
-pytest = "^8.3.3"
-
-[tool.poetry.group.dev.dependencies]
-pytest-asyncio = "^1.0.0"
 
 [tool.black]
 line-length = 79
@@ -39,7 +37,3 @@ exclude = '''
   | dist
 )/
 '''
-
-[build-system]
-requires = ["poetry-core"]
-build-backend = "poetry.core.masonry.api"

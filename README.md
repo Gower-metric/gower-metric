@@ -177,7 +177,8 @@ similarity = gs.similarity(data[0], data[1])
 distance = gs.distance(data[0], data[1])
 ```
 
-[HINT] To calculate the pairwise distances for the entire dataset, you can do it manually or use an auxiliary function, like: `scipy.spatial.distance.pdist` or `sklearn.metrics.pairwise_distances`.
+> [!Tip]
+> To calculate the pairwise distances for the entire dataset, you can do it manually or use an auxiliary function, like: [scipy.spatial.distance.pdist](https://docs.scipy.org/doc/scipy/reference/generated/scipy.spatial.distance.pdist.html) or [sklearn.metrics.pairwise_distances](https://scikit-learn.org/stable/modules/generated/sklearn.metrics.pairwise_distances.html).
 
 ## Results for metrics comparison
 
