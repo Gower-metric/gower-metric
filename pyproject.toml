@@ -19,7 +19,6 @@ dev = [
     "pytest-asyncio<2.0.0,>=1.0.0",
     "setuptools",
     "black>=22.8.0",
-    "rpy2>=3.6.1",
     "scipy>=1.15.3",
     "scikit-learn>=1.7.1",
 ]

@@ -76,6 +76,9 @@ jobs:
       - name: Install the project dependencies
         run: uv sync
 
+      - name: Install rpy2 package
+        run: uv run pip install rpy2
+
       - name: Run tests with pytest
         run: |
             uv run pytest tests/R_comparison
