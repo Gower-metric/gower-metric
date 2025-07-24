@@ -14,13 +14,21 @@ description = ""
 readme = "README.md"
 
 [dependency-groups]
-dev = [
+tests = [
     "pytest",
     "pytest-asyncio<2.0.0,>=1.0.0",
     "setuptools",
     "black>=22.8.0",
     "scipy>=1.15.3",
     "scikit-learn>=1.7.1",
+]
+
+r_env_tests = [
+    "pytest",
+    "pytest-asyncio<2.0.0,>=1.0.0",
+    "setuptools",
+    "black>=22.8.0",
+    "rpy2",
 ]
 
 [tool.black]

@@ -33,7 +33,7 @@ jobs:
           key: ${{ matrix.os }}-venv-${{ hashFiles('**/uv.lock') }}
 
       - name: Install the project dependencies
-        run: uv sync
+        run: uv sync --group tests
 
       - name: Run tests with pytest
         run: uv run pytest tests/gower_api
@@ -74,10 +74,7 @@ jobs:
           Rscript -e "install.packages('gower',type='source')"
 
       - name: Install the project dependencies
-        run: uv sync
-
-      - name: Install rpy2 package
-        run: uv run pip install rpy2
+        run: uv sync --group r_env_tests
 
       - name: Run tests with pytest
         run: |
