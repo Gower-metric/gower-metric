@@ -1,48 +1,53 @@
-from typing import Any, Dict, Optional, Union
+from typing import Any
 
 import numpy as np
 import pandas as pd
 
-from ..utils.to_array import to_array
-from ..utils.ranges import get_numeric_ranges
-from ..utils.kde_types.silverman import silverman_bandwidth
-from ..utils.knn_bandwidth import knn_bandwidth
-from ..utils.validators import (
-    validate_feature_types,
-    validate_scale_method,
-    validate_missing_strategy,
+from gower_similarity.distances.binary_asymmetric import (
+    binary_asymmetric_distance_matrix,
+)
+from gower_similarity.distances.binary_symmetric import binary_symmetric_distance_matrix
+from gower_similarity.distances.categorical_nominal import nominal_distance_matrix
+from gower_similarity.distances.categorical_ordinal import ordinal_distance_matrix
+from gower_similarity.distances.numeric_interval import numeric_distance_matrix
+from gower_similarity.distances.ratio_scale_interval import ratio_scale_distance_matrix
+from gower_similarity.utils.cat_ord_ut import (
+    get_cardinalities_mapping,
+    get_ranks_mapping,
+)
+from gower_similarity.utils.kde_types.silverman import silverman_bandwidth
+from gower_similarity.utils.knn_bandwidth import knn_bandwidth
+from gower_similarity.utils.ranges import get_numeric_ranges
+from gower_similarity.utils.to_array import to_array
+from gower_similarity.utils.validators import (
     validate_categorical_ordinal_calculation_type,
+    validate_conditional_distances,
+    validate_feature_types,
+    validate_k_neighbours,
+    validate_missing_strategy,
+    validate_scale_method,
     validate_scale_window_and_type,
     validate_weights_type,
-    validate_k_neighbours,
-    validate_conditional_distances,
 )
-from ..utils.cat_ord_ut import get_ranks_mapping, get_cardinalities_mapping
-from ..weights.weights import get_weights
-from ..distances.numeric_interval import numeric_distance_matrix
-from ..distances.categorical_nominal import nominal_distance_matrix
-from ..distances.categorical_ordinal import ordinal_distance_matrix
-from ..distances.binary_asymmetric import binary_asymmetric_distance_matrix
-from ..distances.binary_symmetric import binary_symmetric_distance_matrix
-from ..distances.ratio_scale_interval import ratio_scale_distance_matrix
+from gower_similarity.weights.weights import get_weights
 
 
 class GowerSimilarity:
     """
-    Copmute Gower similarity for mixed data types.    
+    Copmute Gower similarity for mixed data types.
     """
 
     def __init__(
         self,
-        feature_types: Dict[Union[int, str], str],
-        feature_weights: Optional[Union[Dict[int, float], str]] = None,
-        scale: Optional[str] = None,
-        missing_strategy: Optional[str] = None,
-        categorical_ordinal_calculation_type: Optional[str] = None,
-        scale_window: Optional[str] = None,
-        scale_window_type: Optional[str] = None,
-        k_neighbours: Optional[int] = None,
-        conditional_distances: Optional[bool] = None,
+        feature_types: dict[int | str, str],
+        feature_weights: dict[int, float] | str | None = None,
+        scale: str | None = None,
+        missing_strategy: str | None = None,
+        categorical_ordinal_calculation_type: str | None = None,
+        scale_window: str | None = None,
+        scale_window_type: str | None = None,
+        k_neighbours: int | None = None,
+        conditional_distances: bool | None = None,
     ) -> None:
         """
         Initialize GowerSimilarity with explicit feature type and weight mappings.
@@ -67,7 +72,7 @@ class GowerSimilarity:
             k_neighbours: Optional number of nearest neighbors for 'kNN' scaling window.
                 Default is None if omitted. If k_neighbours is None or less than 1, it will be
                 set to the square root of the number of points.
-            conditional_distances: Default to None. If set to True, two-step approach will be 
+            conditional_distances: Default to None. If set to True, two-step approach will be
                 triggered to calculate formula. More information in references -> chapter 3.
 
         Raises:
@@ -79,9 +84,7 @@ class GowerSimilarity:
         self.feature_weights = feature_weights or {}
         validate_weights_type(self.feature_weights)
 
-        self.numeric_indices = [
-            i for i, t in feature_types.items() if t == "numeric"
-        ]
+        self.numeric_indices = [i for i, t in feature_types.items() if t == "numeric"]
         self.categorical_nominal_indices = [
             i for i, t in feature_types.items() if t == "categorical_nominal"
         ]
@@ -100,21 +103,23 @@ class GowerSimilarity:
         self.ratio_ranges: np.ndarray = np.array([])
         self.numeric_ranges: np.ndarray = np.array([])
 
-        self.scale_method: Optional[str] = (scale or 'range').lower()
+        self.scale_method: str | None = (scale or "range").lower()
         validate_scale_method(self.scale_method)
 
-        self.missing_strategy: Optional[str] = (missing_strategy
-                                                or 'ignore').lower()
+        self.missing_strategy: str | None = (missing_strategy or "ignore").lower()
         validate_missing_strategy(self.missing_strategy)
 
-        self.categorical_ordinal_calculation_type: Optional[str] = (
-            categorical_ordinal_calculation_type or 'kaufman').lower()
+        self.categorical_ordinal_calculation_type: str | None = (
+            categorical_ordinal_calculation_type or "kaufman"
+        ).lower()
         validate_categorical_ordinal_calculation_type(
             self.categorical_ordinal_calculation_type
         )
 
-        self.scale_window: Optional[str] = scale_window if scale_window else None
-        self.scale_window_type: Optional[str] = scale_window_type if scale_window_type else None
+        self.scale_window: str | None = scale_window if scale_window else None
+        self.scale_window_type: str | None = (
+            scale_window_type if scale_window_type else None
+        )
         validate_scale_window_and_type(self.scale_window, self.scale_window_type)
 
         self.k_neighbours = k_neighbours if k_neighbours else None
@@ -125,7 +130,7 @@ class GowerSimilarity:
 
         self._is_fitted = False
 
-    def fit(self, X: Union[pd.DataFrame, np.ndarray]) -> "GowerSimilarity":
+    def fit(self, X: pd.DataFrame | np.ndarray) -> "GowerSimilarity":
         """
         Fit the GowerSimilarity model by computing numeric feature ranges.
 
@@ -139,12 +144,11 @@ class GowerSimilarity:
         if isinstance(X, pd.DataFrame):
             cols = list(X.columns)
 
-            ft: Dict[int, str] = {}
+            ft: dict[int, str] = {}
             for k, t in self.feature_types.items():
                 if isinstance(k, str):
                     if k not in cols:
-                        raise ValueError(
-                            f"Column name '{k}' not found in DataFrame.")
+                        raise ValueError(f"Column name '{k}' not found in DataFrame.")
                     ft[cols.index(k)] = t
                 else:
                     ft[k] = t
@@ -166,50 +170,66 @@ class GowerSimilarity:
             self.ratio_scale_indices = [
                 i for i, t in ft.items() if t == "ratio_scale_interval"
             ]
-        arr = X.to_numpy(dtype=object) if isinstance(
-            X, pd.DataFrame) else np.array(X, dtype=object)
+        arr = (
+            X.to_numpy(dtype=object)
+            if isinstance(X, pd.DataFrame)
+            else np.array(X, dtype=object)
+        )
 
         if self.ratio_scale_indices:
-            self.ratio_ranges = get_numeric_ranges(arr,
-                                                   self.ratio_scale_indices,
-                                                   self.scale_method)
+            self.ratio_ranges = get_numeric_ranges(
+                arr, self.ratio_scale_indices, self.scale_method
+            )
         else:
             self.ratio_ranges = np.array([])
 
         if self.numeric_indices:
-            self.numeric_ranges = get_numeric_ranges(arr, self.numeric_indices,
-                                                     self.scale_method)
+            self.numeric_ranges = get_numeric_ranges(
+                arr, self.numeric_indices, self.scale_method
+            )
         else:
             self.numeric_ranges = np.array([])
 
         if self.scale_window == "kde" and self.scale_window_type == "silverman":
-            self._h_ratio = np.array([
-                silverman_bandwidth(arr[:, j].astype(float))
-                for j in self.ratio_scale_indices
-            ], dtype=float)
-            self._h_numeric = np.array([
-                silverman_bandwidth(arr[:, j].astype(float))
-                for j in self.numeric_indices
-            ], dtype=float)
+            self._h_ratio = np.array(
+                [
+                    silverman_bandwidth(arr[:, j].astype(float))
+                    for j in self.ratio_scale_indices
+                ],
+                dtype=float,
+            )
+            self._h_numeric = np.array(
+                [
+                    silverman_bandwidth(arr[:, j].astype(float))
+                    for j in self.numeric_indices
+                ],
+                dtype=float,
+            )
         elif self.scale_window == "kNN":
-            self._h_ratio = np.array([
-                knn_bandwidth(arr[:, j].astype(float), k=self.k_neighbours)
-                for j in self.ratio_scale_indices
-            ], dtype=float)
-            self._h_numeric = np.array([
-                knn_bandwidth(arr[:, j].astype(float), k=self.k_neighbours)
-                for j in self.numeric_indices
-            ], dtype=float)
+            self._h_ratio = np.array(
+                [
+                    knn_bandwidth(arr[:, j].astype(float), k=self.k_neighbours)
+                    for j in self.ratio_scale_indices
+                ],
+                dtype=float,
+            )
+            self._h_numeric = np.array(
+                [
+                    knn_bandwidth(arr[:, j].astype(float), k=self.k_neighbours)
+                    for j in self.numeric_indices
+                ],
+                dtype=float,
+            )
         else:
             self._h_ratio = None
             self._h_numeric = None
 
-        self.cat_ord_metadata: Dict[int, Dict[str, Any]] = {}
+        self.cat_ord_metadata: dict[int, dict[str, Any]] = {}
         for j in self.categorical_ordinal_indices:
             col = arr[:, j]
             ranks_map, mn, mx = get_ranks_mapping(col)
             counts_map, _ = get_cardinalities_mapping(col)
-            counts_arr = np.asarray([counts_map[v] for v in ranks_map.keys()], dtype=float)
+            counts_arr = np.asarray([counts_map[v] for v in ranks_map], dtype=float)
 
             self.cat_ord_metadata[j] = {
                 "ranks": ranks_map,
@@ -228,9 +248,9 @@ class GowerSimilarity:
         self._is_fitted = True
 
         self.p_cat = (
-            len(self.binary_symmetric_indices) + 
-            len(self.binary_asymmetric_indices) + 
-            len(self.categorical_nominal_indices)
+            len(self.binary_symmetric_indices)
+            + len(self.binary_asymmetric_indices)
+            + len(self.categorical_nominal_indices)
         )
         return self
 
@@ -280,7 +300,8 @@ class GowerSimilarity:
                 Yn,
                 self.categorical_nominal_indices,
                 missing_strategy=self.missing_strategy,
-                weights=cat_nom_w)
+                weights=cat_nom_w,
+            )
 
             cat_ord_sum, cat_ord_count = ordinal_distance_matrix(
                 Xn,
@@ -318,10 +339,24 @@ class GowerSimilarity:
                 scale_window=self.scale_window,
                 h=self._h_ratio,
             )
-            total_sum = num_sum + cat_nom_sum + cat_ord_sum + bin_asym_sum + bin_sym_sum + ratio_sum
-            total_count = num_count + cat_nom_count + cat_ord_count + bin_asym_count + bin_sym_count + ratio_count
+            total_sum = (
+                num_sum
+                + cat_nom_sum
+                + cat_ord_sum
+                + bin_asym_sum
+                + bin_sym_sum
+                + ratio_sum
+            )
+            total_count = (
+                num_count
+                + cat_nom_count
+                + cat_ord_count
+                + bin_asym_count
+                + bin_sym_count
+                + ratio_count
+            )
             if total_count[0, 0] == 0:
-                return float('nan')
+                return float("nan")
 
             return float(total_sum[0, 0] / total_count[0, 0])
         else:
@@ -346,37 +381,43 @@ class GowerSimilarity:
                 Yn,
                 self.categorical_nominal_indices,
                 missing_strategy=self.missing_strategy,
-                weights=cat_nom_w
+                weights=cat_nom_w,
             )
             cat_sum = 0.0
-            cat_cnt  = 0.0
+            cat_cnt = 0.0
 
             if self.binary_asymmetric_indices:
-                s,c = binary_asymmetric_distance_matrix(
-                    Xn, Yn,
+                s, c = binary_asymmetric_distance_matrix(
+                    Xn,
+                    Yn,
                     self.binary_asymmetric_indices,
                     missing_strategy=self.missing_strategy,
                     weights=bin_asym_w,
                 )
-                cat_sum += s[0,0]; cat_cnt += c[0,0]
+                cat_sum += s[0, 0]
+                cat_cnt += c[0, 0]
 
             if self.binary_symmetric_indices:
-                s,c = binary_symmetric_distance_matrix(
-                    Xn, Yn,
+                s, c = binary_symmetric_distance_matrix(
+                    Xn,
+                    Yn,
                     self.binary_symmetric_indices,
                     missing_strategy=self.missing_strategy,
                     weights=bin_sym_w,
                 )
-                cat_sum += s[0,0]; cat_cnt += c[0,0]
+                cat_sum += s[0, 0]
+                cat_cnt += c[0, 0]
 
             if self.categorical_nominal_indices:
-                s,c = nominal_distance_matrix(
-                    Xn, Yn,
+                s, c = nominal_distance_matrix(
+                    Xn,
+                    Yn,
                     self.categorical_nominal_indices,
                     missing_strategy=self.missing_strategy,
                     weights=cat_nom_w,
                 )
-                cat_sum += s[0,0]; cat_cnt += c[0,0]
+                cat_sum += s[0, 0]
+                cat_cnt += c[0, 0]
 
             if cat_cnt == 0:
                 return float("nan")
@@ -388,7 +429,8 @@ class GowerSimilarity:
                 return 1.0
 
             num_sum, num_count = numeric_distance_matrix(
-                Xn, Yn,
+                Xn,
+                Yn,
                 self.numeric_indices,
                 ranges=self.numeric_ranges,
                 missing_strategy=self.missing_strategy,
@@ -397,7 +439,8 @@ class GowerSimilarity:
                 h=self._h_numeric,
             )
             cat_ord_sum, cat_ord_count = ordinal_distance_matrix(
-                Xn, Yn,
+                Xn,
+                Yn,
                 self.categorical_ordinal_indices,
                 metadata=self.cat_ord_metadata,
                 missing_strategy=self.missing_strategy,
@@ -405,7 +448,8 @@ class GowerSimilarity:
                 weights=cat_ord_w,
             )
             ratio_sum, ratio_count = ratio_scale_distance_matrix(
-                Xn, Yn,
+                Xn,
+                Yn,
                 self.ratio_scale_indices,
                 ranges=self.ratio_ranges,
                 missing_strategy=self.missing_strategy,
@@ -417,10 +461,9 @@ class GowerSimilarity:
             total_sum = num_sum + cat_ord_sum + ratio_sum
             total_cnt = num_count + cat_ord_count + ratio_count
 
-            if total_cnt[0,0] == 0:
+            if total_cnt[0, 0] == 0:
                 return float("nan")
-            return float(total_sum[0,0] / total_cnt[0,0])
-
+            return float(total_sum[0, 0] / total_cnt[0, 0])
 
     def similarity(self, a: Any, b: Any) -> float:
         """
@@ -434,7 +477,3 @@ class GowerSimilarity:
             float: Gower similarity in [0,1], defined as 1 - distance(a, b).
         """
         return 1.0 - self.distance(a, b)
-
-    def __call__(self, *args, **kwds):
-        # TODO: add numba support
-        pass
