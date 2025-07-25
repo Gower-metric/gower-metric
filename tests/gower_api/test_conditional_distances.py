@@ -3,8 +3,9 @@ import pytest
 
 from gower_similarity.core.similarity import GowerSimilarity
 
+
 @pytest.mark.asyncio
-async def test_conditional_distances():
+async def test_conditional_distances() -> None:
     raw = np.array(
         [
             ["A", 0.0],
@@ -27,7 +28,7 @@ async def test_conditional_distances():
     # Manhattan distance, normalized by range
     def d(x, y):
         return abs(x - y) / r_max_min
-    
+
     expected = np.array(
         [
             # 0, 1 , 2, 3
@@ -47,19 +48,19 @@ async def test_conditional_distances():
             assert pytest.approx(dist, rel=1e-6) == expected[i, j]
             assert pytest.approx(sim, rel=1e-6) == 1.0 - expected[i, j]
 
+
 @pytest.mark.asyncio
-async def test_conditional_distances_clip():
+async def test_conditional_distances_clip() -> None:
     raw = np.array(
         [
             ["A", "X", 0.0],
             ["A", "Y", 2.0],
             ["B", "X", 5.0],
             ["B", "Y", 7.0],
-        ], dtype=object
+        ],
+        dtype=object,
     )
-    f_types = {0: "categorical_nominal",
-               1: "categorical_nominal",
-               2: "numeric"}
+    f_types = {0: "categorical_nominal", 1: "categorical_nominal", 2: "numeric"}
 
     gs = GowerSimilarity(
         feature_types=f_types,
@@ -75,16 +76,16 @@ async def test_conditional_distances_clip():
     # Manhattan distance, normalized by range
     def d(x, y):
         return abs(x - y) / r
-    
+
     expected = np.array(
-    [
-        # 0, 1, 2, 3
-        [0.0, d(0, 2), d(0, 5), 1.0], # 0
-        [d(2, 0), 0.0, 1.0, d(2, 7)], # 1
-        [d(5, 0), 1.0, 0.0, d(5, 7)], # 2
-        [1.0, d(7, 2), d(7, 5), 0.0], # 3
-    ],
-    dtype=float,
+        [
+            # 0, 1, 2, 3
+            [0.0, d(0, 2), d(0, 5), 1.0],  # 0
+            [d(2, 0), 0.0, 1.0, d(2, 7)],  # 1
+            [d(5, 0), 1.0, 0.0, d(5, 7)],  # 2
+            [1.0, d(7, 2), d(7, 5), 0.0],  # 3
+        ],
+        dtype=float,
     )
 
     for i in range(raw.shape[0]):

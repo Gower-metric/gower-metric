@@ -5,8 +5,9 @@ from gower_similarity.core.similarity import GowerSimilarity
 from gower_similarity.utils.kde_types.silverman import silverman_bandwidth
 from gower_similarity.utils.knn_bandwidth import knn_bandwidth
 
+
 @pytest.mark.asyncio
-async def test_ratio_scale_knn_window_no_error():
+async def test_ratio_scale_knn_window_no_error() -> None:
     rng = np.random.default_rng(seed=42)
     data = rng.normal(size=(60, 2))
 
@@ -20,8 +21,9 @@ async def test_ratio_scale_knn_window_no_error():
     assert (gs_knn._h_ratio > 0).all()
     assert (gs_knn._h_numeric > 0).all()
 
+
 @pytest.mark.asyncio
-async def test_ratio_scale_kde_window_h_multi():
+async def test_ratio_scale_kde_window_h_multi() -> None:
     rng = np.random.default_rng(seed=123)
     data = rng.normal(size=(80, 2))
 
@@ -32,8 +34,10 @@ async def test_ratio_scale_kde_window_h_multi():
         scale="range",
     ).fit(data)
 
-    assert isinstance(gs_kde._h_ratio, np.ndarray) and gs_kde._h_ratio.shape == (1,)
-    assert isinstance(gs_kde._h_numeric, np.ndarray) and gs_kde._h_numeric.shape == (1,)
+    assert isinstance(gs_kde._h_ratio, np.ndarray)
+    assert gs_kde._h_ratio.shape == (1,)
+    assert isinstance(gs_kde._h_numeric, np.ndarray)
+    assert gs_kde._h_numeric.shape == (1,)
 
     manual_h_ratio = silverman_bandwidth(data[:, 0])
     manual_h_numeric = silverman_bandwidth(data[:, 1])
@@ -41,13 +45,17 @@ async def test_ratio_scale_kde_window_h_multi():
     assert pytest.approx(gs_kde._h_ratio[0], rel=1e-12) == manual_h_ratio
     assert pytest.approx(gs_kde._h_numeric[0], rel=1e-12) == manual_h_numeric
 
+
 @pytest.mark.asyncio
-async def test_knn_bandwidth_values_and_effect():
-    data = np.array([
-        [0.00, 0.00],
-        [0.10, 0.05],
-        [2.00, 1.00],
-    ], dtype=object)
+async def test_knn_bandwidth_values_and_effect() -> None:
+    data = np.array(
+        [
+            [0.00, 0.00],
+            [0.10, 0.05],
+            [2.00, 1.00],
+        ],
+        dtype=object,
+    )
 
     k = 1
     gs = GowerSimilarity(

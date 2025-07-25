@@ -1,15 +1,16 @@
-import numpy as np
-import pandas as pd
-import pytest
 import itertools
+
+import numpy as np
+import pytest
 
 from gower_similarity.core.similarity import GowerSimilarity
 from gower_similarity.utils.kde_types.silverman import silverman_bandwidth
 
+
 @pytest.mark.asyncio
-async def test_ratio_scale_range_ndarray():
+async def test_ratio_scale_range_ndarray() -> None:
     data = np.array([[1.0], [2.0], [3.0], [1.0]], dtype=float)
-    gs = GowerSimilarity({0: 'ratio_scale_interval'}, scale='range')
+    gs = GowerSimilarity({0: "ratio_scale_interval"}, scale="range")
     gs.fit(data)
 
     # Range: max - min = 3 - 1 = 2 -> so matematically it will be |x - y| / 2
@@ -22,7 +23,8 @@ async def test_ratio_scale_range_ndarray():
             [1.0, 0.5, 0.0, 1.0],  # 3
             [0.0, 0.5, 1.0, 0.0],  # 1
         ],
-        dtype=float)
+        dtype=float,
+    )
 
     for i in range(data.shape[0]):
         for j in range(data.shape[0]):
@@ -31,21 +33,20 @@ async def test_ratio_scale_range_ndarray():
             assert pytest.approx(dist, rel=1e-6) == expected[i, j]
             assert pytest.approx(sim, rel=1e-6) == 1.0 - expected[i, j]
 
-# TODO: add test as above for iqr
 
 @pytest.mark.asyncio
-async def test_ratio_scale_kde_window_h():
+async def test_ratio_scale_kde_window_h() -> None:
     # result >> h
     data = np.array([[0.0], [100.0], [200.0]], dtype=float)
 
-    col = data[:,0]
+    col = data[:, 0]
     manual_h = silverman_bandwidth(col)
 
     gs_kde = GowerSimilarity(
-        {0: 'ratio_scale_interval'},
-        scale='range',
-        scale_window='kde',
-        scale_window_type='silverman'
+        {0: "ratio_scale_interval"},
+        scale="range",
+        scale_window="kde",
+        scale_window_type="silverman",
     )
     gs_kde.fit(data)
 
@@ -53,10 +54,7 @@ async def test_ratio_scale_kde_window_h():
     assert gs_kde._h_ratio.shape == (1,)
     assert pytest.approx(gs_kde._h_ratio[0], rel=1e-6) == manual_h
 
-    gs_plain = GowerSimilarity(
-        {0: 'ratio_scale_interval'},
-        scale='range'
-    )
+    gs_plain = GowerSimilarity({0: "ratio_scale_interval"}, scale="range")
     gs_plain.fit(data)
 
     for xi, xj in itertools.product(data, data):
