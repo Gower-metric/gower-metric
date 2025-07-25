@@ -1,9 +1,11 @@
+from collections.abc import Sequence
+
 import numpy as np
 import pandas as pd
+from numpy.typing import NDArray
 
-from typing import Any
 
-def to_array(record: Any) -> np.ndarray:
+def to_array(record: np.ndarray | pd.Series | Sequence[object]) -> NDArray[np.object_]:
     """
     Convert a record to a flat NumPy array of dtype object.
 
