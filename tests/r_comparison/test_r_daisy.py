@@ -1,29 +1,30 @@
-import pandas as pd
-import numpy as np
 import warnings
-import pytest
 
+import numpy as np
+import pandas as pd
+import pytest
 from rpy2 import robjects
 from rpy2.robjects import pandas2ri
-from rpy2.robjects.packages import importr
 from rpy2.robjects.conversion import localconverter
+from rpy2.robjects.packages import importr
 
 from gower_similarity.core.similarity import GowerSimilarity
 
 warnings.filterwarnings("ignore", category=DeprecationWarning)
 
+
 @pytest.mark.asyncio
-async def test_r_daisy_no_weights():
+async def test_r_daisy_no_weights() -> None:
     n_rows = 100
-    df = pd.read_csv('./comparison/data/adult_reduced.csv').head(n_rows)
-    df['race'] = df['race'].astype('category')
-    df['sex'] = df['sex'].astype('category')
+    df = pd.read_csv("./comparison/data/adult_reduced.csv").head(n_rows)
+    df["race"] = df["race"].astype("category")
+    df["sex"] = df["sex"].astype("category")
 
     with localconverter(robjects.default_converter + pandas2ri.converter):
         r_df = robjects.conversion.py2rpy(df)
 
-    cluster = importr("cluster")
-    base = importr("base")
+    importr("cluster")
+    importr("base")
 
     daisy = robjects.r["daisy"]
     dist_matrix = daisy(r_df, metric="gower")
@@ -54,16 +55,19 @@ async def test_r_daisy_no_weights():
 
     assert np.allclose(np_matrix, gower_matrix, atol=1e-6)
 
+
 @pytest.mark.asyncio
-async def test_r_daisy_weights():
-    df = pd.DataFrame({
-        "age": [23, 45, 23, 31],
-        "gender": ["Female", "Male", "Female", "Male"],
-        "income": [35000, 81000, 40000, 30000],
-        "education": ["low", "medium", "high", "low"],
-        "married": [0, 1, 1, 0],
-        "infected": [1, 1, 0, 0],
-    })
+async def test_r_daisy_weights() -> None:
+    df = pd.DataFrame(
+        {
+            "age": [23, 45, 23, 31],
+            "gender": ["Female", "Male", "Female", "Male"],
+            "income": [35000, 81000, 40000, 30000],
+            "education": ["low", "medium", "high", "low"],
+            "married": [0, 1, 1, 0],
+            "infected": [1, 1, 0, 0],
+        }
+    )
 
     feature_types = {
         "age": "ratio_scale_interval",
@@ -84,9 +88,7 @@ async def test_r_daisy_weights():
     }
 
     gs = GowerSimilarity(
-        feature_types=feature_types,
-        feature_weights=feature_weights,
-        scale="range"
+        feature_types=feature_types, feature_weights=feature_weights, scale="range"
     ).fit(df)
 
     n = len(df)
@@ -102,27 +104,27 @@ async def test_r_daisy_weights():
 
     colnames = list(r_df.colnames)
 
-    robjects.r("ordered <- function(x, levels) { factor(x, levels=levels, ordered=TRUE) }")
-
-    r_df[colnames.index('education')] = robjects.r["ordered"](
-        r_df[colnames.index('education')],
-        robjects.StrVector(["low", "medium", "high"])
+    robjects.r(
+        "ordered <- function(x, levels) { factor(x, levels=levels, ordered=TRUE) }"
     )
 
-    r_df[colnames.index('married')] = robjects.r["factor"](
-        r_df[colnames.index('married')],
-        levels=robjects.IntVector([0, 1])
+    r_df[colnames.index("education")] = robjects.r["ordered"](
+        r_df[colnames.index("education")], robjects.StrVector(["low", "medium", "high"])
     )
 
-    r_df[colnames.index('infected')] = robjects.r["as.logical"](
-        r_df[colnames.index('infected')]
+    r_df[colnames.index("married")] = robjects.r["factor"](
+        r_df[colnames.index("married")], levels=robjects.IntVector([0, 1])
     )
 
-    r_df[colnames.index('gender')] = robjects.r["factor"](
-        r_df[colnames.index('gender')]
+    r_df[colnames.index("infected")] = robjects.r["as.logical"](
+        r_df[colnames.index("infected")]
     )
 
-    cluster = importr("cluster")
+    r_df[colnames.index("gender")] = robjects.r["factor"](
+        r_df[colnames.index("gender")]
+    )
+
+    importr("cluster")
     daisy = robjects.r["daisy"]
 
     weights = robjects.FloatVector([1, 2, 3, 4, 5, 6])
