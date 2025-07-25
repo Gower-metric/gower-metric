@@ -78,4 +78,4 @@ jobs:
 
       - name: Run tests with pytest
         run: |
-            uv run pytest tests/R_comparison
+            uv run pytest tests/r_comparison
