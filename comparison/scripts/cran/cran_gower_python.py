@@ -1,6 +1,6 @@
 import numpy as np
 import pandas as pd
-from gower_similarity.core.similarity import GowerSimilarity
+from gower_metric import Gower
 
 # load data
 iris = pd.read_csv("your_path_to_data/iris.csv")
@@ -14,9 +14,9 @@ f_types = {"sepal_length": "numeric", "sepal_width": "numeric", "petal_length": 
 # combine two sets for range scaling
 union = pd.concat([dat1, dat2], ignore_index=True)
 
-# call GowerSimilarity
-gs = GowerSimilarity(feature_types = f_types, scale = "range").fit(union)
-dist_py = np.array([gs.distance(dat1.iloc[i], dat2.iloc[i]) for i in range(10)])
+# call Gower
+gower = Gower(feature_types = f_types, scale = "range").fit(union)
+dist_py = np.array([gower(dat1.iloc[i], dat2.iloc[i]) for i in range(10)])
 
 # print the results
 print(dist_py)

@@ -6,7 +6,7 @@ from rpy2.robjects import pandas2ri
 from rpy2.robjects.conversion import localconverter
 from rpy2.robjects.packages import importr
 
-from gower_similarity.core.similarity import GowerSimilarity
+from gower_metric import Gower
 
 
 @pytest.mark.asyncio
@@ -25,9 +25,9 @@ async def test_r_gower() -> None:
     }
 
     union = pd.concat([dat1, dat2], axis=0, ignore_index=True)
-    gs = GowerSimilarity(feature_types=f_types, scale="range").fit(union)
+    gower = Gower(feature_types=f_types, scale="range").fit(union)
 
-    dist_py = np.array([gs.distance(dat1.iloc[i], dat2.iloc[i]) for i in range(10)])
+    dist_py = np.array([gower(dat1.iloc[i], dat2.iloc[i]) for i in range(10)])
 
     gower = importr("gower")
     with localconverter(robjects.default_converter + pandas2ri.converter):

@@ -3,7 +3,7 @@ repos:
     hooks:
       - id: mypy
         name: mypy
-        entry: uv run mypy --package gower_similarity --package tests --package examples --package comparison
+        entry: uv run mypy --package gower_metric --package tests --package examples --package comparison
         language: system
         pass_filenames: false
 

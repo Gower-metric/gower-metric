@@ -150,7 +150,7 @@ git clone https://github.com/mwardynski/gower-similarity.git
 
 In order to import class, which calculate Gower's metric, you need to import it as follows:
 ```python
-from gower_similarity.core.similarity import GowerSimilarity
+from gower_metric import Gower
 ```
 
 then initialize passing the variable types:
@@ -163,18 +163,18 @@ feature_types = {
     2: "ratio_scale_interval"
 }
 
-gs = GowerSimilarity(feature_types=feature_types)
+gower = Gower(feature_types=feature_types)
 ```
 
 fit it to the data:
 ```python
-gs.fit(data)
+gower.fit(data)
 ```
 
 and finally run for two samples from the dataset:
 ```python
-similarity = gs.similarity(data[0], data[1])
-distance = gs.distance(data[0], data[1])
+similarity = gower.similarity(data[0], data[1])
+distance = gower(data[0], data[1])
 ```
 
 > [!Tip]

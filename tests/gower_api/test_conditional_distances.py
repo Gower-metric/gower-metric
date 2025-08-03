@@ -1,7 +1,7 @@
 import numpy as np
 import pytest
 
-from gower_similarity.core.similarity import GowerSimilarity
+from gower_metric import Gower
 
 
 @pytest.mark.asyncio
@@ -17,7 +17,7 @@ async def test_conditional_distances() -> None:
     )
     f_types = {0: "categorical_nominal", 1: "numeric"}
 
-    gs = GowerSimilarity(
+    gower = Gower(
         feature_types=f_types,
         conditional_distances=True,
     ).fit(raw)
@@ -42,8 +42,8 @@ async def test_conditional_distances() -> None:
 
     for i in range(raw.shape[0]):
         for j in range(raw.shape[0]):
-            dist = gs.distance(raw[i], raw[j])
-            sim = gs.similarity(raw[i], raw[j])
+            dist = gower(raw[i], raw[j])
+            sim = gower.similarity(raw[i], raw[j])
 
             assert pytest.approx(dist, rel=1e-6) == expected[i, j]
             assert pytest.approx(sim, rel=1e-6) == 1.0 - expected[i, j]
@@ -62,13 +62,13 @@ async def test_conditional_distances_clip() -> None:
     )
     f_types = {0: "categorical_nominal", 1: "categorical_nominal", 2: "numeric"}
 
-    gs = GowerSimilarity(
+    gower = Gower(
         feature_types=f_types,
         conditional_distances=True,
     ).fit(raw)
 
-    assert gs.distance(raw[0], raw[3]) == 1.0
-    assert gs.distance(raw[1], raw[2]) == 1.0
+    assert gower(raw[0], raw[3]) == 1.0
+    assert gower(raw[1], raw[2]) == 1.0
 
     # max - min for the numeric feature
     r = 7 - 0
@@ -90,8 +90,8 @@ async def test_conditional_distances_clip() -> None:
 
     for i in range(raw.shape[0]):
         for j in range(raw.shape[0]):
-            dist = gs.distance(raw[i], raw[j])
-            sim = gs.similarity(raw[i], raw[j])
+            dist = gower(raw[i], raw[j])
+            sim = gower.similarity(raw[i], raw[j])
 
             assert pytest.approx(dist, rel=1e-6) == expected[i, j]
             assert pytest.approx(sim, rel=1e-6) == 1.0 - expected[i, j]

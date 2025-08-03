@@ -4,7 +4,7 @@ from joblib import Parallel, delayed, cpu_count
 from tqdm.auto import tqdm
 from time import perf_counter
 
-from gower_similarity.core.similarity import GowerSimilarity
+from gower_metric import Gower
 
 df = pd.read_csv("your_path/adult_reduced.csv").head(1000)
 
@@ -16,7 +16,7 @@ feature_types = {
     "hours_per_week": "ratio_scale_interval",
 }
 
-gs = GowerSimilarity(feature_types, scale="range").fit(df)
+gower = Gower(feature_types, scale="range").fit(df)
 arr = df.to_numpy(dtype=object)
 n = arr.shape[0]
 
@@ -29,7 +29,7 @@ def single_distance_matrix() -> float:
         Calculate distances for a single row against all other rows.
         """
         xi = arr[i]
-        return np.fromiter((gs.distance(xi, arr[j]) for j in range(n)), dtype=np.float16, count=n)
+        return np.fromiter((gower(xi, arr[j]) for j in range(n)), dtype=np.float16, count=n)
 
     t0 = perf_counter()
     _ = Parallel(n_jobs=cpu_count(), backend="loky", verbose=0)(

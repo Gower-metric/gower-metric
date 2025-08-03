@@ -20,13 +20,13 @@ There are two supported input data types.
 ```python
 import numpy as np
 
-from gower_similarity.core.similarity import GowerSimilarity
+from gower_metric import Gower
 
 data = np.array([[1], [4], [7]], dtype=float)
 f_types = {
     0: "ratio_scale_interval",
 }
-gs = GowerSimilarity(f_types).fit(data)
+gower = Gower(f_types).fit(data)
 ```
 > [!Note]
 > Using numpy array with no numerical data, please set `dtype = object` to avoid issues with data types.
@@ -35,7 +35,7 @@ gs = GowerSimilarity(f_types).fit(data)
 ```python
 import pandas as pd
 
-from gower_similarity.core.similarity import GowerSimilarity
+from gower_metric import Gower
 
 iris = pd.read_csv("path/iris.csv")
 
@@ -47,7 +47,7 @@ f_types = {
     "variety": "categorical_nominal",
 }
 
-gs = GowerSimilarity(f_types).fit(iris)
+gower = Gower(f_types).fit(iris)
 ```
 Do not worry, under the hood, we convert pandas DataFrame to numpy array, so you can use the same API for both data types.
 
@@ -57,16 +57,16 @@ Created API allows you to calculate similarity and distance between rows using s
 ```python
 import numpy as np
 
-from gower_similarity.core.similarity import GowerSimilarity
+from gower_metric import Gower
 
 data = np.array([['A'], ['B'], ['C'], ['A']], dtype=object)
-gs = GowerSimilarity({0: 'categorical_nominal'}).fit(data)
+gower = Gower({0: 'categorical_nominal'}).fit(data)
 
 row_0 = data[0]
 row_3 = data[3]
 
-similarity = gs.similarity(row_0, row_3)
-distance = gs.distance(row_0, row_3)
+similarity = gower.similarity(row_0, row_3)
+distance = gower(row_0, row_3)
 ```
 
 ## Creating matrix
@@ -76,7 +76,7 @@ For now, there is no API endpoint to create whole matrix using provided data. Ho
 import pandas as pd
 import numpy as np
 
-from gower_similarity.core.similarity import GowerSimilarity
+from gower_metric import Gower
 
 df = pd.DataFrame({
     "age": [23, 45, 23, 31],
@@ -96,27 +96,27 @@ feature_types = {
     "infected": "binary_asymmetric",
 }
 
-gs = GowerSimilarity(feature_types, scale="range").fit(df)
+gower = Gower(feature_types, scale="range").fit(df)
 
 n = len(df)
 matrix = np.zeros((n, n))
 for i in range(n):
     for j in range(n):
-        matrix[i, j] = gs.distance(df.iloc[i], df.iloc[j])
+        matrix[i, j] = gower(df.iloc[i], df.iloc[j])
 ```
 > [!Tip]
-> To make matrix based on similarity, just use `gs.similarity` instead of `gs.distance`.
+> To make matrix based on similarity, just use `gs.metric` instead of `gs.distance`.
 
 ## Advanced usage
-We also provide basic weighting functionality. You can set weights for each feature type in the `GowerSimilarity` constructor. The weights should be provided as a dictionary where keys are columns indexes and values are weights. Example script can be found in `examples/scripts/weight.py`.
+We also provide basic weighting functionality. You can set weights for each feature type in the `Gower` constructor. The weights should be provided as a dictionary where keys are columns indexes and values are weights. Example script can be found in `examples/scripts/weight.py`.
 
 ### Weights
-To set weights, you can create a dictionary and pass it to the `GowerSimilarity` constructor as follows:
+To set weights, you can create a dictionary and pass it to the `Gower` constructor as follows:
 
 ```python
 import pandas as pd
 
-from gower_similarity.core.similarity import GowerSimilarity
+from gower_metric import Gower
 
 df = pd.read_csv("comparison/data/adult_reduced.csv").head(5)
 
@@ -136,7 +136,7 @@ feature_weights = {
     4: 5.0,
 }
 
-gs = GowerSimilarity(feature_types, feature_weights=feature_weights).fit(df)
+gower = Gower(feature_types, feature_weights=feature_weights).fit(df)
 ```
 
 Please note that specific values are assigned to column index, not name.
@@ -157,7 +157,7 @@ def _gower_distance(x, y):
     """
     Compute Gower distance between two vectors.
     """
-    return gs.distance(x, y)
+    return gower(x, y)
 
 matrix = pairwise_distances(df, metric = _gower_distance, n_jobs = -1, ensure_all_finite = False)
 ```
@@ -176,7 +176,7 @@ def _gower_distance(x, y):
         """
         Compute Gower distance between two vectors.
         """
-        return gs.distance(x, y)
+        return gower(x, y)
     
 array_scipy = pdist(df, metric = _gower_distance)
 matrix_scipy = squareform(array_scipy)
@@ -192,14 +192,14 @@ You can also use build in `scipy.cluster.hierarchy.cophenet` to calculate cophen
 from scipy.spatial.distance import pdist
 from scipy.cluster.hierarchy import single, cophenet
 
-from gower_similarity.core.similarity import GowerSimilarity
+from gower_metric import Gower
 
 # create additional function to compute distance using custom API
 def _gower_distance(x, y):
     """
     Compute Gower distance between two vectors.
     """
-    return gs.distance(x, y)
+    return gower(x, y)
 
 Z = single(pdist(df, metric=_gower_distance))
 c, coph_dists = cophenet(Z, pdist(df, metric=_gower_distance))

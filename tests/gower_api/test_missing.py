@@ -2,7 +2,7 @@ import numpy as np
 import pandas as pd
 import pytest
 
-from gower_similarity.core.similarity import GowerSimilarity
+from gower_metric import Gower
 
 
 @pytest.mark.asyncio
@@ -18,7 +18,7 @@ async def test_missing_values_skip_nan() -> None:
     df = pd.DataFrame(data, columns=["num", "cat"])
     feature_types = {"num": "numeric", "cat": "categorical_nominal"}
 
-    g = GowerSimilarity(feature_types).fit(df)
+    gower = Gower(feature_types).fit(df)
 
-    assert pytest.approx(g.distance(df.iloc[0], df.iloc[1]), rel=1e-6) == 0.0
-    assert np.isnan(g.distance(df.iloc[0], df.iloc[2]))
+    assert pytest.approx(gower(df.iloc[0], df.iloc[1]), rel=1e-6) == 0.0
+    assert np.isnan(gower(df.iloc[0], df.iloc[2]))

@@ -1,5 +1,5 @@
 version = 1
-revision = 2
+revision = 3
 requires-python = ">=3.10, <4.0"
 resolution-markers = [
     "python_full_version >= '3.12'",
@@ -95,7 +95,7 @@ wheels = [
 ]
 
 [[package]]
-name = "gowermetric"
+name = "gower-metric"
 version = "0.1.0"
 source = { virtual = "." }
 dependencies = [
@@ -107,6 +107,7 @@ dependencies = [
 [package.dev-dependencies]
 dev = [
     { name = "mypy" },
+    { name = "pytest" },
 ]
 r-env-tests = [
     { name = "mypy" },
@@ -132,7 +133,10 @@ requires-dist = [
 ]
 
 [package.metadata.requires-dev]
-dev = [{ name = "mypy" }]
+dev = [
+    { name = "mypy" },
+    { name = "pytest", specifier = ">=8.4.1" },
+]
 r-env-tests = [
     { name = "mypy" },
     { name = "pytest" },

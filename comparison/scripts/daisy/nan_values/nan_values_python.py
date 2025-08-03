@@ -1,7 +1,7 @@
 import pandas as pd
 import numpy as np
 
-from gower_similarity.core.similarity import GowerSimilarity
+from gower_metr import Gower
 
 df = pd.read_csv("comparison/data/nan_values_custom.csv")
 
@@ -24,7 +24,7 @@ feature_weights = {
     5: 6,
 }
 
-gs = GowerSimilarity(
+gower = Gower(
     feature_types=feature_types,
     feature_weights=feature_weights,
     missing_strategy="ignore",
@@ -35,6 +35,6 @@ matrix = np.zeros((n, n), dtype=np.float32)
 
 for i in range(n):
     for j in range(n):
-        matrix[i, j] = gs.distance(df.iloc[i], df.iloc[j])
+        matrix[i, j] = gower(df.iloc[i], df.iloc[j])
 
 np.savetxt("comparison/scripts/daisy/nan_values/nan_values_results/nan_values_python.txt", matrix, fmt="%.6f")

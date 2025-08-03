@@ -1,6 +1,6 @@
 import pandas as pd
 import numpy as np
-from gower_similarity.core.similarity import GowerSimilarity
+from gower_metric import Gower
 
 iris = pd.read_csv("your_path/iris.csv")
 
@@ -12,7 +12,7 @@ f_types = {
     "variety": "categorical_nominal",
 }
 
-gs = GowerSimilarity(f_types, scale="range").fit(iris)
+gower = Gower(f_types, scale="range").fit(iris)
 
 rows_1 = range(0, 10)
 rows_2 = range(5, 15)
@@ -20,7 +20,7 @@ rows_2 = range(5, 15)
 py_block = np.zeros((10, 10))
 for i, r1 in enumerate(rows_1):
     for j, r2 in enumerate(rows_2):
-        py_block[i, j] = gs.distance(iris.iloc[r1], iris.iloc[r2])
+        py_block[i, j] = gower(iris.iloc[r1], iris.iloc[r2])
 
 # prepare columns for R-like indexing, pure demonstration purpose
 col6 = py_block[:, 0] # 6-th column corresponds to row 6 in R indexing

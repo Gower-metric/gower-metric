@@ -3,7 +3,7 @@ include = [
     "comparison/**/*.py",
     "examples/**/*.py",
     "examples/**/*.ipynb",
-    "gower_similarity/**/*.py",
+    "gower_metric/**/*.py",
     "tests/**/*.py",
 ]
 exclude = [

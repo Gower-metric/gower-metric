@@ -21,7 +21,7 @@ def ordinal_distance_matrix(
         Y (np.ndarray): Second dataset, shape (n_y, n_features).
         ordinal_indices (List[int]): Indices of ordinal features.
         metadata (Dict[int, Dict[str, Any]]): Metadata for ordinal features. Computed
-            by GowerSimilarity.fit() on whole data range and passed to the distance function.
+            by Gower.fit() on whole data range and passed to the distance function.
         missing_strategy (str): Strategy for handling missing values, default is "ignore".
         calculation_type (str): Type of calculation for ordinal distance, available options are
             "kaufman" and "podani". Default is "kaufman".

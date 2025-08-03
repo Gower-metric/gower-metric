@@ -16,7 +16,7 @@ from joblib import Parallel, delayed, cpu_count
 from time import perf_counter
 from tqdm.auto import tqdm
 
-from gower_similarity.core.similarity import GowerSimilarity
+from gower_metric import Gower
 
 df = pd.read_csv("comparison/data/adult_reduced.csv").head(1000)
 
@@ -28,7 +28,7 @@ feature_types = {
     "hours_per_week": "ratio_scale_interval",
 }
 
-gs = GowerSimilarity(feature_types, scale="range").fit(df)
+gower = Gower(feature_types, scale="range").fit(df)
 n = len(df)
 arr = df.to_numpy(dtype=object)
 
@@ -37,14 +37,14 @@ def row_distances(i: int) -> np.ndarray:
     Calculate distances for a single row against all other rows.
     """
     xi = arr[i]
-    return np.fromiter((gs.distance(xi, arr[j]) for j in range(n)), dtype=np.float16, count=n)
+    return np.fromiter((gower(xi, arr[j]) for j in range(n)), dtype=np.float16, count=n)
 
 def row_upper(i: int):
     """
     Calculate distances for a single row against all other rows, but only for the upper triangle of the matrix.
     """
     xi = arr[i]
-    return np.fromiter((gs.distance(xi, arr[j]) if j > i else 0.0 for j in range(n)), dtype=np.float16, count=n)
+    return np.fromiter((gower(xi, arr[j]) if j > i else 0.0 for j in range(n)), dtype=np.float16, count=n)
 
 # matrix with no speedup
 matrix = np.zeros((n, n), dtype=np.float16)
@@ -53,7 +53,7 @@ t0 = perf_counter()
 for i in tqdm(range(n), desc="loop", unit="row"):
     xi = arr[i]
     for j in range(n):
-        matrix[i, j] = gs.distance(xi, arr[j])
+        matrix[i, j] = gower(xi, arr[j])
 t1 = perf_counter()
 print(f"Distance matrix calculation without speedup took {t1 - t0:.2f} seconds.")
 

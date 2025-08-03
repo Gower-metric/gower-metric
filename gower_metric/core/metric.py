@@ -3,23 +3,23 @@ from typing import Any
 import numpy as np
 import pandas as pd
 
-from gower_similarity.distances.binary_asymmetric import (
+from gower_metric.distances.binary_asymmetric import (
     binary_asymmetric_distance_matrix,
 )
-from gower_similarity.distances.binary_symmetric import binary_symmetric_distance_matrix
-from gower_similarity.distances.categorical_nominal import nominal_distance_matrix
-from gower_similarity.distances.categorical_ordinal import ordinal_distance_matrix
-from gower_similarity.distances.numeric_interval import numeric_distance_matrix
-from gower_similarity.distances.ratio_scale_interval import ratio_scale_distance_matrix
-from gower_similarity.utils.cat_ord_ut import (
+from gower_metric.distances.binary_symmetric import binary_symmetric_distance_matrix
+from gower_metric.distances.categorical_nominal import nominal_distance_matrix
+from gower_metric.distances.categorical_ordinal import ordinal_distance_matrix
+from gower_metric.distances.numeric_interval import numeric_distance_matrix
+from gower_metric.distances.ratio_scale_interval import ratio_scale_distance_matrix
+from gower_metric.utils.cat_ord_ut import (
     get_cardinalities_mapping,
     get_ranks_mapping,
 )
-from gower_similarity.utils.kde_types.silverman import silverman_bandwidth
-from gower_similarity.utils.knn_bandwidth import knn_bandwidth
-from gower_similarity.utils.ranges import get_numeric_ranges
-from gower_similarity.utils.to_array import to_array
-from gower_similarity.utils.validators import (
+from gower_metric.utils.kde_types.silverman import silverman_bandwidth
+from gower_metric.utils.knn_bandwidth import knn_bandwidth
+from gower_metric.utils.ranges import get_numeric_ranges
+from gower_metric.utils.to_array import to_array
+from gower_metric.utils.validators import (
     validate_categorical_ordinal_calculation_type,
     validate_conditional_distances,
     validate_feature_types,
@@ -29,12 +29,12 @@ from gower_similarity.utils.validators import (
     validate_scale_window_and_type,
     validate_weights_type,
 )
-from gower_similarity.weights.weights import get_weights
+from gower_metric.weights.weights import get_weights
 
 
-class GowerSimilarity:
+class Gower:
     """
-    Copmute Gower similarity for mixed data types.
+    Compute Gower distance for mixed data types.
     """
 
     def __init__(
@@ -50,7 +50,7 @@ class GowerSimilarity:
         conditional_distances: bool | None = None,
     ) -> None:
         """
-        Initialize GowerSimilarity with explicit feature type and weight mappings.
+        Initialize Gower with explicit feature type and weight mappings.
 
         Args:
             feature_types: Mapping of column indices (or DataFrame column names) to
@@ -130,9 +130,9 @@ class GowerSimilarity:
 
         self._is_fitted = False
 
-    def fit(self, X: pd.DataFrame | np.ndarray) -> "GowerSimilarity":
+    def fit(self, X: pd.DataFrame | np.ndarray) -> "Gower":
         """
-        Fit the GowerSimilarity model by computing numeric feature ranges.
+        Fit the Gower model by computing numeric feature ranges.
 
         Args:
             X: pandas DataFrame or NumPy array of shape (n_samples, n_features).
@@ -254,7 +254,7 @@ class GowerSimilarity:
         )
         return self
 
-    def distance(self, a: Any, b: Any) -> float:
+    def __call__(self, a: Any, b: Any) -> float:
         """
         Compute the Gower distance between two records.
 
@@ -476,4 +476,4 @@ class GowerSimilarity:
         Returns:
             float: Gower similarity in [0,1], defined as 1 - distance(a, b).
         """
-        return 1.0 - self.distance(a, b)
+        return 1.0 - self(a, b)
