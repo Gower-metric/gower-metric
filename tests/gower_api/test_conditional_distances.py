@@ -43,10 +43,8 @@ async def test_conditional_distances() -> None:
     for i in range(raw.shape[0]):
         for j in range(raw.shape[0]):
             dist = gower(raw[i], raw[j])
-            sim = gower.similarity(raw[i], raw[j])
 
             assert pytest.approx(dist, rel=1e-6) == expected[i, j]
-            assert pytest.approx(sim, rel=1e-6) == 1.0 - expected[i, j]
 
 
 @pytest.mark.asyncio
@@ -91,7 +89,5 @@ async def test_conditional_distances_clip() -> None:
     for i in range(raw.shape[0]):
         for j in range(raw.shape[0]):
             dist = gower(raw[i], raw[j])
-            sim = gower.similarity(raw[i], raw[j])
 
             assert pytest.approx(dist, rel=1e-6) == expected[i, j]
-            assert pytest.approx(sim, rel=1e-6) == 1.0 - expected[i, j]

@@ -65,7 +65,6 @@ gower = Gower({0: 'categorical_nominal'}).fit(data)
 row_0 = data[0]
 row_3 = data[3]
 
-similarity = gower.similarity(row_0, row_3)
 distance = gower(row_0, row_3)
 ```
 

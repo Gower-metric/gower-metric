@@ -29,9 +29,7 @@ async def test_ratio_scale_range_ndarray() -> None:
     for i in range(data.shape[0]):
         for j in range(data.shape[0]):
             dist = gower(data[i], data[j])
-            sim = gower.similarity(data[i], data[j])
             assert pytest.approx(dist, rel=1e-6) == expected[i, j]
-            assert pytest.approx(sim, rel=1e-6) == 1.0 - expected[i, j]
 
 
 @pytest.mark.asyncio

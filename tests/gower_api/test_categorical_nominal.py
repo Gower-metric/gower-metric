@@ -27,9 +27,7 @@ async def test_categorical_nominal_ndarray() -> None:
             xi = data[i]
             xj = data[j]
             dist = gower(xi, xj)
-            sim = gower.similarity(xi, xj)
             assert pytest.approx(dist, rel=1e-6) == expected[i, j]
-            assert pytest.approx(sim, rel=1e-6) == 1.0 - expected[i, j]
 
 
 @pytest.mark.asyncio
@@ -52,6 +50,4 @@ async def test_categorical_nominal_pandas() -> None:
     for i in df.index:
         for j in df.index:
             dist = gower(df.loc[i], df.loc[j])
-            sim = gower.similarity(df.loc[i], df.loc[j])
             assert pytest.approx(dist, rel=1e-6) == expected[i, j]
-            assert pytest.approx(sim, rel=1e-6) == 1.0 - expected[i, j]

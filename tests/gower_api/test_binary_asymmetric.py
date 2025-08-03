@@ -18,4 +18,3 @@ async def test_binary_asymmetric_only() -> None:
 
     # 1/0: distance 1
     assert pytest.approx(gower(data[1], data[0]), rel=1e-6) == 1.0
-    assert pytest.approx(gower.similarity(data[1], data[0]), rel=1e-6) == 0.0

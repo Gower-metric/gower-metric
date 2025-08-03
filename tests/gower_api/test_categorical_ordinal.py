@@ -25,9 +25,7 @@ async def test_categorical_ordinal_kaufman_uniform_ndarray() -> None:
             xi = data[i]
             xj = data[j]
             dist = gower(xi, xj)
-            sim = gower.similarity(xi, xj)
             assert pytest.approx(dist, rel=1e-6) == expected[i, j]
-            assert pytest.approx(sim, rel=1e-6) == 1.0 - expected[i, j]
 
 
 @pytest.mark.asyncio
@@ -53,9 +51,7 @@ async def test_categorical_ordinal_podani_uniform_ndarray() -> None:
             xi = data[i]
             xj = data[j]
             dist = gower(xi, xj)
-            sim = gower.similarity(xi, xj)
             assert pytest.approx(dist, rel=1e-6) == expected[i, j]
-            assert pytest.approx(sim, rel=1e-6) == 1.0 - expected[i, j]
 
 
 @pytest.mark.asyncio

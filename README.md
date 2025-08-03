@@ -173,7 +173,6 @@ gower.fit(data)
 
 and finally run for two samples from the dataset:
 ```python
-similarity = gower.similarity(data[0], data[1])
 distance = gower(data[0], data[1])
 ```
 

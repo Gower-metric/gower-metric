@@ -13,17 +13,13 @@ async def test_binary_symmetric_only() -> None:
 
     # (0,0) -> distance 0, similarity 1
     assert pytest.approx(gower(data[0], data[2]), rel=1e-6) == 0.0
-    assert pytest.approx(gower.similarity(data[0], data[2]), rel=1e-6) == 1.0
 
     # (1,1) -> distance 0, similarity 1
     assert pytest.approx(gower(data[1], data[1]), rel=1e-6) == 0.0
-    assert pytest.approx(gower.similarity(data[1], data[1]), rel=1e-6) == 1.0
 
     # (0,1) and (1,0) -> distance 1, similarity 0
     assert pytest.approx(gower(data[0], data[1]), rel=1e-6) == 1.0
-    assert pytest.approx(gower.similarity(data[0], data[1]), rel=1e-6) == 0.0
     assert pytest.approx(gower(data[1], data[0]), rel=1e-6) == 1.0
-    assert pytest.approx(gower.similarity(data[1], data[0]), rel=1e-6) == 0.0
 
 
 @pytest.mark.asyncio
@@ -34,14 +30,10 @@ async def test_binary_symmetric_only_pandas() -> None:
 
     # (0,0) -> distance 0, similarity 1
     assert pytest.approx(gower(data.iloc[0], data.iloc[2]), rel=1e-6) == 0.0
-    assert pytest.approx(gower.similarity(data.iloc[0], data.iloc[2]), rel=1e-6) == 1.0
 
     # (1,1) -> distance 0, similarity 1
     assert pytest.approx(gower(data.iloc[1], data.iloc[1]), rel=1e-6) == 0.0
-    assert pytest.approx(gower.similarity(data.iloc[1], data.iloc[1]), rel=1e-6) == 1.0
 
     # (0,1) and (1,0) -> distance 1, similarity 0
     assert pytest.approx(gower(data.iloc[0], data.iloc[1]), rel=1e-6) == 1.0
-    assert pytest.approx(gower.similarity(data.iloc[0], data.iloc[1]), rel=1e-6) == 0.0
     assert pytest.approx(gower(data.iloc[1], data.iloc[0]), rel=1e-6) == 1.0
-    assert pytest.approx(gower.similarity(data.iloc[1], data.iloc[0]), rel=1e-6) == 0.0
