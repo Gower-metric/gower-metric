@@ -1,13 +1,14 @@
 import math
-import numpy as np
-
-from typing import Tuple, Dict, Sequence, Any, Optional, List
 from collections import Counter
+from collections.abc import Sequence
+from typing import Any
+
+import numpy as np
 
 
 def get_ranks_mapping(
-    column: Sequence[Any]
-) -> Tuple[Dict[Any, int], Optional[int], Optional[int]]:
+    column: Sequence[Any],
+) -> tuple[dict[Any, int], int | None, int | None]:
     """
     Get ranks mapping for a categorical column.
 
@@ -30,9 +31,10 @@ def get_ranks_mapping(
 
     return ranks_mapping, min_rank, max_rank
 
+
 def get_cardinalities_mapping(
-    column: Sequence[Any]
-) -> Tuple[Dict[Any, int], List[int]]:
+    column: Sequence[Any] | np.ndarray,
+) -> tuple[dict[Any, int], list[int]]:
     """
     Count occurrences of each category value in an ordinal column.
 
@@ -49,14 +51,15 @@ def get_cardinalities_mapping(
             ordered by sorted category values.
     """
     cleaned = [v for v in column if not (isinstance(v, float) and math.isnan(v))]
-    counts_map: Dict[Any, int] = Counter(cleaned)
+    counts_map: dict[Any, int] = Counter(cleaned)
 
     unique_vals = sorted(counts_map.keys())
     counts_list = [counts_map[val] for val in unique_vals]
 
     return counts_map, counts_list
 
-def collect_ordinal_cardinalities(data: np.ndarray) -> List[np.ndarray]:
+
+def collect_ordinal_cardinalities(data: np.ndarray) -> list[np.ndarray]:
     """
     Process a 2D array of ordinal columns to get counts per level for each column.
 
@@ -70,7 +73,7 @@ def collect_ordinal_cardinalities(data: np.ndarray) -> List[np.ndarray]:
             A list where each element is a 1D NumPy array of integer counts.
             counts[i] is the number of occurrences of the i-th sorted category in that column.
     """
-    ordinals_cardinality: List[np.ndarray] = []
+    ordinals_cardinality: list[np.ndarray] = []
     for i in range(data.shape[1]):
         column = data[:, i]
         _, counts_list = get_cardinalities_mapping(column)

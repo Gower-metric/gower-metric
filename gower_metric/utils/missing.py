@@ -1,53 +1,47 @@
 import math
-import pandas as pd
-import numpy as np
+from collections.abc import Sequence
+from typing import Any
 
-from typing import Any, Sequence, Optional, Tuple
+import numpy as np
+import pandas as pd
+
 
 def is_missing(value: Any) -> bool:
     """
-    Returns True if the value is considered missing.
-    
+    Return True if the value is considered missing.
+
     Args:
         value: The value to check.
-        
+
     Returns:
         bool: True if the value is missing, False otherwise.
     """
-
-    if value is None:
-        return True
-
-    if isinstance(value, float) and math.isnan(value):
-        return True
-
-    if hasattr(pd, "isna") and pd.isna(value):
-        return True
-
-    return False
+    return bool(
+        value is None
+        or (isinstance(value, float) and math.isnan(value))
+        or (hasattr(pd, "isna") and pd.isna(value))
+    )
 
 
-def first_not_missing(sequence: Sequence) -> Optional[Any]:
+def first_not_missing(sequence: Sequence) -> Any | None:
     """
-    Returns the first non-missing value from a sequence.
-    
+    Return the first non-missing value from a sequence.
+
     Args:
         sequence: A sequence of values.
-        
+
     Returns:
         Optional[Any]: The first non-missing value, or None if all values are missing.
     """
-
     for value in sequence:
         if not is_missing(value):
             return value
     return None
 
+
 def apply_missing_strategy(
-    diff: np.ndarray,
-    present: np.ndarray,
-    nan_method: str
-) -> Tuple[np.ndarray, np.ndarray]:
+    diff: np.ndarray, present: np.ndarray, nan_method: str
+) -> tuple[np.ndarray, np.ndarray]:
     """
     Apply the chosen missing-values strategy to the raw diff matrix.
 

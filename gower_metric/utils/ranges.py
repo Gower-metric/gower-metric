@@ -1,7 +1,5 @@
 import numpy as np
 
-from typing import List
-
 
 def scale_method(valid: np.ndarray, method: str) -> float:
     """
@@ -17,7 +15,7 @@ def scale_method(valid: np.ndarray, method: str) -> float:
     if valid.size == 0:
         return 0.0
 
-    if method == 'range':
+    if method == "range":
         span = valid.max() - valid.min()
     elif method == "iqr":
         q75, q25 = np.percentile(valid, [75, 25])
@@ -30,16 +28,17 @@ def scale_method(valid: np.ndarray, method: str) -> float:
 
 def get_numeric_ranges(
     X: np.ndarray,
-    indices: List[int],
-    method: str = 'range',
+    indices: list[int],
+    method: str = "range",
 ) -> np.ndarray:
     """
     Compute the range for each numeric column in X based on selected scale method. Applied only to
     ratio-scale and internal-scale data types.
 
     Args:
-        X: array of shape (n_samples, n_features), dtype = float or object convertible to float
-        indices: list of column indices to treat as numeric
+        X: array of shape (n_samples, n_features), dtype = float or object convertible to float.
+        indices: list of column indices to treat as numeric.
+        method: method for scaling, either 'range' or 'iqr'.
 
     Returns:
         1D array of length len(indices), where each entry is
