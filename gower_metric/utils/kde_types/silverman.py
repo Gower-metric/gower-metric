@@ -22,4 +22,4 @@ def silverman_bandwidth(x: np.ndarray) -> float:
     iqr = q75 - q25
     h = 1.06 * min(s, iqr / 1.34) * n ** (-1 / 5)
 
-    return max(h, 0.0)
+    return float(max(h, 0.0))
