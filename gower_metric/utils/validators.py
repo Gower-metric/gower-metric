@@ -15,7 +15,7 @@ ALLOWED_MISSING_STRATEGIES = {"ignore", "max_dist", "raise_error"}
 ALLOWED_CATEGORICAL_ORDINAL_CALCULATION_TYPES = {"kaufman", "podani"}
 ALLOWED_WEIGHTS_TYPES = {None, "uniform"}
 ALLOWED_K_NEIGHBOURS_TYPES = {None, int}
-ALLOWED_CONDITIONAL_DISTANCES = {None, False, True}
+ALLOWED_CONDITIONAL_DISTANCES = {False, True}
 
 
 def validate_feature_types(feature_types: dict[Any, str]) -> None:
@@ -92,7 +92,9 @@ def validate_categorical_ordinal_calculation_type(calculation_type: str) -> None
         )
 
 
-def validate_scale_window_and_type(scale_window: str, scale_window_type: str) -> None:
+def validate_scale_window_and_type(
+    scale_window: str | None, scale_window_type: str | None
+) -> None:
     """
     Validate the scale window and it's type at the same time.
 

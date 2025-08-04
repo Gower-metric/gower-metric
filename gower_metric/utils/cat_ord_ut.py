@@ -7,7 +7,7 @@ import numpy as np
 
 
 def get_ranks_mapping(
-    column: Sequence[Any],
+    column: Sequence[Any] | np.ndarray,
 ) -> tuple[dict[Any, int], int | None, int | None]:
     """
     Get ranks mapping for a categorical column.

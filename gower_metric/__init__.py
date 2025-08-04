@@ -1,7 +1,4 @@
-
-from gower_metric.core.metric import (
-    Gower
-)
+from gower_metric.core.metric import Gower
 
 __doc__ = """
 TODO
@@ -9,6 +6,4 @@ TODO
 add docs here
 """
 
-__all__ = [
-    "Gower"
-]
+__all__ = ["Gower"]
