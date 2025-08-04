@@ -15,7 +15,7 @@ async def test_conditional_distances() -> None:
         ],
         dtype=object,
     )
-    f_types = {0: "categorical_nominal", 1: "numeric"}
+    f_types: dict[int | str, str] = {0: "categorical_nominal", 1: "numeric"}
 
     gower = Gower(
         feature_types=f_types,
@@ -58,7 +58,11 @@ async def test_conditional_distances_clip() -> None:
         ],
         dtype=object,
     )
-    f_types = {0: "categorical_nominal", 1: "categorical_nominal", 2: "numeric"}
+    f_types: dict[int | str, str] = {
+        0: "categorical_nominal",
+        1: "categorical_nominal",
+        2: "numeric",
+    }
 
     gower = Gower(
         feature_types=f_types,

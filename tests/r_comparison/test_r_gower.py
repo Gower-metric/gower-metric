@@ -16,7 +16,7 @@ async def test_r_gower() -> None:
     dat1 = iris.iloc[0:10].reset_index(drop=True)
     dat2 = iris.iloc[5:15].reset_index(drop=True)
 
-    f_types = {
+    f_types: dict[int | str, str] = {
         "sepal_length": "numeric",
         "sepal_width": "numeric",
         "petal_length": "numeric",

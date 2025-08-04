@@ -16,7 +16,10 @@ async def test_missing_values_skip_nan() -> None:
         [np.nan, None],
     ]
     df = pd.DataFrame(data, columns=["num", "cat"])
-    feature_types = {"num": "numeric", "cat": "categorical_nominal"}
+    feature_types: dict[int | str, str] = {
+        "num": "numeric",
+        "cat": "categorical_nominal",
+    }
 
     gower = Gower(feature_types).fit(df)
 

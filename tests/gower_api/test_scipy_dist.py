@@ -27,7 +27,7 @@ async def test_scikit_learn_paiwise_distances() -> None:
 
     df = df.replace(to_replace="?", value=np.nan)
 
-    feature_types = {
+    feature_types: dict[int | str, str] = {
         "age": "ratio_scale_interval",
         "educational-num": "ratio_scale_interval",
         "race": "categorical_nominal",

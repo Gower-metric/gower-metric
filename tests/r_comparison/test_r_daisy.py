@@ -36,7 +36,7 @@ async def test_r_daisy_no_weights() -> None:
     assert np_matrix.shape == (n_rows, n_rows)
 
     # gower section
-    feature_types = {
+    feature_types: dict[int | str, str] = {
         "age": "ratio_scale_interval",
         "education_num": "ratio_scale_interval",
         "race": "categorical_nominal",
@@ -69,7 +69,7 @@ async def test_r_daisy_weights() -> None:
         }
     )
 
-    feature_types = {
+    feature_types: dict[int | str, str] = {
         "age": "ratio_scale_interval",
         "gender": "categorical_nominal",
         "income": "numeric",
@@ -78,7 +78,7 @@ async def test_r_daisy_weights() -> None:
         "infected": "binary_asymmetric",
     }
 
-    feature_weights = {
+    feature_weights: dict[int, float] | str | None = {
         0: 1.0,
         1: 2.0,
         2: 3.0,

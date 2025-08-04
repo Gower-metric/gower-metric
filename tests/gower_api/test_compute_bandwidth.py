@@ -18,8 +18,8 @@ async def test_ratio_scale_knn_window_no_error() -> None:
     ).fit(data)
 
     assert isinstance(gs_knn._h_ratio, np.ndarray)
-    assert (gs_knn._h_ratio > 0).all()
-    assert (gs_knn._h_numeric > 0).all()
+    assert (np.asarray(gs_knn._h_ratio) > 0).all()
+    assert (np.asarray(gs_knn._h_numeric) > 0).all()
 
 
 @pytest.mark.asyncio
