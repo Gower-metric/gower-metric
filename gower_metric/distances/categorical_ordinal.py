@@ -1,18 +1,18 @@
-import numpy as np
-from typing import List, Tuple, Optional, Dict, Any
+from typing import Any
 
-from ..utils.missing import is_missing, apply_missing_strategy
+import numpy as np
+from utils.missing import apply_missing_strategy, is_missing
 
 
 def ordinal_distance_matrix(
     X: np.ndarray,
     Y: np.ndarray,
-    ordinal_indices: List[int],
-    metadata: Dict[int, Dict[str, Any]],
+    ordinal_indices: list[int],
+    metadata: dict[int, dict[str, Any]],
     missing_strategy: str = "ignore",
     calculation_type: str = "kaufman",
-    weights: Optional[np.ndarray] = None,
-) -> Tuple[np.ndarray, np.ndarray]:
+    weights: np.ndarray | None = None,
+) -> tuple[np.ndarray, np.ndarray]:
     """
     Compute the ordinal categorical component of Gower distance between rows of X and Y.
 
@@ -54,10 +54,8 @@ def ordinal_distance_matrix(
             max_rank = info["max"]
             counts_arr = info["counts"]
         else:
-            raise ValueError(
-                f"Missing metadata for ordinal feature at index {j}."
-            )
-        
+            raise ValueError(f"Missing metadata for ordinal feature at index {j}.")
+
         if min_rank is None:
             continue
 
@@ -65,23 +63,23 @@ def ordinal_distance_matrix(
         r_y = np.array([ranks_map.get(v, np.nan) for v in col_y], dtype=float)
 
         if calculation_type == "kaufman":
-            denom = (max_rank - min_rank)
+            denom = max_rank - min_rank
 
             if denom == 0:
                 dist = np.zeros((n_x, n_y), dtype=float)
             else:
                 dist = np.abs(r_x[:, None] - r_y[None, :]) / denom
-                
+
         else:
             diff = np.abs(r_x[:, None] - r_y[None, :])
             mid = (counts_arr - 1) / 2.0
             mid_x = mid[r_x.astype(int)][:, None]
             mid_y = mid[r_y.astype(int)][None, :]
-            podani_denom = (max_rank - min_rank - mid[0] - mid[-1])
+            podani_denom = max_rank - min_rank - mid[0] - mid[-1]
 
             if podani_denom <= 0:
                 # fallback to kaufman if podani denominator is not valid
-                base_denom = (max_rank - min_rank)
+                base_denom = max_rank - min_rank
                 if base_denom == 0:
                     dist = np.zeros((n_x, n_y), dtype=float)
                 else:

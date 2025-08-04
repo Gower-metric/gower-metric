@@ -1,21 +1,19 @@
 import numpy as np
-from typing import List, Tuple, Optional
-
-from ..utils.missing import is_missing, apply_missing_strategy
+from utils.missing import apply_missing_strategy, is_missing
 
 
 def ratio_scale_distance_matrix(
     X: np.ndarray,
     Y: np.ndarray,
-    ratio_indices: List[int],
+    ratio_indices: list[int],
     ranges: np.ndarray,
-    missing_strategy: str = 'ignore',
-    weights: Optional[np.ndarray] = None,
-    scale_window: Optional[str] = None,
-    h: Optional[np.ndarray] = None,
-) -> Tuple[np.ndarray, np.ndarray]:
+    missing_strategy: str = "ignore",
+    weights: np.ndarray | None = None,
+    scale_window: str | None = None,
+    h: np.ndarray | None = None,
+) -> tuple[np.ndarray, np.ndarray]:
     """
-    Basic range-scaled Gower component for ratio-scale features.
+    Compute range-scaled Gower component for ratio-scale features.
 
     Args:
         X: array (n_x, n_features)
@@ -33,8 +31,7 @@ def ratio_scale_distance_matrix(
     """
     n_x, n_y = X.shape[0], Y.shape[0]
     if not ratio_indices:
-        return np.zeros((n_x, n_y), dtype=float), np.zeros((n_x, n_y),
-                                                           dtype=int)
+        return np.zeros((n_x, n_y), dtype=float), np.zeros((n_x, n_y), dtype=int)
 
     sum_diff = np.zeros((n_x, n_y), dtype=float)
     count_present = np.zeros((n_x, n_y), dtype=float)
@@ -54,7 +51,7 @@ def ratio_scale_distance_matrix(
         else:
             diff = np.zeros_like(raw)
 
-        if scale_window in ('kde', 'kNN') and h is not None:
+        if scale_window in ("kde", "kNN") and h is not None:
             diff[raw <= h[pos]] = 0.0
 
         diff, mask = apply_missing_strategy(diff, present, missing_strategy)

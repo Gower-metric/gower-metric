@@ -1,16 +1,14 @@
 import numpy as np
-from typing import List, Tuple, Optional
-
-from ..utils.missing import is_missing, apply_missing_strategy
+from utils.missing import apply_missing_strategy, is_missing
 
 
 def nominal_distance_matrix(
     X: np.ndarray,
     Y: np.ndarray,
-    categorical_indices: List[int],
+    categorical_indices: list[int],
     missing_strategy: str = "ignore",
-    weights: Optional[np.ndarray] = None,
-) -> Tuple[np.ndarray, np.ndarray]:
+    weights: np.ndarray | None = None,
+) -> tuple[np.ndarray, np.ndarray]:
     """
     Compute the nominal categorical component of Gower distance between rows of X and Y.
 
@@ -28,8 +26,7 @@ def nominal_distance_matrix(
     """
     n_x, n_y = X.shape[0], Y.shape[0]
     if not categorical_indices:
-        return np.zeros((n_x, n_y), dtype=float), np.zeros((n_x, n_y),
-                                                           dtype=int)
+        return np.zeros((n_x, n_y), dtype=float), np.zeros((n_x, n_y), dtype=int)
 
     sum_diff = np.zeros((n_x, n_y), dtype=float)
     count_present = np.zeros((n_x, n_y), dtype=float)

@@ -1,16 +1,14 @@
 import numpy as np
-from typing import List, Tuple, Optional
-
-from ..utils.missing import is_missing, apply_missing_strategy
+from utils.missing import apply_missing_strategy, is_missing
 
 
 def binary_asymmetric_distance_matrix(
     X: np.ndarray,
     Y: np.ndarray,
-    binary_indices: List[int],
+    binary_indices: list[int],
     missing_strategy: str = "ignore",
-    weights: Optional[np.ndarray] = None,
-) -> Tuple[np.ndarray, np.ndarray]:
+    weights: np.ndarray | None = None,
+) -> tuple[np.ndarray, np.ndarray]:
     """
     Compute the asymmetric binary component of Gower distance between rows of X and Y.
 

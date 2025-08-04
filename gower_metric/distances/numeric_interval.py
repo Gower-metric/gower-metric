@@ -1,21 +1,19 @@
 import numpy as np
-from typing import List, Tuple, Optional
-
-from ..utils.missing import is_missing, apply_missing_strategy
+from utils.missing import apply_missing_strategy, is_missing
 
 
 def numeric_distance_matrix(
     X: np.ndarray,
     Y: np.ndarray,
-    numeric_indices: List[int],
+    numeric_indices: list[int],
     ranges: np.ndarray,
-    missing_strategy: str = 'ignore',
-    weights: Optional[np.ndarray] = None,
-    scale_window: Optional[str] = None,
-    h: Optional[np.ndarray] = None,
-) -> Tuple[np.ndarray, np.ndarray]:
+    missing_strategy: str = "ignore",
+    weights: np.ndarray | None = None,
+    scale_window: str | None = None,
+    h: np.ndarray | None = None,
+) -> tuple[np.ndarray, np.ndarray]:
     """
-    Basic range-scaled Gower component for interval-scale (numeric) features. The same logic as
+    Compute range-scaled Gower component for interval-scale (numeric) features. The same logic as
     in ratio scale.
 
     Args:
@@ -55,7 +53,7 @@ def numeric_distance_matrix(
         else:
             diff = np.zeros_like(raw)
 
-        if scale_window in ('kde', 'kNN') and h is not None:
+        if scale_window in ("kde", "kNN") and h is not None:
             diff[raw <= h[pos]] = 0.0
 
         diff, mask = apply_missing_strategy(diff, present, missing_strategy)

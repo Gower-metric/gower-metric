@@ -92,3 +92,6 @@ max-line-length = 200
 
 [lint.mccabe]
 max-complexity = 10 # B in xenon rating
+
+[lint.pylint]
+max-branches = 15
