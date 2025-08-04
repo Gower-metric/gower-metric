@@ -43,6 +43,4 @@ def single_distance_matrix() -> float:
     return perf_counter() - t0
 
 
-times = []
-for _ in tqdm(range(100), desc="100 experiments"):
-    times.append(single_distance_matrix())
+times = [single_distance_matrix() for _ in tqdm(range(100), desc="100 experiments")]

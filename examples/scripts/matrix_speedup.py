@@ -122,6 +122,6 @@ def compare_with_R(
     return np.allclose(matrix_upper, r_matrix, atol=tolerance)
 
 
-matrix_R = np.loadtxt(fname="path/file.txt")
-compare_with_R(matrix_upper, matrix_R)
+matrix_r = np.loadtxt(fname="path/file.txt")
+compare_with_R(matrix_upper, matrix_r)
 print("Upper triangle matrix is equal to the R matrix within the specified tolerance.")
