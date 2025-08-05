@@ -41,13 +41,13 @@ class Gower:
         self,
         feature_types: dict[int | str, str],
         feature_weights: dict[int, float] | str | None = None,
-        scale: str | None = None,
-        missing_strategy: str | None = None,
-        categorical_ordinal_calculation_type: str | None = None,
+        scale: str = "range",
+        missing_strategy: str = "ignore",
+        categorical_ordinal_calculation_type: str = "kaufman",
         scale_window: str | None = None,
         scale_window_type: str | None = None,
         k_neighbours: int | None = None,
-        conditional_distances: bool | None = None,
+        conditional_distances: bool = False,
     ) -> None:
         """
         Initialize Gower with explicit feature type and weight mappings.
@@ -72,7 +72,7 @@ class Gower:
             k_neighbours: Optional number of nearest neighbors for 'kNN' scaling window.
                 Default is None if omitted. If k_neighbours is None or less than 1, it will be
                 set to the square root of the number of points.
-            conditional_distances: Default to None. If set to True, two-step approach will be
+            conditional_distances: Default to False. If set to True, two-step approach will be
                 triggered to calculate formula. More information in references -> chapter 3.
 
         Raises:
@@ -84,32 +84,34 @@ class Gower:
         self.feature_weights = feature_weights or {}
         validate_weights_type(self.feature_weights)
 
-        self.numeric_indices = [i for i, t in feature_types.items() if t == "numeric"]
-        self.categorical_nominal_indices = [
+        self.numeric_indices: list[int] = [
+            i for i, t in feature_types.items() if t == "numeric"
+        ]
+        self.categorical_nominal_indices: list[int] = [
             i for i, t in feature_types.items() if t == "categorical_nominal"
         ]
-        self.categorical_ordinal_indices = [
+        self.categorical_ordinal_indices: list[int] = [
             i for i, t in feature_types.items() if t == "categorical_ordinal"
         ]
-        self.binary_asymmetric_indices = [
+        self.binary_asymmetric_indices: list[int] = [
             i for i, t in feature_types.items() if t == "binary_asymmetric"
         ]
-        self.binary_symmetric_indices = [
+        self.binary_symmetric_indices: list[int] = [
             i for i, t in feature_types.items() if t == "binary_symmetric"
         ]
-        self.ratio_scale_indices = [
+        self.ratio_scale_indices: list[int] = [
             i for i, t in feature_types.items() if t == "ratio_scale_interval"
         ]
         self.ratio_ranges: np.ndarray = np.array([])
         self.numeric_ranges: np.ndarray = np.array([])
 
-        self.scale_method: str | None = (scale or "range").lower()
+        self.scale_method: str = (scale or "range").lower()
         validate_scale_method(self.scale_method)
 
-        self.missing_strategy: str | None = (missing_strategy or "ignore").lower()
+        self.missing_strategy: str = (missing_strategy or "ignore").lower()
         validate_missing_strategy(self.missing_strategy)
 
-        self.categorical_ordinal_calculation_type: str | None = (
+        self.categorical_ordinal_calculation_type: str = (
             categorical_ordinal_calculation_type or "kaufman"
         ).lower()
         validate_categorical_ordinal_calculation_type(
@@ -144,7 +146,7 @@ class Gower:
         if isinstance(X, pd.DataFrame):
             cols = list(X.columns)
 
-            ft: dict[int, str] = {}
+            ft: dict[int | str, str] = {}
             for k, t in self.feature_types.items():
                 if isinstance(k, str):
                     if k not in cols:
@@ -154,20 +156,22 @@ class Gower:
                     ft[k] = t
             self.feature_types = ft
 
-            self.numeric_indices = [i for i, t in ft.items() if t == "numeric"]
-            self.categorical_nominal_indices = [
+            self.numeric_indices: list[int] = [
+                i for i, t in ft.items() if t == "numeric"
+            ]
+            self.categorical_nominal_indices: list[int] = [
                 i for i, t in ft.items() if t == "categorical_nominal"
             ]
-            self.categorical_ordinal_indices = [
+            self.categorical_ordinal_indices: list[int] = [
                 i for i, t in ft.items() if t == "categorical_ordinal"
             ]
-            self.binary_asymmetric_indices = [
+            self.binary_asymmetric_indices: list[int] = [
                 i for i, t in ft.items() if t == "binary_asymmetric"
             ]
-            self.binary_symmetric_indices = [
+            self.binary_symmetric_indices: list[int] = [
                 i for i, t in ft.items() if t == "binary_symmetric"
             ]
-            self.ratio_scale_indices = [
+            self.ratio_scale_indices: list[int] = [
                 i for i, t in ft.items() if t == "ratio_scale_interval"
             ]
         arr = (
@@ -221,8 +225,8 @@ class Gower:
                 dtype=float,
             )
         else:
-            self._h_ratio = None
-            self._h_numeric = None
+            self._h_ratio = np.empty(0)
+            self._h_numeric = np.empty(0)
 
         self.cat_ord_metadata: dict[int, dict[str, Any]] = {}
         for j in self.categorical_ordinal_indices:
@@ -233,7 +237,7 @@ class Gower:
 
             self.cat_ord_metadata[j] = {
                 "ranks": ranks_map,
-                "denom": (mx - mn) if mn is not None else 0,
+                "denom": (mx - mn) if mn is not None and mx is not None else 0,
                 "counts": counts_arr,
                 "min": mn,
                 "max": mx,
@@ -289,10 +293,10 @@ class Gower:
                 Yn,
                 self.numeric_indices,
                 ranges=self.numeric_ranges,
+                h=self._h_numeric,
                 missing_strategy=self.missing_strategy,
                 weights=num_w,
                 scale_window=self.scale_window,
-                h=self._h_numeric,
             )
 
             cat_nom_sum, cat_nom_count = nominal_distance_matrix(
@@ -334,11 +338,12 @@ class Gower:
                 Yn,
                 self.ratio_scale_indices,
                 ranges=self.ratio_ranges,
+                h=self._h_ratio,
                 missing_strategy=self.missing_strategy,
                 weights=ratio_w,
                 scale_window=self.scale_window,
-                h=self._h_ratio,
             )
+
             total_sum = (
                 num_sum
                 + cat_nom_sum
@@ -433,10 +438,10 @@ class Gower:
                 Yn,
                 self.numeric_indices,
                 ranges=self.numeric_ranges,
+                h=self._h_numeric,
                 missing_strategy=self.missing_strategy,
                 weights=num_w,
                 scale_window=self.scale_window,
-                h=self._h_numeric,
             )
             cat_ord_sum, cat_ord_count = ordinal_distance_matrix(
                 Xn,
@@ -452,10 +457,10 @@ class Gower:
                 Yn,
                 self.ratio_scale_indices,
                 ranges=self.ratio_ranges,
+                h=self._h_ratio,
                 missing_strategy=self.missing_strategy,
                 weights=ratio_w,
                 scale_window=self.scale_window,
-                h=self._h_ratio,
             )
 
             total_sum = num_sum + cat_ord_sum + ratio_sum
