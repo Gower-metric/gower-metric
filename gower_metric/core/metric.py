@@ -79,29 +79,17 @@ class Gower:
             ValueError: If feature_types is not a non-empty dict.
         """
         validate_feature_types(feature_types)
-        self.feature_types = feature_types
+        self.feature_types: dict[int | str, str] = feature_types
 
         self.feature_weights = feature_weights or {}
         validate_weights_type(self.feature_weights)
 
-        self.numeric_indices: list[int] = [
-            i for i, t in feature_types.items() if t == "numeric"
-        ]
-        self.categorical_nominal_indices: list[int] = [
-            i for i, t in feature_types.items() if t == "categorical_nominal"
-        ]
-        self.categorical_ordinal_indices: list[int] = [
-            i for i, t in feature_types.items() if t == "categorical_ordinal"
-        ]
-        self.binary_asymmetric_indices: list[int] = [
-            i for i, t in feature_types.items() if t == "binary_asymmetric"
-        ]
-        self.binary_symmetric_indices: list[int] = [
-            i for i, t in feature_types.items() if t == "binary_symmetric"
-        ]
-        self.ratio_scale_indices: list[int] = [
-            i for i, t in feature_types.items() if t == "ratio_scale_interval"
-        ]
+        self.numeric_indices: list[int] = []
+        self.categorical_nominal_indices: list[int] = []
+        self.categorical_ordinal_indices: list[int] = []
+        self.binary_asymmetric_indices: list[int] = []
+        self.binary_symmetric_indices: list[int] = []
+        self.ratio_scale_indices: list[int] = []
         self.ratio_ranges: np.ndarray = np.array([])
         self.numeric_ranges: np.ndarray = np.array([])
 
@@ -146,7 +134,7 @@ class Gower:
         if isinstance(X, pd.DataFrame):
             cols = list(X.columns)
 
-            ft: dict[int | str, str] = {}
+            ft: dict[int, str] = {}
             for k, t in self.feature_types.items():
                 if isinstance(k, str):
                     if k not in cols:
@@ -154,26 +142,38 @@ class Gower:
                     ft[cols.index(k)] = t
                 else:
                     ft[k] = t
-            self.feature_types = ft
+            self.feature_types = ft  # type: ignore[assignment]
 
-            self.numeric_indices: list[int] = [
-                i for i, t in ft.items() if t == "numeric"
-            ]
-            self.categorical_nominal_indices: list[int] = [
-                i for i, t in ft.items() if t == "categorical_nominal"
-            ]
-            self.categorical_ordinal_indices: list[int] = [
-                i for i, t in ft.items() if t == "categorical_ordinal"
-            ]
-            self.binary_asymmetric_indices: list[int] = [
-                i for i, t in ft.items() if t == "binary_asymmetric"
-            ]
-            self.binary_symmetric_indices: list[int] = [
-                i for i, t in ft.items() if t == "binary_symmetric"
-            ]
-            self.ratio_scale_indices: list[int] = [
-                i for i, t in ft.items() if t == "ratio_scale_interval"
-            ]
+        self.numeric_indices = [
+            i
+            for i, t in self.feature_types.items()
+            if isinstance(i, int) and t == "numeric"
+        ]
+        self.categorical_nominal_indices = [
+            i
+            for i, t in self.feature_types.items()
+            if isinstance(i, int) and t == "categorical_nominal"
+        ]
+        self.categorical_ordinal_indices = [
+            i
+            for i, t in self.feature_types.items()
+            if isinstance(i, int) and t == "categorical_ordinal"
+        ]
+        self.binary_asymmetric_indices = [
+            i
+            for i, t in self.feature_types.items()
+            if isinstance(i, int) and t == "binary_asymmetric"
+        ]
+        self.binary_symmetric_indices = [
+            i
+            for i, t in self.feature_types.items()
+            if isinstance(i, int) and t == "binary_symmetric"
+        ]
+        self.ratio_scale_indices = [
+            i
+            for i, t in self.feature_types.items()
+            if isinstance(i, int) and t == "ratio_scale_interval"
+        ]
         arr = (
             X.to_numpy(dtype=object)
             if isinstance(X, pd.DataFrame)

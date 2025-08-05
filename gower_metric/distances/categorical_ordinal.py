@@ -1,7 +1,8 @@
 from typing import Any
 
 import numpy as np
-from utils.missing import apply_missing_strategy, is_missing
+
+from gower_metric.utils.missing import apply_missing_strategy, is_missing
 
 
 def ordinal_distance_matrix(
