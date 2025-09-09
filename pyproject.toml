@@ -23,6 +23,7 @@ dev = [
     "pytest>=8.4.1",
     "scikit-learn>=1.7.1",
     "tqdm>=4.67.1",
+    "tqdm-joblib>=0.0.5",
 ]
 
 tests = [
