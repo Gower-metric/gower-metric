@@ -18,10 +18,14 @@ packages = ["gower_metric"]
 
 [dependency-groups]
 dev = [
+    "ipykernel>=6.30.1",
     "joblib>=1.5.1",
     "mypy",
+    "openml>=0.15.1",
+    "pip>=25.2",
     "pytest>=8.4.1",
     "scikit-learn>=1.7.1",
+    "seaborn>=0.13.2",
     "tqdm>=4.67.1",
     "tqdm-joblib>=0.0.5",
 ]

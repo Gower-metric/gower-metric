@@ -5,6 +5,7 @@ include = [
     "examples/**/*.ipynb",
     "gower_metric/**/*.py",
     "tests/**/*.py",
+    "benchmarks/**/*.py",
 ]
 exclude = [
     "docs/**"
@@ -83,6 +84,11 @@ ignore = [
     "SIM108",   # if-else instead of ternary operations for long lines
     "SIM211",   # explicit False/True for readability
     "TRY004",   # AssertionError in tests, not TypeError
+]
+
+"benchmarks/**" = [
+    "D101",  # no docstrings in benchmarks
+    "D103",  # no docstrings in benchmarks
 ]
 
 [lint.pycodestyle]
