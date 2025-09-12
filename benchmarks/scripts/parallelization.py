@@ -121,6 +121,7 @@ def _compare_matrices(
 def plot_results(
     results: dict,
     max_range: int,
+    iterations: int,
     do_show_plot: bool = False,
     do_save_plot: bool = False,
     resolution: int = 600,
@@ -153,7 +154,7 @@ def plot_results(
         markersize=8,
     )
 
-    # add std
+    # add std as error bars
     for method in methods:
         method_data = time_df[time_df["Method"] == method]
         ax.errorbar(
@@ -176,7 +177,10 @@ def plot_results(
     plt.tight_layout()
 
     if do_save_plot:
-        plt.savefig("gower_benchmark.png", dpi=resolution)
+        plt.savefig(
+            f"benchmarks/imgs/parallelization/benchmark_{iterations}_iterations.png",
+            dpi=resolution,
+        )
 
     if do_show_plot:
         plt.show()
@@ -201,10 +205,9 @@ def main() -> None:
         "hours-per-week": "numeric",
     }
 
-    N_ITERATIONS = 5
+    N_ITERATIONS = 10
     MAX_RANGE = 1000
 
-    # time benchmark
     with tqdm(total=N_ITERATIONS * (MAX_RANGE // 100), desc="Overall Progress") as pbar:
         for curr_iter in range(N_ITERATIONS):
             for n_rows in range(100, MAX_RANGE + 1, 100):
@@ -236,7 +239,14 @@ def main() -> None:
                     gower_joblib_upper_matrix, gower_scipy_matrix, gower_sklearn_matrix
                 )
 
-                del gower_sklearn_matrix, sklearn_time
+                del (
+                    gower_sklearn_matrix,
+                    sklearn_time,
+                    gower_scipy_matrix,
+                    scipy_time,
+                    gower_joblib_upper_matrix,
+                    joblib_time,
+                )
 
     for method, times_dict in all_times.items():
         for n_rows, times in times_dict.items():
@@ -244,7 +254,7 @@ def main() -> None:
             std_time = np.std(times)
             results.setdefault(method, {})[n_rows] = (mean_time, std_time)
 
-    plot_results(results, MAX_RANGE, do_save_plot=True, resolution=2400)
+    plot_results(results, MAX_RANGE, N_ITERATIONS, resolution=2400)
 
 
 if __name__ == "__main__":
