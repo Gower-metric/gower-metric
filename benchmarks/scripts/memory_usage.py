@@ -8,6 +8,8 @@ import pandas as pd
 import seaborn as sns
 from joblib import Parallel, cpu_count, delayed
 from scipy.spatial import distance_matrix
+from scipy.spatial.distance import pdist, squareform
+from sklearn.metrics import pairwise_distances
 from sklearn.preprocessing import OneHotEncoder
 from tqdm import tqdm
 
@@ -83,6 +85,45 @@ def gower_onehot_enc(
     return matrix, peak
 
 
+def gower_scipy(
+    DATASET_ID: int, n_rows: int, feature_types: dict
+) -> tuple[np.ndarray, float]:
+    gc.collect()
+    data: pd.DataFrame = _load_data(DATASET_ID)
+    data = data.head(n_rows)
+    gower = Gower(feature_types=feature_types).fit(data)
+
+    tracemalloc.start()
+    dist_array = pdist(data, metric=gower)
+    matrix_scipy = squareform(dist_array)
+    _, peak = tracemalloc.get_traced_memory()
+    tracemalloc.stop()
+
+    del data, gower, dist_array
+
+    return matrix_scipy, peak
+
+
+def gower_sklearn(
+    DATASET_ID: int, n_rows: int, feature_types: dict
+) -> tuple[np.ndarray, float]:
+    gc.collect()
+    data: pd.DataFrame = _load_data(DATASET_ID)
+    data = data.head(n_rows)
+    gower = Gower(feature_types=feature_types).fit(data)
+
+    tracemalloc.start()
+    matrix_sklearn = pairwise_distances(
+        data, metric=gower, n_jobs=cpu_count(), ensure_all_finite=False
+    )
+    _, peak = tracemalloc.get_traced_memory()
+    tracemalloc.stop()
+
+    del data, gower
+
+    return matrix_sklearn, peak
+
+
 def plot_results(
     results: dict,
     max_range: int,
@@ -135,7 +176,8 @@ def plot_results(
     plt.xlabel("Number of Rows")
     plt.ylabel("Peak Memory Usage (MB)")
     plt.title(
-        "Peak Memory Usage calculating custom Gower matrix vs OneHot Encoding Euclidean Matrix (Number of Rows x 12 Features)"
+        "Peak Memory Usage calculating Gower matrix using different methods \
+            and OneHot encoding Euclidean distance matrix (Number of rows x 12 features)"
     )
     plt.grid(True)
     plt.tight_layout()
@@ -188,11 +230,34 @@ def main():
                 gower_onehot, mem_gower_onehot = gower_onehot_enc(
                     DATASET_ID, n_rows, feature_types
                 )
-                all_memory.setdefault("OneHot encoding", {}).setdefault(
+                all_memory.setdefault("OneHot encoding (Euclidean)", {}).setdefault(
                     n_rows, []
                 ).append(mem_gower_onehot)
 
-                del gower_joblib, gower_onehot, mem_gower_joblib, mem_gower_onehot
+                gower_scipy_m, mem_gower_scipy = gower_scipy(
+                    DATASET_ID, n_rows, feature_types
+                )
+                all_memory.setdefault("Gower scipy", {}).setdefault(n_rows, []).append(
+                    mem_gower_scipy
+                )
+
+                gower_sklearn_m, mem_gower_sklearn = gower_sklearn(
+                    DATASET_ID, n_rows, feature_types
+                )
+                all_memory.setdefault("Gower sklearn", {}).setdefault(
+                    n_rows, []
+                ).append(mem_gower_sklearn)
+
+                del (
+                    gower_joblib,
+                    gower_onehot,
+                    mem_gower_joblib,
+                    mem_gower_onehot,
+                    gower_scipy_m,
+                    mem_gower_scipy,
+                    gower_sklearn_m,
+                    mem_gower_sklearn,
+                )
 
     for method, n_rows_dict in all_memory.items():
         for n_rows, mem_values in n_rows_dict.items():
