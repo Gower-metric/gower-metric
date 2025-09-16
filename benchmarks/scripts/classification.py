@@ -5,7 +5,7 @@ import openml
 import pandas as pd
 from joblib import Parallel, delayed, parallel_backend
 from sklearn.impute import KNNImputer, SimpleImputer
-from sklearn.metrics import accuracy_score, f1_score
+from sklearn.metrics import accuracy_score, classification_report, f1_score
 from sklearn.model_selection import GridSearchCV, train_test_split
 from sklearn.neighbors import KNeighborsClassifier
 from sklearn.preprocessing import OneHotEncoder
@@ -16,7 +16,7 @@ from gower_metric import Gower
 warnings.simplefilter(action="ignore", category=FutureWarning)
 
 
-def _load_data(dataset_id: int, n_rows: int = 2000) -> tuple[pd.DataFrame, pd.Series]:
+def _load_data(dataset_id: int, n_rows: int = 5000) -> tuple[pd.DataFrame, pd.Series]:
     dataset = openml.datasets.get_dataset(dataset_id)
     X, y, _, _ = dataset.get_data(
         target=dataset.default_target_attribute, dataset_format="dataframe"
@@ -27,7 +27,7 @@ def _load_data(dataset_id: int, n_rows: int = 2000) -> tuple[pd.DataFrame, pd.Se
 def _split_data(
     X: pd.DataFrame, y: pd.Series
 ) -> tuple[pd.DataFrame, pd.DataFrame, pd.Series, pd.Series]:
-    return train_test_split(X, y, test_size=0.2, random_state=42)
+    return train_test_split(X, y, test_size=0.2, random_state=42, stratify=y)
 
 
 def _impute_data(
@@ -75,14 +75,28 @@ def _encode_data(
 
 
 def _grid_search_knn(
-    X_train: pd.DataFrame, y_train: pd.Series, metric=None
+    y_train: pd.Series, X_train: pd.DataFrame = None, metric=None, train_matrix=None
 ) -> KNeighborsClassifier:
-    param_grid = {"n_neighbors": [3, 5, 7, 9, 11]}
-    knn = KNeighborsClassifier(n_jobs=-1, metric=metric if metric else "minkowski")
-    grid_search = GridSearchCV(knn, param_grid, cv=5, n_jobs=-1, scoring="accuracy")
+    param_grid = {
+        "n_neighbors": [3, 5, 7, 9, 11],
+        "weights": ["uniform", "distance"],
+        "p": [1, 2],
+        "leaf_size": [20, 30, 40],
+    }
 
-    with parallel_backend("multiprocessing"):
-        grid_search.fit(X_train, y_train)
+    if metric == "precomputed":
+        knn = KNeighborsClassifier(n_jobs=-1, metric="precomputed")
+        grid_search = GridSearchCV(knn, param_grid, cv=5, n_jobs=-1, scoring="accuracy")
+
+        with parallel_backend("multiprocessing"):
+            grid_search.fit(train_matrix, y_train)
+
+    else:
+        knn = KNeighborsClassifier(n_jobs=-1)
+        grid_search = GridSearchCV(knn, param_grid, cv=5, n_jobs=-1, scoring="accuracy")
+
+        with parallel_backend("multiprocessing"):
+            grid_search.fit(X_train, y_train)
 
     return grid_search.best_estimator_
 
@@ -180,8 +194,10 @@ def main() -> None:
     results_f1_enc = []
     results_gower = []
     results_f1_gower = []
+    classification_report_enc: list[dict] = []
+    classification_report_gower: list[dict] = []
 
-    n_tasks_to_run = 10
+    n_tasks_to_run = len(tasks)
 
     with tqdm(total=len(strategies) * n_tasks_to_run) as pbar:
         for strategy in strategies:
@@ -223,8 +239,9 @@ def main() -> None:
                         test_matrix, gower, X_train, X_test
                     )
 
-                    knn = KNeighborsClassifier(n_neighbors=5, metric="precomputed")
-                    knn.fit(train_matrix, y_train)
+                    knn = _grid_search_knn(
+                        y_train=y_train, metric="precomputed", train_matrix=train_matrix
+                    )
 
                     prefictions = knn.predict(test_matrix)
                     accuracy = accuracy_score(y_test, prefictions)
@@ -232,8 +249,12 @@ def main() -> None:
 
                     f1 = f1_score(y_test, prefictions, average="weighted")
                     results_f1_gower.append(f1)
+
+                    classification_report_gower.append(
+                        classification_report(y_test, prefictions, output_dict=True)
+                    )
                 else:
-                    knn = _grid_search_knn(X_train, y_train)
+                    knn = _grid_search_knn(y_train=y_train, X_train=X_train)
 
                     prefictions = knn.predict(X_test)
                     accuracy = accuracy_score(y_test, prefictions)
@@ -241,6 +262,10 @@ def main() -> None:
 
                     f1 = f1_score(y_test, prefictions, average="weighted")
                     results_f1_enc.append(f1)
+
+                    classification_report_enc.append(
+                        classification_report(y_test, prefictions, output_dict=True)
+                    )
 
     _print_results(results_enc, results_f1_enc, results_gower, results_f1_gower)
 
