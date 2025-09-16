@@ -1,8 +1,9 @@
 import warnings
 
+import numpy as np
 import openml
 import pandas as pd
-from joblib import parallel_backend
+from joblib import Parallel, delayed, parallel_backend
 from sklearn.impute import KNNImputer, SimpleImputer
 from sklearn.metrics import accuracy_score, f1_score
 from sklearn.model_selection import GridSearchCV, train_test_split
@@ -10,15 +11,17 @@ from sklearn.neighbors import KNeighborsClassifier
 from sklearn.preprocessing import OneHotEncoder
 from tqdm import tqdm
 
+from gower_metric import Gower
+
 warnings.simplefilter(action="ignore", category=FutureWarning)
 
 
-def _load_data(dataset_id: int) -> tuple[pd.DataFrame, pd.Series]:
+def _load_data(dataset_id: int, n_rows: int = 2000) -> tuple[pd.DataFrame, pd.Series]:
     dataset = openml.datasets.get_dataset(dataset_id)
     X, y, _, _ = dataset.get_data(
         target=dataset.default_target_attribute, dataset_format="dataframe"
     )
-    return X, y
+    return X.head(n_rows), y.head(n_rows)
 
 
 def _split_data(
@@ -71,9 +74,11 @@ def _encode_data(
     return X_train, X_test
 
 
-def _grid_search_knn(X_train: pd.DataFrame, y_train: pd.Series) -> KNeighborsClassifier:
+def _grid_search_knn(
+    X_train: pd.DataFrame, y_train: pd.Series, metric=None
+) -> KNeighborsClassifier:
     param_grid = {"n_neighbors": [3, 5, 7, 9, 11]}
-    knn = KNeighborsClassifier(n_jobs=-1)
+    knn = KNeighborsClassifier(n_jobs=-1, metric=metric if metric else "minkowski")
     grid_search = GridSearchCV(knn, param_grid, cv=5, n_jobs=-1, scoring="accuracy")
 
     with parallel_backend("multiprocessing"):
@@ -82,42 +87,162 @@ def _grid_search_knn(X_train: pd.DataFrame, y_train: pd.Series) -> KNeighborsCla
     return grid_search.best_estimator_
 
 
+def _get_gower_features(X: pd.DataFrame) -> dict:
+    gower_features = {}
+    for col in X.columns:
+        if pd.api.types.is_numeric_dtype(X[col]):
+            gower_features[col] = "numeric"
+        else:
+            gower_features[col] = "categorical_nominal"
+    return gower_features
+
+
+def compute_gower_train(i, X_train_np, gower):
+    xi = X_train_np[i]
+    return np.fromiter(
+        (
+            gower(xi, X_train_np[j]) if j > i else 0.0
+            for j in range(X_train_np.shape[0])
+        ),
+        dtype=np.float32,
+        count=X_train_np.shape[0],
+    )
+
+
+def _get_gower_matrix_train(
+    train_matrix: np.ndarray, gower: Gower, X_train: pd.DataFrame
+) -> np.ndarray:
+    X_train_np = X_train.to_numpy()
+
+    train_matrix_rows = Parallel(n_jobs=-1, backend="multiprocessing")(
+        delayed(compute_gower_train)(i, X_train_np, gower)
+        for i in range(X_train_np.shape[0])
+    )
+    train_matrix = np.vstack(train_matrix_rows)
+    train_matrix += train_matrix.T
+    np.fill_diagonal(train_matrix, 0.0)
+
+    return train_matrix
+
+
+def compute_gower_test(i, X_test_np, X_train_np, gower):
+    xi = X_test_np[i]
+    return np.fromiter(
+        (gower(xi, X_train_np[j]) for j in range(X_train_np.shape[0])),
+        dtype=np.float32,
+        count=X_train_np.shape[0],
+    )
+
+
+def _get_gower_matrix_test(
+    test_matrix: np.ndarray, gower: Gower, X_train: pd.DataFrame, X_test: pd.DataFrame
+) -> np.ndarray:
+    X_train_np = X_train.to_numpy()
+    X_test_np = X_test.to_numpy()
+
+    test_matrix = Parallel(n_jobs=-1, backend="multiprocessing")(
+        delayed(compute_gower_test)(i, X_test_np, X_train_np, gower)
+        for i in range(X_test_np.shape[0])
+    )
+    return np.array(test_matrix)
+
+
+def _print_results(
+    results_enc, results_f1_enc, results_gower, results_f1_gower
+) -> None:
+    print(
+        f"Average accuracy over {len(results_enc)} tasks (OneHotEncoding): {sum(results_enc) / len(results_enc):.4f}"
+    )
+    print(f"Standard deviation of accuracy: {pd.Series(results_enc).std():.4f}")
+
+    print(
+        f"Average F1 score over tasks (OneHotEncoding): {sum(results_f1_enc) / len(results_f1_enc):.4f}"
+    )
+    print(f"Standard deviation of F1 score: {pd.Series(results_f1_enc).std():.4f}")
+
+    print(
+        f"Average accuracy over {len(results_gower)} tasks (Gower): {sum(results_gower) / len(results_gower):.4f}"
+    )
+    print(f"Standard deviation of accuracy: {pd.Series(results_gower).std():.4f}")
+
+    print(
+        f"Average F1 score over tasks (Gower): {sum(results_f1_gower) / len(results_f1_gower):.4f}"
+    )
+    print(f"Standard deviation of F1 score: {pd.Series(results_f1_gower).std():.4f}")
+
+
 def main() -> None:
     suite = openml.study.get_suite(99)
     tasks = suite.tasks
 
-    results = []
-    results_f1 = []
+    strategies = ["onehotencoding", "gower"]
+    results_enc = []
+    results_f1_enc = []
+    results_gower = []
+    results_f1_gower = []
 
-    for task_id in tqdm(tasks, desc="Processing tasks", unit="task"):
-        task = openml.tasks.get_task(task_id)
+    n_tasks_to_run = 10
 
-        X, y = _load_data(task.dataset_id)
+    with tqdm(total=len(strategies) * n_tasks_to_run) as pbar:
+        for strategy in strategies:
+            for task_id in tasks[:n_tasks_to_run]:
+                pbar.set_description(f"Strategy: {strategy}, Task ID: {task_id}")
+                pbar.update(1)
 
-        X_train, X_test, y_train, y_test = _split_data(X, y)
-        X_train, X_test = _impute_data(X_train, X_test)
-        X_train, X_test = _encode_data(X_train, X_test)
+                task = openml.tasks.get_task(task_id)
 
-        X_train.columns = X_train.columns.astype(str)
-        X_test.columns = X_test.columns.astype(str)
+                X, y = _load_data(task.dataset_id)
 
-        knn = _grid_search_knn(X_train, y_train)
-        knn.fit(X_train, y_train)
+                if strategy == "gower":
+                    gower_features = _get_gower_features(X)
 
-        prefictions = knn.predict(X_test)
-        accuracy = accuracy_score(y_test, prefictions)
-        results.append(accuracy)
+                    if type(gower_features) is not dict:
+                        raise ValueError("gower_features must be a dictionary")
 
-        f1 = f1_score(y_test, prefictions, average="weighted")
-        results_f1.append(f1)
+                    gower = Gower(feature_types=gower_features).fit(X)
 
-    print(
-        f"Average accuracy over {len(results)} tasks: {sum(results) / len(results):.4f}"
-    )
-    print(f"Standard deviation of accuracy: {pd.Series(results).std():.4f}")
+                X_train, X_test, y_train, y_test = _split_data(X, y)
+                X_train, X_test = _impute_data(X_train, X_test)
 
-    print(f"Average F1 score over tasks: {sum(results_f1) / len(results_f1):.4f}")
-    print(f"Standard deviation of F1 score: {pd.Series(results_f1).std():.4f}")
+                if strategy == "onehotencoding":
+                    X_train, X_test = _encode_data(X_train, X_test)
+
+                    X_train.columns = X_train.columns.astype(str)
+                    X_test.columns = X_test.columns.astype(str)
+
+                if strategy == "gower":
+                    train_matrix = np.zeros(
+                        (X_train.shape[0], X_train.shape[0]), dtype=np.float32
+                    )
+                    test_matrix = np.zeros(
+                        (X_test.shape[0], X_train.shape[0]), dtype=np.float32
+                    )
+
+                    train_matrix = _get_gower_matrix_train(train_matrix, gower, X_train)
+                    test_matrix = _get_gower_matrix_test(
+                        test_matrix, gower, X_train, X_test
+                    )
+
+                    knn = KNeighborsClassifier(n_neighbors=5, metric="precomputed")
+                    knn.fit(train_matrix, y_train)
+
+                    prefictions = knn.predict(test_matrix)
+                    accuracy = accuracy_score(y_test, prefictions)
+                    results_gower.append(accuracy)
+
+                    f1 = f1_score(y_test, prefictions, average="weighted")
+                    results_f1_gower.append(f1)
+                else:
+                    knn = _grid_search_knn(X_train, y_train)
+
+                    prefictions = knn.predict(X_test)
+                    accuracy = accuracy_score(y_test, prefictions)
+                    results_enc.append(accuracy)
+
+                    f1 = f1_score(y_test, prefictions, average="weighted")
+                    results_f1_enc.append(f1)
+
+    _print_results(results_enc, results_f1_enc, results_gower, results_f1_gower)
 
 
 if __name__ == "__main__":
