@@ -16,7 +16,7 @@ from gower_metric import Gower
 warnings.simplefilter(action="ignore", category=FutureWarning)
 
 
-def _load_data(dataset_id: int, n_rows: int = 5000) -> tuple[pd.DataFrame, pd.Series]:
+def _load_data(dataset_id: int, n_rows: int = 5_000) -> tuple[pd.DataFrame, pd.Series]:
     dataset = openml.datasets.get_dataset(dataset_id)
     X, y, _, _ = dataset.get_data(
         target=dataset.default_target_attribute, dataset_format="dataframe"
@@ -209,16 +209,16 @@ def main() -> None:
 
                 X, y = _load_data(task.dataset_id)
 
+                X_train, X_test, y_train, y_test = _split_data(X, y)
+                X_train, X_test = _impute_data(X_train, X_test)
+
                 if strategy == "gower":
-                    gower_features = _get_gower_features(X)
+                    gower_features = _get_gower_features(X_train)
 
                     if type(gower_features) is not dict:
                         raise ValueError("gower_features must be a dictionary")
 
-                    gower = Gower(feature_types=gower_features).fit(X)
-
-                X_train, X_test, y_train, y_test = _split_data(X, y)
-                X_train, X_test = _impute_data(X_train, X_test)
+                    gower = Gower(feature_types=gower_features).fit(X_train)
 
                 if strategy == "onehotencoding":
                     X_train, X_test = _encode_data(X_train, X_test)
