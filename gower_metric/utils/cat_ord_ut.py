@@ -6,14 +6,14 @@ from typing import Any
 import numpy as np
 
 
-def get_ranks_mapping(
-    column: Sequence[Any] | np.ndarray,
+def map_ordered_values(
+    ordered_values: Sequence[Any] | np.ndarray,
 ) -> tuple[dict[Any, int], int | None, int | None]:
     """
-    Get ranks mapping for a categorical column.
+    Map consequtive integers to passed ordered values.
 
     Args:
-        column: A sequence of categorical values.
+        ordered_values: A defined sequence of categorical values.
 
     Returns:
         A tuple containing:
@@ -21,13 +21,9 @@ def get_ranks_mapping(
             - min_rank: The minimum rank (or None if no categories).
             - max_rank: The maximum rank (or None if no categories).
     """
-    unique_values = list(dict.fromkeys(column))
-    if not unique_values:
-        return {}, None, None
-
-    ranks_mapping = {value: rank for rank, value in enumerate(unique_values)}
+    ranks_mapping = {value: rank for rank, value in enumerate(ordered_values)}
     min_rank = 0
-    max_rank = len(unique_values) - 1
+    max_rank = len(ordered_values) - 1
 
     return ranks_mapping, min_rank, max_rank
 

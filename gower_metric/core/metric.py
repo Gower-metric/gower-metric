@@ -13,7 +13,7 @@ from gower_metric.distances.numeric_interval import numeric_distance_matrix
 from gower_metric.distances.ratio_scale_interval import ratio_scale_distance_matrix
 from gower_metric.utils.cat_ord_ut import (
     get_cardinalities_mapping,
-    get_ranks_mapping,
+    map_ordered_values,
 )
 from gower_metric.utils.kde_types.silverman import silverman_bandwidth
 from gower_metric.utils.knn_bandwidth import knn_bandwidth
@@ -21,6 +21,7 @@ from gower_metric.utils.ranges import get_numeric_ranges
 from gower_metric.utils.to_array import to_array
 from gower_metric.utils.validators import (
     validate_categorical_ordinal_calculation_type,
+    validate_categorical_ordinal_values_order,
     validate_conditional_distances,
     validate_feature_types,
     validate_k_neighbours,
@@ -43,6 +44,7 @@ class Gower:
         feature_weights: dict[int, float] | str | None = None,
         scale: str = "range",
         missing_strategy: str = "ignore",
+        categorical_ordinal_values_order: dict[int | str, list[str]] | None = None,
         categorical_ordinal_calculation_type: str = "kaufman",
         scale_window: str | None = None,
         scale_window_type: str | None = None,
@@ -63,6 +65,8 @@ class Gower:
                 Default is 'range' if omitted.
             missing_strategy: Optional strategy for handling missing values. Can be 'ignore',
                 'max_dist' or 'raise_error'. Default is 'ignore' if omitted.
+            categorical_ordinal_values_order: Optional dict defining the order of the values contained in
+                the columns of type 'categorical_ordinal'. Must contain values for all such columns.
             categorical_ordinal_calculation_type: Optional calculation type for categorical
                 ordinal features. Can be 'kaufman' or 'podani'. Default is 'kaufman' if omitted.
             scale_window: Optional scaling window for numeric or ratio features. Can be None, 'kde'
@@ -98,6 +102,13 @@ class Gower:
 
         self.missing_strategy: str = (missing_strategy or "ignore").lower()
         validate_missing_strategy(self.missing_strategy)
+
+        if categorical_ordinal_values_order is None:
+            categorical_ordinal_values_order = {}
+        self.categorical_ordinal_values_order = categorical_ordinal_values_order
+        validate_categorical_ordinal_values_order(
+            self.categorical_ordinal_values_order, self.feature_types
+        )
 
         self.categorical_ordinal_calculation_type: str = (
             categorical_ordinal_calculation_type or "kaufman"
@@ -143,6 +154,17 @@ class Gower:
                 else:
                     ft[k] = t
             self.feature_types = ft  # type: ignore[assignment]
+
+            if self.categorical_ordinal_values_order:
+                for k in self.categorical_ordinal_values_order:
+                    if isinstance(k, str):
+                        if k not in cols:
+                            raise ValueError(
+                                f"Column name '{k}' specified for categorical ordinal values not found in DataFrame."
+                            )
+                        self.categorical_ordinal_values_order[cols.index(k)] = (
+                            self.categorical_ordinal_values_order.pop(k)
+                        )
 
         self.numeric_indices = [
             i
@@ -231,7 +253,9 @@ class Gower:
         self.cat_ord_metadata: dict[int, dict[str, Any]] = {}
         for j in self.categorical_ordinal_indices:
             col = arr[:, j]
-            ranks_map, mn, mx = get_ranks_mapping(col)
+            ranks_map, mn, mx = map_ordered_values(
+                self.categorical_ordinal_values_order[j]
+            )
             counts_map, _ = get_cardinalities_mapping(col)
             counts_arr = np.asarray([counts_map[v] for v in ranks_map], dtype=float)
 

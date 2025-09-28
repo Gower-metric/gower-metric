@@ -63,7 +63,7 @@ async def test_r_daisy_weights() -> None:
             "age": [23, 45, 23, 31],
             "gender": ["Female", "Male", "Female", "Male"],
             "income": [35000, 81000, 40000, 30000],
-            "education": ["low", "medium", "high", "low"],
+            "education": ["high", "low", "medium", "low"],
             "married": [0, 1, 1, 0],
             "infected": [1, 1, 0, 0],
         }
@@ -78,6 +78,10 @@ async def test_r_daisy_weights() -> None:
         "infected": "binary_asymmetric",
     }
 
+    categorical_ordinal_values_order: dict[int | str, list[str]] | None = {
+        "education": ["low", "medium", "high"],
+    }
+
     feature_weights: dict[int, float] | str | None = {
         0: 1.0,
         1: 2.0,
@@ -88,7 +92,10 @@ async def test_r_daisy_weights() -> None:
     }
 
     gower = Gower(
-        feature_types=feature_types, feature_weights=feature_weights, scale="range"
+        feature_types=feature_types,
+        feature_weights=feature_weights,
+        scale="range",
+        categorical_ordinal_values_order=categorical_ordinal_values_order,
     ).fit(df)
 
     n = len(df)

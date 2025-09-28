@@ -7,6 +7,7 @@ requires-python = "<4.0,>=3.10"
 dependencies = [
     "numpy<3.0.0,>=2.2.6",
     "pandas<3.0.0,>=2.3.0",
+    "rpy2>=3.6.1",
 ]
 name = "gower-metric"
 version = "0.1.0"
@@ -16,14 +17,26 @@ readme = "README.md"
 [tool.setuptools]
 packages = ["gower_metric"]
 
+[tool.uv.workspace]
+members = [
+    ".",
+    ".",
+]
+
+[tool.uv.sources]
+gower-metric = { workspace = true }
+
 [dependency-groups]
 dev = [
+    "gower-metric",
     "ipykernel>=6.30.1",
     "joblib>=1.5.1",
     "mypy",
     "openml>=0.15.1",
     "pip>=25.2",
+    "pre-commit>=4.3.0",
     "pytest>=8.4.1",
+    "pytest-asyncio>=1.1.0",
     "scikit-learn>=1.7.1",
     "seaborn>=0.13.2",
     "tqdm>=4.67.1",

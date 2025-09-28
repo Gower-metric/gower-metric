@@ -74,6 +74,33 @@ def validate_missing_strategy(missing_strategy: str) -> None:
         )
 
 
+def validate_categorical_ordinal_values_order(
+    categorical_ordinal_values_order: dict[int | str, list[str]],
+    feature_types: dict[int | str, str],
+) -> None:
+    """
+    Validate whether all defined categorical ordinal columns have specified the order of their values.
+
+    Args:
+        categorical_ordinal_values_order: categorical ordinal values order to validate.
+        feature_types: A dictionary mapping column names to their feature types.
+
+    Raises:
+        ValueError: If the categorical ordinal values order is not valid.
+    """
+    categorical_ordinal_columns = {
+        k for k, v in feature_types.items() if v == "categorical_ordinal"
+    }
+    defined_values_order_columns = set(categorical_ordinal_values_order.keys())
+
+    if defined_values_order_columns < categorical_ordinal_columns:
+        raise ValueError(
+            f"Categorical ordinal values order must be defined for the following columns: "
+            f"{categorical_ordinal_columns}, "
+            f"got {defined_values_order_columns}"
+        )
+
+
 def validate_categorical_ordinal_calculation_type(calculation_type: str) -> None:
     """
     Validate the calculation type for categorical nominal features.
