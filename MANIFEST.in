@@ -24,4 +24,6 @@ exclude CHANGELOG.md
 recursive-exclude benchmarks *
 recursive-exclude comparison *
 recursive-exclude examples *
+recursive-exclude docs *
 recursive-exclude gower_metric *.pyc
+recursive-exclude tests *.pyc

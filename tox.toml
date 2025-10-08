@@ -1,11 +1,35 @@
-requires = ["tox>=4"]
-
-env_list = ["3.10", "3.11", "3.12", "3.13"]
-
-deps = ["poetry>=2.0"]
-commands_pre = ["poetry install --sync --no-root --no-interaction"]
-
 [env_run_base]
-description = "run tests"
-deps = ["pytest-asyncio"]
-commands = [["pytest", { replace = "posargs", default = ["tests"], extend = true }]]
+description = "Run tests"
+requires = ["tox>=4"]
+deps = ["uv"]
+allowlist_externals = ["rm"]
+commands = [
+    ["uv", "sync", "--group", "tests", "--quiet", "--active"],
+    ["pytest", "tests/gower_api"],
+    ["uv", "build", "--quiet"],
+    ["uv", "run", "check-manifest"],
+    ["rm", "-rf", "dist/", "gower_metric.egg-info/", ".venv/"],
+    ]
+
+[env.py310]
+description = "Run tests with Python 3.10"
+base_python = ["python3.10"]
+env_dir = ".venv/"
+
+[env.py311]
+description = "Run tests with Python 3.11" 
+base_python = ["python3.11"]
+env_dir = ".venv/"
+
+[env.py312]
+description = "Run tests with Python 3.12"
+base_python = ["python3.12"]
+env_dir = ".venv/"
+
+[env.py313]
+description = "Run tests with Python 3.13"
+base_python = ["python3.13"]
+env_dir = ".venv/"
+
+[env.py]
+description = "Run tests with current Python"

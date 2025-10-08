@@ -4,6 +4,7 @@ __pycache__/
 *$py.class
 .pip_audit_cache/
 .ruff_cache/
+.tox
 
 # Ignore virtual environment directories
 .venv/
