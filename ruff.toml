@@ -6,12 +6,14 @@ include = [
     "gower_metric/**/*.py",
     "tests/**/*.py",
     "benchmarks/**/*.py",
-    "README.md",
+    ".github/README.md",
     "MANIFEST.in",
     "LICENSE.txt",
-    "CONTRIBUTING.md",
+    ".github/CONTRIBUTING.md",
     "CHANGELOG.md",
-    "CODE_OF_CONDUCT.md",
+    ".github/CODE_OF_CONDUCT.md",
+    ".github/SECURITY.md",
+    ".github/SUPPORT.md",
 ]
 exclude = [
     "docs/**"

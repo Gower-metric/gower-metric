@@ -17,10 +17,13 @@ recursive-include .github *
 recursive-include tests *
 
 exclude MANIFEST.in
-exclude LICENSE.md
-exclude CODE_OF_CONDUCT.md
+exclude LICENSE.txt
+exclude .github/CODE_OF_CONDUCT.md
 exclude CHANGELOG.md
-exclude CONTRIBUTING.md
+exclude .readthedocs.yaml
+exclude .github/CONTRIBUTING.md
+exclude .github/SECURITY.md
+exclude .github/SUPPORT.md
 
 recursive-exclude benchmarks *
 recursive-exclude comparison *
