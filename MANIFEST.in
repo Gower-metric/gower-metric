@@ -1,0 +1,27 @@
+include uv.lock
+include tox.toml
+include README.md
+include pyproject.toml
+include mypy.ini
+include ruff.toml
+include .pre-commit-config.yaml
+include .gitignore
+
+recursive-include gower_metric *.py
+recursive-include gower_metric/core *.py
+recursive-include gower_metric/distances *.py
+recursive-include gower_metric/utils *.py
+recursive-include gower_metric/utils/kde_types *.py
+recursive-include gower_metric/utils/weights *.py
+recursive-include .github *
+recursive-include tests *
+
+exclude MANIFEST.in
+exclude LICENSE.md
+exclude CODE_OF_CONDUCT.md
+exclude CHANGELOG.md
+
+recursive-exclude benchmarks *
+recursive-exclude comparison *
+recursive-exclude examples *
+recursive-exclude gower_metric *.pyc
