@@ -1,6 +1,6 @@
-# Contributing to CONTRIBUTING.md
+# Contributing to gower-metric library
 
-First off, thanks for taking the time to contribute! ❤️
+First off, thanks for taking the time to contribute!
 
 All types of contributions are encouraged and valued. See the [Table of Contents](#table-of-contents) for different ways to help and details about how this project handles them. Please make sure to read the relevant section before making your contribution. It will make it a lot easier for us maintainers and smooth out the experience for all involved. The community looks forward to your contributions. 🎉
 
@@ -16,6 +16,7 @@ All types of contributions are encouraged and valued. See the [Table of Contents
 ## Table of Contents
 
 - [Code of Conduct](#code-of-conduct)
+- [Local Setup](#local-setup)
 - [I Have a Question](#i-have-a-question)
 - [I Want To Contribute](#i-want-to-contribute)
 - [Suggesting Enhancements](#suggesting-enhancements)
@@ -27,6 +28,52 @@ All types of contributions are encouraged and valued. See the [Table of Contents
 This project and everyone participating in it is governed by the
 [Code of Conduct](./CODE_OF_CONDUCT.md).
 
+## Local Setup
+
+To set up your local development environment, it is highly recommended to use following tools:
+- Python 3.10 or higher
+- [git](https://git-scm.com/)
+- [uv](https://docs.astral.sh/uv/)
+- [pre-commit](https://pre-commit.com/)
+- [tox](https://tox.readthedocs.io/en/latest/)
+
+After installing the required tools and checking out [this](#i-want-to-contribute) section:
+1. Fork the repository
+2. Create a new branch for your changes
+3. Add new features or fix bugs
+4. Make sure to run tests and linters before committing your changes
+5. Commit your changes with a clear and descriptive message
+
+### Installing Dependencies
+
+In total, you need to know about four dependency groups:
+- `base` - These dependencies are required to run the project
+- `dev` - These dependencies are required for development
+- `tests` - These dependencies are required to run the tests
+- `r_env_tests` - These dependencies are required to run the R environment tests
+
+You can install desired dependency using following command:
+
+```bash
+uv sync --group dev
+```
+This will install all dependencies from `base` and `dev` group. You can replace `dev` with `tests` or `r_env_tests` to install those dependencies.
+
+### Running Tests
+
+To run the tests, you can use `tox`. This will create a virtual environment and run the tests in it. You can run all tests using following command:
+
+```bash
+tox -e py310
+```
+Where `py310` is the python version you want to use. You can also run tests for other python versions by replacing `py310` with `py311`, `py312`, etc. You can also run tests for all python versions using following command:
+
+```bash
+tox -e py310,py311,py312,py313
+```
+
+> [!NOTE]
+> The key difference between `tests` and `r_env_tests` is presence of [rpy2](https://rpy2.readthedocs.io/en/latest/) package, which requires [R](https://www.r-project.org) to be installed on your system. If you want to run tests that do not require R, feel free to use first group.
 
 ## I Have a Question
 
@@ -110,7 +157,7 @@ Enhancement suggestions are tracked as GitHub issues.
 - Provide a **step-by-step description of the suggested enhancement** in as many details as possible.
 - **Describe the current behavior** and **explain which behavior you expected to see instead** and why. At this point you can also tell which alternatives do not work for you.
 - You may want to **include screenshots and animated GIFs** which help you demonstrate the steps or point out the part which the suggestion is related to. You can use [this tool](https://www.cockos.com/licecap/) to record GIFs on macOS and Windows, and [this tool](https://github.com/colinkeenan/silentcast) on Linux. 
-- **Explain why this enhancement would be useful** to most `CONTRIBUTING.md` users. You may also want to point out the other projects that solved it better and which could serve as inspiration.
+- **Explain why this enhancement would be useful** to most contributing users. You may also want to point out the other projects that solved it better and which could serve as inspiration.
 
 
 ### Improving The Documentation

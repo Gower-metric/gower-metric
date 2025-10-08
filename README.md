@@ -1,4 +1,6 @@
-# GowerMetric
+# Gower-metric
+
+Welcome to the Gower-metric library! This library provides an implementation of Gower's distance metric, which is particularly useful for calculating distances between samples with mixed data types 😁
 
 ## Table of Contents
 
