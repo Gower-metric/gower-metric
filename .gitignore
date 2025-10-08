@@ -16,6 +16,7 @@ ENV/
 .eggs/
 build/
 dist/
+.pypirc
 
 # Ignore test coverage reports
 htmlcov/

@@ -45,6 +45,7 @@ dev = [
     "seaborn>=0.13.2",
     "tqdm>=4.67.1",
     "tqdm-joblib>=0.0.5",
+    "twine>=6.2.0",
 ]
 
 tests = [
