@@ -20,6 +20,7 @@ exclude MANIFEST.in
 exclude LICENSE.md
 exclude CODE_OF_CONDUCT.md
 exclude CHANGELOG.md
+exclude CONTRIBUTING.md
 
 recursive-exclude benchmarks *
 recursive-exclude comparison *
