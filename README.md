@@ -1,6 +1,19 @@
 # GowerMetric
 
+## Table of Contents
+
+- [Introduction](#introduction)
+- [Compatibility](#compatibility)
+- [Documentation](#documentation)
+- [Installation](#installation)
+- [Quick start](#quick-start)
+- [Gower characteristics](#gower-characteristics)
+- [Metric enhancements](#metric-enhancements)
+- [Metrics comparison](#metrics-comparison)
+- [References](#references)
+
 ## Introduction
+
 Distance quantifies how far apart two objects are and is synonymous with dissimilarity. Calculating distance between individuals or groups is essential in fields like biology, psychology, ecology, medical diagnosis, and agriculture. It also underpins statistical methods like discriminant analysis, classification, and clustering, as well as machine learning algorithms such as k-nearest neighbor (supervised learning) and k-means clustering (unsupervised learning).
 
 Euclidean distance is the standard measure for continuous variables, while the simple matching coefficient is common for categorical ones. However, real-world data often combines continuous and categorical variables (mixed data). Although extensive research exists for either continuous or categorical data, mixed data poses challenges. Researchers often either treat categorical data as continuous or transform continuous data into categorical, both of which can result in information loss.
@@ -17,9 +30,52 @@ Implementation of Gower's Metric in Python.
 | Windows | ✅ | ✅ | ✅ | ✅ |
 | macOS | ✅ | ✅ | ✅ | ✅ |
 
-## How to Python Gower
+## Documentation
 
-Before we dive into details about Gower's metric, please feel free to check out [example](./examples/) and [comparison](./comparison/) sections.
+@TODO: add ref  
+Documentation is available [here]().
+
+What is more, please feel free to check out [example](./examples/) and [comparison](./comparison/) sections.
+
+## Installation
+
+The easiest way to install the package is via pip:
+```bash
+pip install gower-metric
+```
+
+## Quick start
+
+In order to import class, which calculate Gower's metric, you need to import it as follows:
+```python
+from gower_metric import Gower
+```
+
+then initialize passing the variable types:
+```python
+data = [[1, 'a', 3.5], [2, 'b', 4.0], [3, 'a', 2.5], [4, 'c', 5.0]]
+
+feature_types = {
+    0: "ratio_scale_interval",
+    1: "categorical_nominal",
+    2: "ratio_scale_interval"
+}
+
+gower = Gower(feature_types=feature_types)
+```
+
+fit it to the data:
+```python
+gower.fit(data)
+```
+
+and finally run for two samples from the dataset:
+```python
+distance = gower(data[0], data[1])
+```
+
+> [!Tip]
+> To calculate the pairwise distances for the entire dataset, you can do it manually or use an auxiliary function, like: [scipy.spatial.distance.pdist](https://docs.scipy.org/doc/scipy/reference/generated/scipy.spatial.distance.pdist.html) or [sklearn.metrics.pairwise_distances](https://scikit-learn.org/stable/modules/generated/sklearn.metrics.pairwise_distances.html).
 
 ## Gower characteristics
 
@@ -35,19 +91,19 @@ Let $\delta_{ijk}$​ represent the possibility of making a comparison. Specific
 
 The Gower's distance can by calculated in the following way: $d_{ij} = 1 - S_{ij}$, and the scores $s_{ijk}$ as follows:
 
-#### Binary symmetric data:
+### Binary symmetric data:
 
 $s_{ijk} = 1$ if $x_{ik} = x_{jk}$, $0$ otherwise.
 
-#### Binary asymmetric data:
+### Binary asymmetric data:
 
 $s_{ijk} = 1$ if $x_{ik} = x_{jk} = 1$, $0$ otherwise.
 
-#### Ratio scale
+### Ratio scale
 
 $s_{ijk} = 1 - \frac{|x_{ik} - x_{jk}|}{R_{k}}$, where $R_k = max(x_k) - min(x_k)$
 
-#### Categorical nominal
+### Categorical nominal
 
 $s_{ijk} = 1$, if variable $i$ equals to variable $j$ at $k$-th element, $0$ otherwise.
 
@@ -139,47 +195,7 @@ When a non-existing value is found, the implementation performs one of the follo
 - omit the value
 - set it to the maximal distance
 
-## How to install
-
-For now, the easiest way to get library is to clone the repository locally:
-```bash
-git clone https://github.com/mwardynski/gower-similarity.git
-```
-
-### Basic usage
-
-In order to import class, which calculate Gower's metric, you need to import it as follows:
-```python
-from gower_metric import Gower
-```
-
-then initialize passing the variable types:
-```python
-data = [[1, 'a', 3.5], [2, 'b', 4.0], [3, 'a', 2.5], [4, 'c', 5.0]]
-
-feature_types = {
-    0: "ratio_scale_interval",
-    1: "categorical_nominal",
-    2: "ratio_scale_interval"
-}
-
-gower = Gower(feature_types=feature_types)
-```
-
-fit it to the data:
-```python
-gower.fit(data)
-```
-
-and finally run for two samples from the dataset:
-```python
-distance = gower(data[0], data[1])
-```
-
-> [!Tip]
-> To calculate the pairwise distances for the entire dataset, you can do it manually or use an auxiliary function, like: [scipy.spatial.distance.pdist](https://docs.scipy.org/doc/scipy/reference/generated/scipy.spatial.distance.pdist.html) or [sklearn.metrics.pairwise_distances](https://scikit-learn.org/stable/modules/generated/sklearn.metrics.pairwise_distances.html).
-
-## Results for metrics comparison
+## Metrics comparison
 
 Primary, we have focus on the comparison of the Gower's metric with the other metrics. Only three datasets files were used: adult.csv, car_insurance_csv and diabetes.csv. We have used [kNN](https://scikit-learn.org/stable/modules/generated/sklearn.neighbors.KNeighborsClassifier.html), [hierarchical clustering](https://docs.scipy.org/doc/scipy-1.15.0/reference/cluster.hierarchy.html) and [HDBSCAN](https://pypi.org/project/hdbscan/) algorithms. As background for hiperparameters improvement, we have used [optuna](https://optuna.org) framework. The results are shown in the following tables.
 
