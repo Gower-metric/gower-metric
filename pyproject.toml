@@ -2,16 +2,15 @@
 authors = [
     {name = "Arch4ngel21", email = "adammichal657@gmail.com"},
 ]
-license = {text = "MIT"}
-requires-python = "<4.0,>=3.10"
+license-files = ["LICENSE.md"]
+requires-python = ">=3.10, <3.14"
 dependencies = [
     "numpy<3.0.0,>=2.2.6",
     "pandas<3.0.0,>=2.3.0",
-    "rpy2>=3.6.1",
 ]
 name = "gower-metric"
-version = "0.1.0"
-description = ""
+version = "1.0.0"
+description = "A Python implementation of the Gower distance metric for mixed data types."
 readme = "README.md"
 
 [tool.setuptools]
@@ -31,12 +30,15 @@ dev = [
     "gower-metric",
     "ipykernel>=6.30.1",
     "joblib>=1.5.1",
-    "mypy",
+    "mypy>=1.17.0",
+    "numpy>=2.2.6",
     "openml>=0.15.1",
+    "pandas>=2.3.1",
     "pip>=25.2",
     "pre-commit>=4.3.0",
     "pytest>=8.4.1",
     "pytest-asyncio>=1.1.0",
+    "rpy2>=3.6.1",
     "scikit-learn>=1.7.1",
     "seaborn>=0.13.2",
     "tqdm>=4.67.1",
@@ -44,18 +46,18 @@ dev = [
 ]
 
 tests = [
-    "pytest",
     "pytest-asyncio<2.0.0,>=1.0.0",
-    "setuptools",
     "scipy>=1.15.3",
     "scikit-learn>=1.7.1",
-    "mypy",
+    "pytest>=8.4.1",
+    "setuptools>=80.9.0",
+    "mypy>=1.17.0",
 ]
 
 r_env_tests = [
-    "pytest",
+    "mypy>=1.17.0",
+    "pytest>=8.4.1",
     "pytest-asyncio<2.0.0,>=1.0.0",
-    "setuptools",
-    "rpy2",
-    "mypy",
+    "rpy2>=3.6.1",
+    "setuptools>=80.9.0",
 ]
