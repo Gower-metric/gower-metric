@@ -28,9 +28,15 @@ Implementation of Gower's Metric in Python.
 
 | | Python 3.10 | Python 3.11 | Python 3.12 | Python 3.13 | Python 3.14 |
 |:---:|:-----------:|:-----------:|:-----------:|:-----------:|:-----------:|
-| Linux | ✅ | ✅ | ✅ | ✅ | ✅ |
-| Windows | ✅ | ✅ | ✅ | ✅ | ✅ |
-| macOS | ✅ | ✅ | ✅ | ✅ | ✅ |
+| Linux | ✅ | ✅ | ✅ | ✅ | 🚧 |
+| Windows | ✅ | ✅ | ✅ | ✅ | 🚧 |
+| macOS | ✅ | ✅ | ✅ | ✅ | 🚧 |
+
+Legend: ✅ - supported and tested, 🚧 - work in progres
+
+> [!Note]
+> The package is compatible with Python 3.10 to Python 3.13. Support for Python 3.14 is currently under development and will be available soon.
+> Any errors that occur the library might be associated with the incompatibility of the Python version.
 
 ## Documentation
 
