@@ -31,3 +31,4 @@ recursive-exclude examples *
 recursive-exclude docs *
 recursive-exclude gower_metric *.pyc
 recursive-exclude tests *.pyc
+recursive-exclude tests *.DS_Store
