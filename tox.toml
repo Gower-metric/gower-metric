@@ -2,7 +2,7 @@
 description = "Run tests"
 requires = ["tox>=4"]
 deps = ["uv"]
-allowlist_externals = ["rm"]
+allowlist_externals = ["rm", "uv", "pytest"]
 commands = [
     ["uv", "sync", "--group", "tests", "--quiet", "--active"],
     ["pytest", "tests/gower_api"],
@@ -29,6 +29,11 @@ env_dir = ".venv/"
 [env.py313]
 description = "Run tests with Python 3.13"
 base_python = ["python3.13"]
+env_dir = ".venv/"
+
+[env.py314]
+description = "Run tests with Python 3.14"
+base_python = ["python3.14"]
 env_dir = ".venv/"
 
 [env.py]

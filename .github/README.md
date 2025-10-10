@@ -26,11 +26,11 @@ Implementation of Gower's Metric in Python.
 
 ## Compatibility
 
-| | Python 3.10 | Python 3.11 | Python 3.12 | Python 3.13 |
-|:---:|:-----------:|:-----------:|:-----------:|:-----------:|
-| Linux | ✅ | ✅ | ✅ | ✅ |
-| Windows | ✅ | ✅ | ✅ | ✅ |
-| macOS | ✅ | ✅ | ✅ | ✅ |
+| | Python 3.10 | Python 3.11 | Python 3.12 | Python 3.13 | Python 3.14 |
+|:---:|:-----------:|:-----------:|:-----------:|:-----------:|:-----------:|
+| Linux | ✅ | ✅ | ✅ | ✅ | ✅ |
+| Windows | ✅ | ✅ | ✅ | ✅ | ✅ |
+| macOS | ✅ | ✅ | ✅ | ✅ | ✅ |
 
 ## Documentation
 

@@ -3,7 +3,7 @@ authors = [
     {name = "Arch4ngel21", email = "adammichal657@gmail.com"},
 ]
 license-files = ["LICENSE.md"]
-requires-python = ">=3.10, <3.14"
+requires-python = ">=3.10, <3.15"
 dependencies = [
     "numpy<3.0.0,>=2.2.6",
     "pandas<3.0.0,>=2.3.0",
