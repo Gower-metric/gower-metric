@@ -156,7 +156,7 @@ class Gower:
             self.feature_types = ft  # type: ignore[assignment]
 
             if self.categorical_ordinal_values_order:
-                for k in self.categorical_ordinal_values_order:
+                for k in list(self.categorical_ordinal_values_order.keys()):
                     if isinstance(k, str):
                         if k not in cols:
                             raise ValueError(

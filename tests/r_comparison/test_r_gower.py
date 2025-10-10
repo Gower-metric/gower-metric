@@ -1,12 +1,18 @@
+import warnings
+
 import numpy as np
 import pandas as pd
 import pytest
-from rpy2 import robjects
+from rpy2 import rinterface, robjects
 from rpy2.robjects import pandas2ri
-from rpy2.robjects.conversion import localconverter
 from rpy2.robjects.packages import importr
 
 from gower_metric import Gower
+
+warnings.filterwarnings("ignore", category=UserWarning, module="rpy2")
+
+if not rinterface.initr():
+    rinterface.initr()
 
 
 @pytest.mark.asyncio
@@ -30,9 +36,14 @@ async def test_r_gower() -> None:
     dist_py = np.array([gower(dat1.iloc[i], dat2.iloc[i]) for i in range(10)])
 
     gower = importr("gower")
-    with localconverter(robjects.default_converter + pandas2ri.converter):
-        r_dat1 = robjects.conversion.py2rpy(dat1)
-        r_dat2 = robjects.conversion.py2rpy(dat2)
+
+    converter = robjects.default_converter + pandas2ri.converter
+    with converter.context():
+        r_dat1 = robjects.conversion.get_conversion().py2rpy(dat1)
+        r_dat2 = robjects.conversion.get_conversion().py2rpy(dat2)
+        r_dist = gower.gower_dist(r_dat1, r_dat2)
+
+    r_dist = np.array(r_dist)
 
     r_dist = gower.gower_dist(r_dat1, r_dat2)
     r_dist = np.array(r_dist)

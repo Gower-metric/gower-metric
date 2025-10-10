@@ -3,14 +3,16 @@ import warnings
 import numpy as np
 import pandas as pd
 import pytest
-from rpy2 import robjects
+from rpy2 import rinterface, robjects
 from rpy2.robjects import pandas2ri
-from rpy2.robjects.conversion import localconverter
 from rpy2.robjects.packages import importr
 
 from gower_metric import Gower
 
-warnings.filterwarnings("ignore", category=DeprecationWarning)
+warnings.filterwarnings("ignore", category=UserWarning, module="rpy2")
+
+if not rinterface.initr():
+    rinterface.initr()
 
 
 @pytest.mark.asyncio
@@ -20,8 +22,9 @@ async def test_r_daisy_no_weights() -> None:
     df["race"] = df["race"].astype("category")
     df["sex"] = df["sex"].astype("category")
 
-    with localconverter(robjects.default_converter + pandas2ri.converter):
-        r_df = robjects.conversion.py2rpy(df)
+    converter = robjects.default_converter + pandas2ri.converter
+    with converter.context():
+        r_df = robjects.conversion.get_conversion().py2rpy(df)
 
     importr("cluster")
     importr("base")
@@ -106,8 +109,9 @@ async def test_r_daisy_weights() -> None:
 
     assert matrix.shape == (n, n)
 
-    with localconverter(robjects.default_converter + pandas2ri.converter):
-        r_df = robjects.conversion.py2rpy(df)
+    converter = robjects.default_converter + pandas2ri.converter
+    with converter.context():
+        r_df = robjects.conversion.get_conversion().py2rpy(df)
 
     colnames = list(r_df.colnames)
 
