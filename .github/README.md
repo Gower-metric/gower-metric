@@ -32,7 +32,7 @@ Implementation of Gower's Metric in Python.
 | Windows | ✅ | ✅ | ✅ | ✅ | 🚧 |
 | macOS | ✅ | ✅ | ✅ | ✅ | 🚧 |
 
-Legend: ✅ - supported and tested, 🚧 - work in progres
+Legend: ✅ - supported and tested, 🚧 - work in progress
 
 > [!Note]
 > The package is compatible with Python 3.10 to Python 3.13. Support for Python 3.14 is currently under development and will be available soon.
@@ -43,7 +43,7 @@ Legend: ✅ - supported and tested, 🚧 - work in progres
 @TODO: add ref  
 Documentation is available [here]().
 
-What is more, please feel free to check out [example](./examples/) and [comparison](./comparison/) sections.
+What is more, please feel free to check out [example](../examples/) and [comparison](../comparison/) sections.
 
 ## Installation
 
@@ -118,6 +118,8 @@ $s_{ijk} = 1$, if variable $i$ equals to variable $j$ at $k$-th element, $0$ oth
 Additionaly, Gower proposed the inclusion of weights in the similarity coefficient.
 
 ## Metric enhancements
+
+In 1999 and 2021, a few improvements to the original Gower's metric were proposed. Below are listed implemented enhancements.
 
 ### Ordinal variables
 
@@ -209,7 +211,8 @@ Primary, we have focus on the comparison of the Gower's metric with the other me
 
 ---
 
-### - kNN
+<details>
+<summary><h3 style="display:inline; margin:0;">kNN</h3></summary>
 
 #### Adult Dataset
 | Metric    | KNN Score   | F1        |
@@ -245,9 +248,12 @@ Primary, we have focus on the comparison of the Gower's metric with the other me
 | dice      | 0.6558       | 0.5195    |
 | jaccard   | **0.6039**   | **0.4548**|
 
+</details>
+
 ---
 
-### - Hierarchical clustering
+<details>
+<summary><h3 style="display:inline; margin:0;">Hierarchical clustering</h3></summary>
 
 #### Adult Dataset
 | Metric    | Rand           | Complete         | F-M            | Mutual         | CPCC           | IOA            |
@@ -283,9 +289,12 @@ Primary, we have focus on the comparison of the Gower's metric with the other me
 | dice      | 0.5455         | 1.0000           | 0.7386         | 0.0000         | 0.0000         | 0.0000         |
 | jaccard   | 0.5455         | 1.0000           | 0.7386         | 0.0000         | 0.0000         | 0.0000         |
 
+</details>
+
 ---
 
-### - HDBSCAN
+<details>
+<summary><h3 style="display:inline; margin:0;">HDBSCAN</h3></summary>
 
 #### Adult Dataset
 | Metric    | Rand           | Complete         | F-M            | Mutual         |
@@ -321,7 +330,9 @@ Primary, we have focus on the comparison of the Gower's metric with the other me
 | dice      | 0.5003         | 0.0035           | 0.5466         | 0.0022         |
 | jaccard   | 0.5068         | 0.0013           | 0.5525         | 0.0009         |
 
-Suggested results interpretation
+</details>
+
+### Suggested results interpretation
 
 Each of the analyzed datasets contains different types of data. For example, the adult.csv dataset includes both ratio and categorical data. On the other hand, diabetes.csv consists solely of numeric data, while car_insurance.csv incorporates an additional type: binary variables. Additionally, all data files have been labeled accordingly to facilitate analysis.
 
@@ -331,6 +342,11 @@ However, this does not imply that the Gower metric is inherently the best for al
 
 Thus, the best approach is to select a distance metric that best aligns with the specific problem at hand.
 
+## History
+
+@TODO: add history of this project
+
 ## References
 - [Distances with mixed type variables some modified Gower's coefficients (2021)](https://arxiv.org/abs/2101.02481)
+- [Extending Gower's General Coefficient of Similarity to Ordinal Characters (1999)](https://www.researchgate.net/publication/271789313_Extending_Gower%27s_General_Coefficient_of_Similarity_to_Ordinal_Characters)
 - [A General Coefficient of Similarity and Some of Its Properties (1971)](https://www.jstor.org/stable/2528823)
