@@ -511,9 +511,10 @@ class Gower:
     def matrix(
         self,
         X: pd.DataFrame | np.ndarray,
-        data_type: type[np.floating] = np.float32,
+        data_type: type[np.floating | np.integer] = np.float32,
         n_jobs: int = -1,
         verbose: int = 0,
+        matrix_type: str = "distance",
     ):
         """Compute symmetric pairwise Gower distance matrix using joblib (parallel).
 
@@ -522,6 +523,8 @@ class Gower:
             data_type: data type for the output distance matrix, default np.float32
             n_jobs: number of parallel jobs to run, -1 means using all processors
             verbose: whether to show tqdm progress bar
+            matrix_type: Type of matrix to compute, either 'distance' or 'similarity'.
+                Default is 'distance'.
 
         Returns:
             M: np.ndarray (n_samples, n_samples) symmetric matrix of Gower distances
@@ -546,6 +549,7 @@ class Gower:
             data_type=data_type,
             verbose=verbose,
             backend="multiprocessing",
+            matrix_type=matrix_type,
         )
 
         results.sort(key=lambda x: x[0])
