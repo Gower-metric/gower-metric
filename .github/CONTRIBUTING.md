@@ -75,6 +75,20 @@ tox -e py310,py311,py312,py313
 > [!NOTE]
 > The key difference between `tests` and `r_env_tests` is presence of [rpy2](https://rpy2.readthedocs.io/en/latest/) package, which requires [R](https://www.r-project.org) to be installed on your system. If you want to run tests that do not require R, feel free to use first group.
 
+### Creating documentation
+
+To create the documentation, you can use [sphinx-autobuild](https://github.com/sphinx-doc/sphinx-autobuild) tool. It will automatically create the documentation for you and host it locally. You can run the following command to create the environment first:
+
+```bash
+uv sync --group docs
+```
+
+After that, you can run the following command to start the documentation server from the root directory of the project:
+
+```bash
+sphinx-autobuild docs/source docs/build/html
+```
+
 ## I Have a Question
 
 > [!NOTE]

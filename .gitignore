@@ -16,6 +16,7 @@ ENV/
 *.egg-info/
 .eggs/
 build/
+generated/
 dist/
 .pypirc
 .python-version

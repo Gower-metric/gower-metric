@@ -12,6 +12,8 @@ Welcome to the Gower-metric library! This library provides an implementation of 
 - [Gower characteristics](#gower-characteristics)
 - [Metric enhancements](#metric-enhancements)
 - [Metrics comparison](#metrics-comparison)
+- [History](#history)
+- [Citation](#citation)
 - [References](#references)
 
 ## Introduction
@@ -345,6 +347,12 @@ Thus, the best approach is to select a distance metric that best aligns with the
 ## History
 
 @TODO: add history of this project
+
+## Citation
+
+If you find this project useful in your research, please consider citing it as follows:
+
+@TODO: add citation
 
 ## References
 - [Distances with mixed type variables some modified Gower's coefficients (2021)](https://arxiv.org/abs/2101.02481)
