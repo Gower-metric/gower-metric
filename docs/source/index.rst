@@ -10,6 +10,7 @@ Main features include:
 - Podani's support
 - Efficient computation using NumPy framework
 - Numerical friendly thanks to transform call and joblib support
+- SciPy sparse matrix support
 - Easy integration with pandas DataFrames
 - Customizable weighting for different variable types
 - MIT License

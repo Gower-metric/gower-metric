@@ -8,6 +8,7 @@ dependencies = [
     "joblib>=1.5.1",
     "numpy<3.0.0,>=2.2.6",
     "pandas<3.0.0,>=2.3.0",
+    "scipy>=1.15.3",
 ]
 name = "gower-metric"
 version = "1.0.0"

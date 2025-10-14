@@ -2,6 +2,7 @@ from typing import Any
 
 import numpy as np
 import pandas as pd
+import scipy.sparse
 
 from gower_metric.distances.binary_asymmetric import (
     binary_asymmetric_distance_matrix,
@@ -18,6 +19,7 @@ from gower_metric.utils.cat_ord_ut import (
 from gower_metric.utils.kde_types.silverman import silverman_bandwidth
 from gower_metric.utils.knn_bandwidth import knn_bandwidth
 from gower_metric.utils.matrix.calculate_matrix import get_results_from_joblib
+from gower_metric.utils.matrix.convert_matrix import get_scipy_sparse_matrix
 from gower_metric.utils.ranges import get_numeric_ranges
 from gower_metric.utils.to_array import to_array
 from gower_metric.utils.validators import (
@@ -515,19 +517,35 @@ class Gower:
         n_jobs: int = -1,
         verbose: int = 0,
         matrix_type: str = "distance",
+        convert_to_sparse: bool = False,
+        sparse_type: str = "csr",
+    ) -> (
+        np.ndarray
+        | scipy.sparse.csr_matrix
+        | scipy.sparse.csc_matrix
+        | scipy.sparse.coo_matrix
     ):
         """Compute symmetric pairwise Gower distance matrix using joblib (parallel).
 
         Args:
-            X: pandas DataFrame or numpy array (n_samples, n_features)
-            data_type: data type for the output distance matrix, default np.float32
-            n_jobs: number of parallel jobs to run, -1 means using all processors
-            verbose: whether to show tqdm progress bar
+            X: pandas DataFrame or numpy array (n_samples, n_features).
+            data_type: data type for the output distance matrix, default np.float32.
+            n_jobs: number of parallel jobs to run, -1 means using all processors.
+            verbose: whether to show tqdm progress bar.
             matrix_type: Type of matrix to compute, either 'distance' or 'similarity'.
                 Default is 'distance'.
+            convert_to_sparse: Whether to convert the output dense matrix to a sparse format.
+                Default is False.
+            sparse_type: Type of sparse matrix to convert to, either 'csr', 'csc' or 'coo'.
+                Default is 'csr'.
 
         Returns:
-            M: np.ndarray (n_samples, n_samples) symmetric matrix of Gower distances
+            M: np.ndarray (n_samples, n_samples) or scipy sparse matrix.
+
+        Raises:
+            ValueError: If fit(X) was not called before computing the matrix.
+            ValueError: If matrix_type is not 'distance' or 'similarity'.
+            ValueError: If sparse_type is not 'csr', 'csc' or 'coo'.
         """
         if not self._is_fitted:
             print("Model not fitted, fitting now...")
@@ -558,5 +576,12 @@ class Gower:
         M = np.vstack(rows_upper)
         M += M.T
         np.fill_diagonal(M, 0.0)
+
+        if convert_to_sparse:
+            M = get_scipy_sparse_matrix(
+                M, matrix_format=sparse_type, data_type=data_type
+            )
+        else:
+            raise ValueError("sparse_type must be either 'csr', 'csc' or 'coo'.")
 
         return M
