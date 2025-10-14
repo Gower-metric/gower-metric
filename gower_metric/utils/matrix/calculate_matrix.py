@@ -9,7 +9,7 @@ if TYPE_CHECKING:
 
 
 def __compute_row_upper(
-    i: int, X_arr: np.ndarray, model: "Gower", data_type: int | float
+    i: int, X_arr: np.ndarray, model: "Gower", data_type: type[np.floating]
 ) -> tuple[int, np.ndarray]:
     """Compute one upper triangle row of Gower distances.
 
@@ -34,7 +34,7 @@ def get_results_from_joblib(
     arr: np.ndarray,
     n_jobs: int,
     verbose: int,
-    data_type: int | float,
+    data_type: type[np.floating],
     model: "Gower",
     n: int = 0,
     backend: str = "multiprocessing",
@@ -53,7 +53,7 @@ def get_results_from_joblib(
     Returns:
         List of tuples (row index, computed row array).
     """
-    results: tuple[int, np.ndarray] = Parallel(
+    results: list[tuple[int, np.ndarray]] = Parallel(
         n_jobs=n_jobs, backend=backend, verbose=0
     )(
         delayed(__compute_row_upper)(i, arr, model, data_type)

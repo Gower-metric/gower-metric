@@ -511,7 +511,7 @@ class Gower:
     def matrix(
         self,
         X: pd.DataFrame | np.ndarray,
-        data_type: float = np.float32,
+        data_type: type[np.floating] = np.float32,
         n_jobs: int = -1,
         verbose: int = 0,
     ):
