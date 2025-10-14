@@ -636,6 +636,7 @@ name = "gower-metric"
 version = "1.0.0"
 source = { editable = "." }
 dependencies = [
+    { name = "joblib" },
     { name = "numpy" },
     { name = "pandas" },
 ]
@@ -698,6 +699,7 @@ tests = [
 
 [package.metadata]
 requires-dist = [
+    { name = "joblib", specifier = ">=1.5.1" },
     { name = "numpy", specifier = ">=2.2.6,<3.0.0" },
     { name = "pandas", specifier = ">=2.3.0,<3.0.0" },
     { name = "pydata-sphinx-theme", marker = "extra == 'docs'", specifier = ">=0.16.1" },

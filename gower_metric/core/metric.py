@@ -17,6 +17,7 @@ from gower_metric.utils.cat_ord_ut import (
 )
 from gower_metric.utils.kde_types.silverman import silverman_bandwidth
 from gower_metric.utils.knn_bandwidth import knn_bandwidth
+from gower_metric.utils.matrix.calculate_matrix import get_results_from_joblib
 from gower_metric.utils.ranges import get_numeric_ranges
 from gower_metric.utils.to_array import to_array
 from gower_metric.utils.validators import (
@@ -499,10 +500,59 @@ class Gower:
         Compute the Gower similarity between two records.
 
         Args:
-            a: First record, same format as for distance().
-            b: Second record, same format as for distance().
+            a: First record, same format as for __call__().
+            b: Second record, same format as for __call__().
 
         Returns:
             float: Gower similarity in [0,1], defined as 1 - distance(a, b).
         """
         return 1.0 - self(a, b)
+
+    def matrix(
+        self,
+        X: pd.DataFrame | np.ndarray,
+        data_type: float = np.float32,
+        n_jobs: int = -1,
+        verbose: int = 0,
+    ):
+        """Compute symmetric pairwise Gower distance matrix using joblib (parallel).
+
+        Args:
+            X: pandas DataFrame or numpy array (n_samples, n_features)
+            data_type: data type for the output distance matrix, default np.float32
+            n_jobs: number of parallel jobs to run, -1 means using all processors
+            verbose: whether to show tqdm progress bar
+
+        Returns:
+            M: np.ndarray (n_samples, n_samples) symmetric matrix of Gower distances
+        """
+        if not self._is_fitted:
+            print("Model not fitted, fitting now...")
+            self.fit(X)
+
+        if isinstance(X, pd.DataFrame):
+            arr = X.to_numpy(dtype=object)
+        else:
+            arr = np.array(X, dtype=object)
+
+        n: int = len(arr)
+        M: np.ndarray = np.zeros((n, n), dtype=data_type)
+
+        results: list[tuple[int, np.ndarray]] = get_results_from_joblib(
+            n_jobs=n_jobs,
+            n=n,
+            arr=arr,
+            model=self,
+            data_type=data_type,
+            verbose=verbose,
+            backend="multiprocessing",
+        )
+
+        results.sort(key=lambda x: x[0])
+        rows_upper = [row for _, row in results]
+
+        M = np.vstack(rows_upper)
+        M += M.T
+        np.fill_diagonal(M, 0.0)
+
+        return M

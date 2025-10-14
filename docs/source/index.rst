@@ -9,7 +9,7 @@ Main features include:
 - Support for mixed data types (categorical, numerical, ordinal, binary)
 - Podani's support
 - Efficient computation using NumPy framework
-- Numerical friendly thanks to transform call
+- Numerical friendly thanks to transform call and joblib support
 - Easy integration with pandas DataFrames
 - Customizable weighting for different variable types
 - MIT License
