@@ -555,8 +555,10 @@ class Gower:
         else:
             arr = np.array(X, dtype=object)
 
-        n: int = len(arr)
-        M: np.ndarray = np.zeros((n, n), dtype=data_type)
+        n: int = arr.shape[0]
+        m: int = arr.shape[1]
+
+        MATRIX: np.ndarray = np.zeros((n, m), dtype=data_type)
 
         results: list[tuple[int, np.ndarray]] = get_results_from_joblib(
             n_jobs=n_jobs,
@@ -572,13 +574,13 @@ class Gower:
         results.sort(key=lambda x: x[0])
         rows_upper = [row for _, row in results]
 
-        M = np.vstack(rows_upper)
-        M += M.T
-        np.fill_diagonal(M, 0.0)
+        MATRIX = np.vstack(rows_upper)
+        MATRIX += MATRIX.T
+        np.fill_diagonal(MATRIX, 0.0)
 
         if convert_to_sparse:
-            M = get_scipy_sparse_matrix(
-                M, matrix_format=sparse_type, data_type=data_type
+            MATRIX = get_scipy_sparse_matrix(
+                MATRIX, matrix_format=sparse_type, data_type=data_type
             )
 
-        return M
+        return MATRIX

@@ -11,6 +11,7 @@ if TYPE_CHECKING:
 def __compute_row_upper(
     i: int,
     X_arr: np.ndarray,
+    n: int,
     model: "Gower",
     data_type: type[np.floating | np.integer],
     row_type: str,
@@ -20,6 +21,7 @@ def __compute_row_upper(
     Args:
         i: Row index.
         X_arr: Data array (n_samples, n_features).
+        n: Number of samples.
         model: Fitted Gower instance.
         data_type: Data type for the output row array.
         row_type: Type of row to compute, distance or similarity. Defaults to "distance".
@@ -27,7 +29,7 @@ def __compute_row_upper(
     Returns:
         (i, row): Tuple of row index and computed row array.
     """
-    n = X_arr.shape[0]
+    n = X_arr.shape[0] if n == 0 else n
     xi = X_arr[i]
     row = np.zeros(n, dtype=data_type)
 
@@ -68,7 +70,7 @@ def get_results_from_joblib(
     results: list[tuple[int, np.ndarray]] = Parallel(
         n_jobs=n_jobs, backend=backend, verbose=0
     )(
-        delayed(__compute_row_upper)(i, arr, model, data_type, matrix_type)
+        delayed(__compute_row_upper)(i, arr, n, model, data_type, matrix_type)
         for i in tqdm(
             range(n),
             desc="Calculating upper triangle rows",
