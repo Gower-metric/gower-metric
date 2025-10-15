@@ -62,23 +62,26 @@ dev = [
 ]
 
 tests = [
-    "pytest-asyncio<2.0.0,>=1.0.0",
     "scipy>=1.15.3",
     "scikit-learn>=1.7.1",
     "pytest>=8.4.1",
     "setuptools>=80.9.0",
     "mypy>=1.17.0",
+    "numpy>=2.2.6",
+    "pandas>=2.3.1",
 ]
 
 r_env_tests = [
     "mypy>=1.17.0",
+    "numpy>=2.2.6",
+    "pandas>=2.3.1",
     "pytest>=8.4.1",
-    "pytest-asyncio<2.0.0,>=1.0.0",
     "rpy2>=3.6.1",
     "scikit-learn>=1.7.1",
     "scipy>=1.15.3",
     "setuptools>=80.9.0",
 ]
+
 docs = [
     "pydata-sphinx-theme>=0.16.1",
     "sphinx>=8.1.3",

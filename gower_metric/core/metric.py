@@ -543,13 +543,12 @@ class Gower:
             M: np.ndarray (n_samples, n_samples) or scipy sparse matrix.
 
         Raises:
-            ValueError: If fit(X) was not called before computing the matrix.
-            ValueError: If matrix_type is not 'distance' or 'similarity'.
-            ValueError: If sparse_type is not 'csr', 'csc' or 'coo'.
+            Warning: If fit(X) was not called before computing the matrix. In this case,
+                the model will be fitted automatically.
         """
         if not self._is_fitted:
-            print("Model not fitted, fitting now...")
             self.fit(X)
+            raise Warning("Calling .fit(X) inside .matrix(X).")
 
         if isinstance(X, pd.DataFrame):
             arr = X.to_numpy(dtype=object)
@@ -581,7 +580,5 @@ class Gower:
             M = get_scipy_sparse_matrix(
                 M, matrix_format=sparse_type, data_type=data_type
             )
-        else:
-            raise ValueError("sparse_type must be either 'csr', 'csc' or 'coo'.")
 
         return M
