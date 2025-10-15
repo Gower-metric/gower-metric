@@ -7,8 +7,7 @@ from gower_metric import Gower
 from gower_metric.utils.kde_types.silverman import silverman_bandwidth
 
 
-@pytest.mark.asyncio
-async def test_ratio_scale_range_ndarray() -> None:
+def test_ratio_scale_range_ndarray() -> None:
     data = np.array([[1.0], [2.0], [3.0], [1.0]], dtype=float)
     gower = Gower({0: "ratio_scale_interval"}, scale="range")
     gower.fit(data)
@@ -32,8 +31,7 @@ async def test_ratio_scale_range_ndarray() -> None:
             assert pytest.approx(dist, rel=1e-6) == expected[i, j]
 
 
-@pytest.mark.asyncio
-async def test_ratio_scale_kde_window_h() -> None:
+def test_ratio_scale_kde_window_h() -> None:
     # result >> h
     data = np.array([[0.0], [100.0], [200.0]], dtype=float)
 

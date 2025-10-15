@@ -5,8 +5,7 @@ import pytest
 from gower_metric import Gower
 
 
-@pytest.mark.asyncio
-async def test_missing_values_skip_nan() -> None:
+def test_missing_values_skip_nan() -> None:
     """
     Test that missing values are handled correctly (ignored) in Gower similarity.
     """

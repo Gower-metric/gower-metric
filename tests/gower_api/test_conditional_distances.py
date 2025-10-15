@@ -4,8 +4,7 @@ import pytest
 from gower_metric import Gower
 
 
-@pytest.mark.asyncio
-async def test_conditional_distances() -> None:
+def test_conditional_distances() -> None:
     raw = np.array(
         [
             ["A", 0.0],
@@ -47,8 +46,7 @@ async def test_conditional_distances() -> None:
             assert pytest.approx(dist, rel=1e-6) == expected[i, j]
 
 
-@pytest.mark.asyncio
-async def test_conditional_distances_clip() -> None:
+def test_conditional_distances_clip() -> None:
     raw = np.array(
         [
             ["A", "X", 0.0],

@@ -2,7 +2,6 @@ import warnings
 
 import numpy as np
 import pandas as pd
-import pytest
 from rpy2 import rinterface, robjects
 from rpy2.robjects import pandas2ri
 from rpy2.robjects.packages import importr
@@ -15,8 +14,7 @@ if not rinterface.initr():
     rinterface.initr()
 
 
-@pytest.mark.asyncio
-async def test_r_gower() -> None:
+def test_r_gower() -> None:
     iris = pd.read_csv("./comparison/data/iris.csv")
 
     dat1 = iris.iloc[0:10].reset_index(drop=True)

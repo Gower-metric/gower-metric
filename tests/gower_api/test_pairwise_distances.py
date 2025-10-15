@@ -1,13 +1,11 @@
 import numpy as np
 import pandas as pd
-import pytest
 from sklearn.metrics import pairwise_distances
 
 from gower_metric import Gower
 
 
-@pytest.mark.asyncio
-async def test_scikit_learn_paiwise_distances() -> None:
+def test_scikit_learn_paiwise_distances() -> None:
     n_rows = 500
     df = pd.read_csv("./comparison/data/adult.csv").head(n_rows)
 
@@ -52,17 +50,14 @@ async def test_scikit_learn_paiwise_distances() -> None:
         df, metric=_gower_distance, n_jobs=-1, ensure_all_finite=False
     )
 
-    matrix_custom = np.zeros((n_rows, n_rows))
-    for i in range(n_rows):
-        for j in range(n_rows):
-            matrix_custom[i, j] = gower(df[i], df[j])
+    matrix_gower = gower.matrix(df)
 
     assert matrix_scikit.shape == (n_rows, n_rows), (
         "The shape of the pairwise distance matrix is incorrect."
     )
-    assert matrix_custom.shape == (n_rows, n_rows), (
+    assert matrix_gower.shape == (n_rows, n_rows), (
         "The shape of the custom pairwise distance matrix is incorrect."
     )
-    assert np.allclose(matrix_scikit, matrix_custom, rtol=1e-5, atol=1e-8), (
+    assert np.allclose(matrix_scikit, matrix_gower, rtol=1e-5, atol=1e-8), (
         "The pairwise distance matrices do not match."
     )

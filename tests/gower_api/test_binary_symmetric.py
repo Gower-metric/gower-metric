@@ -5,8 +5,7 @@ import pytest
 from gower_metric import Gower
 
 
-@pytest.mark.asyncio
-async def test_binary_symmetric_only() -> None:
+def test_binary_symmetric_only() -> None:
     data = np.array([[0], [1], [0]], dtype=object)
     gower = Gower({0: "binary_symmetric"})
     gower.fit(data)
@@ -22,8 +21,7 @@ async def test_binary_symmetric_only() -> None:
     assert pytest.approx(gower(data[1], data[0]), rel=1e-6) == 1.0
 
 
-@pytest.mark.asyncio
-async def test_binary_symmetric_only_pandas() -> None:
+def test_binary_symmetric_only_pandas() -> None:
     data = pd.DataFrame({"column": [0, 1, 0]})
     gower = Gower({"column": "binary_symmetric"})
     gower.fit(data)

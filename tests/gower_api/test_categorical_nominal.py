@@ -5,8 +5,7 @@ import pytest
 from gower_metric import Gower
 
 
-@pytest.mark.asyncio
-async def test_categorical_nominal_ndarray() -> None:
+def test_categorical_nominal_ndarray() -> None:
     data = np.array([["A"], ["B"], ["C"], ["A"]], dtype=object)
     gower = Gower({0: "categorical_nominal"})
     gower.fit(data)
@@ -30,8 +29,7 @@ async def test_categorical_nominal_ndarray() -> None:
             assert pytest.approx(dist, rel=1e-6) == expected[i, j]
 
 
-@pytest.mark.asyncio
-async def test_categorical_nominal_pandas() -> None:
+def test_categorical_nominal_pandas() -> None:
     df = pd.DataFrame({"color": ["red", "blue", "green", "red"]})
     gower = Gower({"color": "categorical_nominal"})
     gower.fit(df)

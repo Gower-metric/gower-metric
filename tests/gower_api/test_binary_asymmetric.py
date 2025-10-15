@@ -4,8 +4,7 @@ import pytest
 from gower_metric import Gower
 
 
-@pytest.mark.asyncio
-async def test_binary_asymmetric_only() -> None:
+def test_binary_asymmetric_only() -> None:
     data = np.array([[0], [1], [0]], dtype=object)
     gower = Gower({0: "binary_asymmetric"})
     gower.fit(data)

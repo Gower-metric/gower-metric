@@ -2,7 +2,6 @@ import warnings
 
 import numpy as np
 import pandas as pd
-import pytest
 from rpy2 import rinterface, robjects
 from rpy2.robjects import pandas2ri
 from rpy2.robjects.packages import importr
@@ -15,8 +14,7 @@ if not rinterface.initr():
     rinterface.initr()
 
 
-@pytest.mark.asyncio
-async def test_r_daisy_no_weights() -> None:
+def test_r_daisy_no_weights() -> None:
     n_rows = 100
     df = pd.read_csv("./comparison/data/adult_reduced.csv").head(n_rows)
     df["race"] = df["race"].astype("category")
@@ -49,18 +47,13 @@ async def test_r_daisy_no_weights() -> None:
 
     gower = Gower(feature_types=feature_types).fit(df)
 
-    gower_matrix = np.zeros((n_rows, n_rows), dtype=np.float32)
     df = df.to_numpy()
-
-    for i in range(n_rows):
-        for j in range(n_rows):
-            gower_matrix[i, j] = gower(df[i], df[j])
+    gower_matrix = gower.matrix(df)
 
     assert np.allclose(np_matrix, gower_matrix, atol=1e-6)
 
 
-@pytest.mark.asyncio
-async def test_r_daisy_weights() -> None:
+def test_r_daisy_weights() -> None:
     df = pd.DataFrame(
         {
             "age": [23, 45, 23, 31],
@@ -102,10 +95,7 @@ async def test_r_daisy_weights() -> None:
     ).fit(df)
 
     n = len(df)
-    matrix = np.zeros((n, n), dtype=np.float32)
-    for i in range(n):
-        for j in range(n):
-            matrix[i, j] = gower(df.iloc[i], df.iloc[j])
+    matrix = gower.matrix(df)
 
     assert matrix.shape == (n, n)
 

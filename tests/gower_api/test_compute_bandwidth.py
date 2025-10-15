@@ -6,8 +6,7 @@ from gower_metric.utils.kde_types.silverman import silverman_bandwidth
 from gower_metric.utils.knn_bandwidth import knn_bandwidth
 
 
-@pytest.mark.asyncio
-async def test_ratio_scale_knn_window_no_error() -> None:
+def test_ratio_scale_knn_window_no_error() -> None:
     rng = np.random.default_rng(seed=42)
     data = rng.normal(size=(60, 2))
 
@@ -22,8 +21,7 @@ async def test_ratio_scale_knn_window_no_error() -> None:
     assert (np.asarray(gs_knn._h_numeric) > 0).all()
 
 
-@pytest.mark.asyncio
-async def test_ratio_scale_kde_window_h_multi() -> None:
+def test_ratio_scale_kde_window_h_multi() -> None:
     rng = np.random.default_rng(seed=123)
     data = rng.normal(size=(80, 2))
 
@@ -46,8 +44,7 @@ async def test_ratio_scale_kde_window_h_multi() -> None:
     assert pytest.approx(gs_kde._h_numeric[0], rel=1e-12) == manual_h_numeric
 
 
-@pytest.mark.asyncio
-async def test_knn_bandwidth_values_and_effect() -> None:
+def test_knn_bandwidth_values_and_effect() -> None:
     data = np.array(
         [
             [0.00, 0.00],
