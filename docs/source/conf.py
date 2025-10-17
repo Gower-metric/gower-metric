@@ -47,9 +47,9 @@ templates_path = ['_templates']
 html_theme = "pydata_sphinx_theme"
 
 html_theme_options = {
-    "show_toc_level": 4,
-    "navigation_depth": 4,
-    "show_nav_level": 4,
+    "show_toc_level": 1,
+    "navigation_depth": 3,
+    "show_nav_level": 1,
     "collapse_navigation": False,
     "navigation_with_keys": True,
 }

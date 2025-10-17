@@ -8,8 +8,7 @@ Distances
    :show-inheritance:
 
 .. toctree::
-   :maxdepth: 2
-   :caption: Distance Types
+   :maxdepth: 1
    
    distances/binary_asymmetric
    distances/binary_symmetric

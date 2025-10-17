@@ -1,16 +1,13 @@
-====
-Core
-====
+===================
+Core functionality
+===================
 
-.. automodule:: gower_metric.core
+.. automodule:: gower_metric
    :members:
    :undoc-members:
    :show-inheritance:
 
-Metric
-------
+.. toctree::
+   :maxdepth: 1
 
-.. automodule:: gower_metric.core.metric
-   :members:
-   :undoc-members:
-   :show-inheritance:
+   core/metric

@@ -8,6 +8,6 @@ Weights
    :show-inheritance:
 
 .. toctree::
-   :maxdepth: 2
+   :maxdepth: 1
 
    weights/constant_weight

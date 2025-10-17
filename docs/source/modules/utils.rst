@@ -9,7 +9,6 @@ Utils
 
 .. toctree::
    :maxdepth: 1
-   :caption: Utility submodules:
 
    utils/cat_ord_ut
    utils/knn_bandwidth
