@@ -28,6 +28,14 @@ autosummary_generate_overviews = True
 
 add_module_names = False
 
+autodoc_default_options = {
+    'members': True,
+    'member-order': 'bysource',
+    'private-members': True,
+    'undoc-members': True,
+    'show-inheritance': True,
+}
+
 intersphinx_mapping = {
     'python': ('https://docs.python.org/3/', None),
     'sphinx': ('https://www.sphinx-doc.org/en/master/', None),
@@ -42,7 +50,7 @@ html_theme_options = {
     "show_toc_level": 4,
     "navigation_depth": 4,
     "show_nav_level": 4,
-    "collapse_navigation": True,
+    "collapse_navigation": False,
     "navigation_with_keys": True,
 }
 
