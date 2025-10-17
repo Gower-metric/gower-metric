@@ -17,6 +17,7 @@ extensions = [
     'sphinx.ext.autosummary',
     'sphinx.ext.intersphinx',
     'sphinx.ext.napoleon',
+    'sphinx.ext.viewcode',
     'sphinx_copybutton',
 ]
 
@@ -24,6 +25,8 @@ extensions = [
 napoleon_google_docstring = True
 napoleon_numpy_docstring = True
 autosummary_generate_overviews = True
+
+add_module_names = False
 
 intersphinx_mapping = {
     'python': ('https://docs.python.org/3/', None),
@@ -34,5 +37,13 @@ intersphinx_disabled_domains = ['std']
 templates_path = ['_templates']
 
 html_theme = "pydata_sphinx_theme"
+
+html_theme_options = {
+    "show_toc_level": 2,
+    "navigation_depth": 4,
+    "show_nav_level": 2,
+    "collapse_navigation": True,
+    "navigation_with_keys": True,
+}
 
 epub_show_urls = 'footnote'

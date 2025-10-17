@@ -540,7 +540,7 @@ class Gower:
                 Default is 'csr'.
 
         Returns:
-            M: np.ndarray (n_samples, n_samples) or scipy sparse matrix.
+            MATRIX: np.ndarray (n_samples, n_samples) or scipy sparse matrix.
 
         Raises:
             Warning: If fit(X) was not called before computing the matrix. In this case,
