@@ -556,9 +556,8 @@ class Gower:
             arr = np.array(X, dtype=object)
 
         n: int = arr.shape[0]
-        m: int = arr.shape[1]
 
-        MATRIX: np.ndarray = np.zeros((n, m), dtype=data_type)
+        MATRIX: np.ndarray = np.zeros((n, n), dtype=data_type)
 
         results: list[tuple[int, np.ndarray]] = get_results_from_joblib(
             n_jobs=n_jobs,
@@ -576,7 +575,11 @@ class Gower:
 
         MATRIX = np.vstack(rows_upper)
         MATRIX += MATRIX.T
-        np.fill_diagonal(MATRIX, 0.0)
+
+        if matrix_type == "distance":
+            np.fill_diagonal(MATRIX, 0.0)
+        elif matrix_type == "similarity":
+            np.fill_diagonal(MATRIX, 1.0)
 
         if convert_to_sparse:
             MATRIX = get_scipy_sparse_matrix(

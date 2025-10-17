@@ -48,9 +48,8 @@ def test_gower_matrix_endpoint_with_custom_created_matrix() -> None:
 
     matrix_custom: np.ndarray = np.zeros((n_rows, n_rows), dtype=np.float32)
     for i in range(n_rows):
-        for j in range(i + 1, n_rows):
+        for j in range(n_rows):
             matrix_custom[i, j] = gower(df[i], df[j])
-            matrix_custom[j, i] = matrix_custom[i, j]
 
     assert np.allclose(dist_matrix, matrix_custom, rtol=1e-5, atol=1e-5), (
         "Matrices are not equal"
@@ -96,9 +95,8 @@ def test_gower_matrix_endpoint_similarity() -> None:
 
     matrix_custom: np.ndarray = np.zeros((n_rows, n_rows), dtype=np.float32)
     for i in range(n_rows):
-        for j in range(i + 1, n_rows):
+        for j in range(n_rows):
             matrix_custom[i, j] = gower.similarity(df[i], df[j])
-            matrix_custom[j, i] = matrix_custom[i, j]
 
     assert np.allclose(similarity_matrix, matrix_custom, rtol=1e-5, atol=1e-5), (
         "Matrices are not equal"
@@ -169,9 +167,8 @@ def test_gower_matrix_endpoint_if_it_symmetrical() -> None:
 
     custom_matrix = np.zeros((n_rows, n_rows), dtype=np.float32)
     for i in range(n_rows):
-        for j in range(i + 1, n_rows):
+        for j in range(n_rows):
             custom_matrix[i, j] = gower(df[i], df[j])
-            custom_matrix[j, i] = custom_matrix[i, j]
 
     assert np.allclose(dist_matrix, custom_matrix, rtol=1e-5, atol=1e-5), (
         "Matrices are not equal"
@@ -199,12 +196,12 @@ def test_matrix_endpoint_podani_if_symmetrical_distance() -> None:
 
     dist_matrix: np.ndarray = gower.matrix(data)
 
-    custom_matrix = np.zeros((data.shape[0], data.shape[0]), dtype=np.float32)
+    n = data.shape[0]
+    custom_matrix = np.zeros((n, n), dtype=np.float32)
 
     for i in range(data.shape[0]):
-        for j in range(i + 1, data.shape[0]):
+        for j in range(data.shape[0]):
             custom_matrix[i, j] = gower(data[i], data[j])
-            custom_matrix[j, i] = custom_matrix[i, j]
 
     assert np.allclose(dist_matrix, custom_matrix, rtol=1e-5, atol=1e-5), (
         "Matrices are not equal"
@@ -232,12 +229,12 @@ def test_matrix_endpoint_podani_if_symmetrical_similarity() -> None:
 
     dist_matrix: np.ndarray = gower.matrix(data, matrix_type="similarity")
 
-    custom_matrix = np.zeros((data.shape[0], data.shape[0]), dtype=np.float32)
+    n = data.shape[0]
+    custom_matrix = np.zeros((n, n), dtype=np.float32)
 
-    for i in range(data.shape[0]):
-        for j in range(i + 1, data.shape[0]):
+    for i in range(n):
+        for j in range(n):
             custom_matrix[i, j] = gower.similarity(data[i], data[j])
-            custom_matrix[j, i] = custom_matrix[i, j]
 
     assert np.allclose(dist_matrix, custom_matrix, rtol=1e-5, atol=1e-5), (
         "Matrices are not equal"

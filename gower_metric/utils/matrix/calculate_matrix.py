@@ -36,7 +36,7 @@ def __compute_row_upper(
     for j in range(i + 1, n):
         if row_type == "distance":
             row[j] = model(xi, X_arr[j])
-        else:
+        elif row_type == "similarity":
             row[j] = model.similarity(xi, X_arr[j])
 
     return (i, row)
