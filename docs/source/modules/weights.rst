@@ -7,10 +7,7 @@ Weights
    :undoc-members:
    :show-inheritance:
 
-Weights calculation
--------------------
+.. toctree::
+   :maxdepth: 2
 
-.. automodule:: gower_metric.weights.weights
-   :members:
-   :undoc-members:
-   :show-inheritance:
+   weights/constant_weight
