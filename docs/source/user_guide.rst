@@ -26,3 +26,4 @@ It supports different types of features, as follows:
 .. note::
 
    Any possible mistakes in feature type specification may lead to incorrect results.
+   Their more detailed description can be found in the main repository section.

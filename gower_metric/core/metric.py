@@ -84,6 +84,25 @@ class Gower:
 
         Raises:
             ValueError: If feature_types is not a non-empty dict.
+
+        Example:
+            >>> import pandas as pd
+            >>> from gower_metric import Gower
+            >>> data = pd.DataFrame({
+            ...     'feature1': [[1.0], [2.0], [3.0], [4.0]],
+            ...     'feature2': ['A', 'B', 'A', 'C'],
+            ...     'feature3': [0, 1, 0, 1],
+            ... })
+            >>> feature_types = {
+            ...     'feature1': 'numeric_interval',
+            ...     'feature2': 'categorical_nominal',
+            ...     'feature3': 'binary_symmetric',
+            ... }
+            ... feature_weights = {
+            ...     0: 1.0,
+            ...     1: 2.0,
+            ...     2: 1.0,
+            >>> gower = Gower(feature_types=feature_types, feature_weights=feature_weights)
         """
         validate_feature_types(feature_types)
         self.feature_types: dict[int | str, str] = feature_types
@@ -140,10 +159,25 @@ class Gower:
 
         Args:
             X: pandas DataFrame or NumPy array of shape (n_samples, n_features).
-            For DataFrame inputs, column names in feature_types are converted to indices.
+                For DataFrame inputs, column names in feature_types are converted to indices.
 
         Returns:
             self: The fitted instance.
+
+        Example:
+            >>> import pandas as pd
+            >>> from gower_metric import Gower
+            >>> data = pd.DataFrame({
+            ...     'feature1': [[1.0], [2.0], [3.0], [4.0]],
+            ...     'feature2': ['A', 'B', 'A', 'C'],
+            ...     'feature3': [0, 1, 0, 1],
+            ... })
+            >>> feature_types = {
+            ...     'feature1': 'numeric_interval',
+            ...     'feature2': 'categorical_nominal',
+            ...     'feature3': 'binary_symmetric',
+            ... }
+            >>> gower = Gower(feature_types=feature_types).fit(data)
         """
         if isinstance(X, pd.DataFrame):
             cols = list(X.columns)
@@ -290,14 +324,24 @@ class Gower:
         Compute the Gower distance between two records.
 
         Args:
-            a: First record, can be numpy.ndarray, pandas.Series, or sequence of feature values.
-            b: Second record, same restrictions as 'a'.
+            a: First record, can be a pandas Series or 1D numpy array.
+            b: Second record, can be a pandas Series or 1D numpy array.
 
         Returns:
             float: Gower distance in [0,1], or np.nan if no features are comparable.
 
         Raises:
             ValueError: If fit(X) was not called before computing distance.
+
+        Example:
+            >>> import pandas as pd
+            >>> from gower_metric import Gower
+            >>> data = pd.DataFrame({
+            ...     'feature1': [[1.0], [2.0], [3.0], [4.0]],
+            ...     'feature2': ['A', 'B', 'A', 'C'],
+            ... })
+            >>> gower = Gower(feature_types={0: 'numeric_interval', 1: 'categorical_nominal'}).fit(data)
+            >>> distance = gower(data.iloc[0], data.iloc[1])
         """
         if not self._is_fitted:
             raise ValueError("Must call .fit(X) before computing distances.")
@@ -507,6 +551,16 @@ class Gower:
 
         Returns:
             float: Gower similarity in [0,1], defined as 1 - distance(a, b).
+
+        Example:
+            >>> import pandas as pd
+            >>> from gower_metric import Gower
+            >>> data = pd.DataFrame({
+            ...     'feature1': [[1.0], [2.0], [3.0], [4.0]],
+            ...     'feature2': ['A', 'B', 'A', 'C'],
+            ... })
+            >>> gower = Gower(feature_types={0: 'numeric_interval', 1: 'categorical_nominal'}).fit(data)
+            >>> similarity = gower.similarity(data.iloc[0], data.iloc[1])
         """
         return 1.0 - self(a, b)
 
@@ -540,11 +594,50 @@ class Gower:
                 Default is 'csr'.
 
         Returns:
-            MATRIX: np.ndarray (n_samples, n_samples) or scipy sparse matrix.
+            np.ndarray (n_samples, n_samples) or scipy sparse matrix.
 
         Raises:
             Warning: If fit(X) was not called before computing the matrix. In this case,
                 the model will be fitted automatically.
+
+        Examples:
+            Basic usage:
+                >>> import pandas as pd
+                >>> from gower_metric import Gower
+                >>> data = pd.DataFrame({
+                ...     'feature1': [[1.0], [2.0], [3.0], [4.0]],
+                ...     'feature2': ['A', 'B', 'A', 'C'],
+                ...     'feature3': [0, 1, 0, 1],
+                ... })
+                >>> feature_types = {
+                ...     'feature1': 'numeric_interval',
+                ...     'feature2': 'categorical_nominal',
+                ...     'feature3': 'binary_symmetric',
+                ... }
+                >>> gower = Gower(feature_types=feature_types).fit(data)
+                >>> distance_matrix = gower.matrix(data)
+
+            Using similarity matrix and sparse output:
+                >>> import pandas as pd
+                >>> from gower_metric import Gower
+                >>> data = pd.DataFrame({
+                ...     'feature1': [[1.0], [2.0], [3.0], [4.0]],
+                ...     'feature2': ['A', 'B', 'A', 'C'],
+                ...     'feature3': [0, 1, 0, 1],
+                ... })
+                >>> feature_types = {
+                ...     'feature1': 'numeric_interval',
+                ...     'feature2': 'categorical_nominal',
+                ...     'feature3': 'binary_symmetric',
+                ... }
+                >>> gower = Gower(feature_types=feature_types).fit(data)
+                >>> similarity_matrix = gower.matrix(
+                ...     data,
+                ...     matrix_type='similarity',
+                ...     convert_to_sparse=True,
+                ...     sparse_type='csr'
+                ... )
+
         """
         if not self._is_fitted:
             self.fit(X)
