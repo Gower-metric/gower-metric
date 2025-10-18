@@ -1,5 +1,5 @@
 ====================
-Basic code examples
+Basic examples
 ====================
 
 Here we provide some basic code examples to demonstrate how to use the package with different types of data.
@@ -7,6 +7,8 @@ Here we provide some basic code examples to demonstrate how to use the package w
 .. code-block:: python
 
    import numpy as np
+
+   from gower_metric import Gower
 
    data = np.array([[1, 'a', 3.5], [2, 'b', 4.0], [3, 'a', 2.5], [4, 'c', 5.0]], dtype=object)
 
@@ -49,38 +51,7 @@ We can also pass pandas DataFrames directly:
 
     gower = Gower(feature_types, scale="iqr").fit(df)
 
-Categorical ordinal example
-----------------------------
-
-Here things get a bit more tricky. When dealing with categorical ordinal data, we need to provide an additional mapping that defines the order of the categories.
-
-.. code-block:: python
-
-    import numpy as np
-
-    from gower_metric import Gower
-
-    data = np.array([
-        [1, 'low', 3.5],
-        [2, 'medium', 4.0],
-        [3, 'high', 2.5],
-        [4, 'medium', 5.0]
-    ], dtype=object)
-
-    feature_types = {
-        0: "ratio_scale_interval",
-        1: "categorical_ordinal",
-        2: "ratio_scale_interval"
-    }
-
-    ordinal_mappings = {
-        1: ['low', 'medium', 'high']
-    }
-
-    gower = Gower(feature_types=feature_types, categorical_ordinal_values_order=ordinal_mappings)
-    gower.fit(data)
-
-More advanced examples can be found in next section.
+More advanced examples, as well as categorical ordinal example, can be found in next section.
 
 .. automodule:: 
     :members:

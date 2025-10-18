@@ -10,3 +10,5 @@ For more advanced usage or example's source code, please refer to the `examples`
 
    modules/user_guide/quick_start
    modules/user_guide/basic_examples
+   modules/user_guide/advanced_examples
+   modules/user_guide/matrix

@@ -1,7 +1,7 @@
 Welcome to gower-metric documentation!
 ======================================
 
-**Gower-metric** is a Python library for calculating distance for mixed-type variables 
+**Gower-metric** is a Python library for calculating distance or similarity for mixed-type variables 
 derived as the complement of the Gower's similarity coefficient.
 
 Main features include:
@@ -21,48 +21,36 @@ Main features include:
    or if you find any issues, please visit the main [repository]() and 
    submit a pull request or open an issue.
 
------------
-Quick start
------------
+Installation, user guide, and API reference can be found in the respective sections. We also provide separate section 
+for describing how Gower's metric formula works.
 
-In order to import class, which calculate Gower's metric, you need to import it as follows:
+--------------------
+Future improvements
+--------------------
 
-.. code-block:: python
+We understand that there are still some features missing in the current version of the package. Here are some of the planned improvements for future releases:
 
-   from gower_metric import Gower
-
-After that, we have to initialize the features type dictionary:
-
-.. code-block:: python
-
-   data = [[1, 'a', 3.5], [2, 'b', 4.0], [3, 'a', 2.5], [4, 'c', 5.0]]
-
-   feature_types = {
-      0: "ratio_scale_interval",
-      1: "categorical_nominal",
-      2: "ratio_scale_interval"
-   }
-
-   gower = Gower(feature_types=feature_types)
-
-Finally, we can fit our data and calculate Gower's distance over first and second rows:
-
-.. code-block:: python
-
-   gower.fit(data)
-   distance = gower(data[0], data[1])
+- Numerical pipeline optimizations. 
+   Currently, the package is optimized for clarity and correctness, but we plan to enhance its performance using lower-level languages (Cython, Numba) and parallel processing techniques.
+- Continous optimization support. 
+   Here is the problem. For now, continous variable optimization is not being done iteratively. It compares calculated results with set threshold only once.
+   It is possible to make it iterative, so the algorithm will keep changing the threshold until it reaches desired state. However,
+   this will require more numerical speed optimizations.
 
 .. toctree::
    :maxdepth: 1
+   :hidden:
 
    installation
 
 .. toctree::
    :maxdepth: 1
+   :hidden:
 
    user_guide
 
 .. toctree::
    :maxdepth: 1
+   :hidden:
 
    api_reference
