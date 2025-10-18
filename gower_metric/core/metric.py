@@ -58,28 +58,28 @@ class Gower:
         Initialize Gower with explicit feature type and weight mappings.
 
         Args:
-            feature_types: Mapping of column indices (or DataFrame column names) to
+            feature_types (dict[int | str, str]): Mapping of column indices (or DataFrame column names) to
                 specific type.
-            feature_weights: Optional mapping of column indices (or names) to a float weight.
+            feature_weights (dict[int, float] | str | None): Optional mapping of column indices (or names) to a float weight.
                 If None or "uniform", all features will have equal weight of 1. Otherwise,
                 the weights must be a dictionary mapping feature indices to weights, i.e.
-                {0: 1.0, 1: 2.0, ...}.
-            scale: Optional scaling method for numeric features. Can be 'range' or 'iqr'.
+                {0: 1.0, 1: 2.0}.
+            scale (str): Optional scaling method for numeric features. Can be 'range' or 'iqr'.
                 Default is 'range' if omitted.
-            missing_strategy: Optional strategy for handling missing values. Can be 'ignore',
+            missing_strategy (str): Optional strategy for handling missing values. Can be 'ignore',
                 'max_dist' or 'raise_error'. Default is 'ignore' if omitted.
-            categorical_ordinal_values_order: Optional dict defining the order of the values contained in
+            categorical_ordinal_values_order (dict[int | str, list[str]] | None): Optional dict defining the order of the values contained in
                 the columns of type 'categorical_ordinal'. Must contain values for all such columns.
-            categorical_ordinal_calculation_type: Optional calculation type for categorical
+            categorical_ordinal_calculation_type (str): Optional calculation type for categorical
                 ordinal features. Can be 'kaufman' or 'podani'. Default is 'kaufman' if omitted.
-            scale_window: Optional scaling window for numeric or ratio features. Can be None, 'kde'
+            scale_window (Optional[str]): Optional scaling window for numeric or ratio features. Can be None, 'kde'
                 or 'kNN'. Default is None if omitted.
-            scale_window_type: Optional type of scaling window. Can be None or 'silverman'.
+            scale_window_type (Optional[str]): Optional type of scaling window. Can be None or 'silverman'.
                 Default is None if omitted, not recommended to use without scale_window.
-            k_neighbours: Optional number of nearest neighbors for 'kNN' scaling window.
+            k_neighbours (Optional[int]): Optional number of nearest neighbors for 'kNN' scaling window.
                 Default is None if omitted. If k_neighbours is None or less than 1, it will be
                 set to the square root of the number of points.
-            conditional_distances: Default to False. If set to True, two-step approach will be
+            conditional_distances (bool): Default to False. If set to True, two-step approach will be
                 triggered to calculate formula. More information in references -> chapter 3.
 
         Raises:
@@ -158,11 +158,11 @@ class Gower:
         Fit the Gower model by computing numeric feature ranges.
 
         Args:
-            X: pandas DataFrame or NumPy array of shape (n_samples, n_features).
+            X (np.ndarray | pd.DataFrame): shape of (n_samples, n_features).
                 For DataFrame inputs, column names in feature_types are converted to indices.
 
         Returns:
-            self: The fitted instance.
+            Gower: The fitted instance.
 
         Example:
             >>> import pandas as pd
@@ -324,8 +324,8 @@ class Gower:
         Compute the Gower distance between two records.
 
         Args:
-            a: First record of data.
-            b: Second record of data.
+            a (Any): First record of data.
+            b (Any): Second record of data.
 
         Returns:
             float: Gower distance in [0,1], or np.nan if no features are comparable.
@@ -546,8 +546,8 @@ class Gower:
         Compute the Gower similarity between two records.
 
         Args:
-            a: First record, same format as for __call__().
-            b: Second record, same format as for __call__().
+            a (Any): First record of data.
+            b (Any): Second record of data.
 
         Returns:
             float: Gower similarity in [0,1], defined as 1 - distance(a, b).
@@ -582,19 +582,20 @@ class Gower:
         """Compute symmetric pairwise Gower distance matrix using joblib (parallel).
 
         Args:
-            X: pandas DataFrame or numpy array (n_samples, n_features).
-            data_type: data type for the output distance matrix, default np.float32.
-            n_jobs: number of parallel jobs to run, -1 means using all processors.
-            verbose: whether to show tqdm progress bar.
-            matrix_type: Type of matrix to compute, either 'distance' or 'similarity'.
+            X (pd.DataFrame | np.ndarray): shape of (n_samples, n_features).
+            data_type (type[np.floating | np.integer]): data type for the output distance matrix, default np.float32.
+            n_jobs (int): number of parallel jobs to run, -1 means using all processors. Default is -1.
+            verbose (int): whether to show tqdm progress bar. Default is 0 (no progress bar).
+            matrix_type (str): Type of matrix to compute, either 'distance' or 'similarity'.
                 Default is 'distance'.
-            convert_to_sparse: Whether to convert the output dense matrix to a sparse format.
+            convert_to_sparse (bool): Whether to convert the output dense matrix to a sparse format.
                 Default is False.
-            sparse_type: Type of sparse matrix to convert to, either 'csr', 'csc' or 'coo'.
+            sparse_type (str): Type of sparse matrix to convert to, either 'csr', 'csc' or 'coo'.
                 Default is 'csr'.
 
         Returns:
-            np.ndarray (n_samples, n_samples) or scipy sparse matrix.
+            np.ndarray | scipy.sparse.csr_matrix | scipy.sparse.csc_matrix | scipy.sparse.coo_matrix:
+                Pairwise Gower distance or similarity matrix of shape (n_samples, n_samples) or sparse matrix.
 
         Raises:
             Warning: If fit(X) was not called before computing the matrix. In this case,

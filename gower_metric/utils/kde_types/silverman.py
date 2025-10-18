@@ -6,7 +6,7 @@ def silverman_bandwidth(x: np.ndarray) -> float:
     Calculate Silverman's rule of thumb bandwidth for kernel density estimation.
 
     Args:
-        x: Input data array.
+        x (np.ndarray): Input data array.
 
     Returns:
         float: Calculated bandwidth, ensuring it is non-negative.

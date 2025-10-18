@@ -23,7 +23,7 @@ def validate_feature_types(feature_types: dict[Any, str]) -> None:
     Validate the feature types dictionary.
 
     Args:
-        feature_types : A dictionary mapping column names to their feature types.
+        feature_types (dict[Any, str]): A dictionary mapping column names to their feature types.
 
     Raises:
         ValueError: If the feature types are not valid.
@@ -46,7 +46,7 @@ def validate_scale_method(scale: str) -> None:
     Validate the scale method.
 
     Args:
-        scale : The scale method to validate.
+        scale (str): The scale method to validate.
 
     Raises:
         ValueError: If the scale method is not valid.
@@ -62,7 +62,7 @@ def validate_missing_strategy(missing_strategy: str) -> None:
     Validate the missing strategy.
 
     Args:
-        missing_strategy: The missing strategy to validate.
+        missing_strategy (str): The missing strategy to validate.
 
     Raises:
         ValueError: If the missing strategy is not valid.
@@ -82,8 +82,8 @@ def validate_categorical_ordinal_values_order(
     Validate whether all defined categorical ordinal columns have specified the order of their values.
 
     Args:
-        categorical_ordinal_values_order: categorical ordinal values order to validate.
-        feature_types: A dictionary mapping column names to their feature types.
+        categorical_ordinal_values_order (dict[int | str, list[str]]): categorical ordinal values order to validate.
+        feature_types (dict[int | str, str]): A dictionary mapping column names to their feature types.
 
     Raises:
         ValueError: If the categorical ordinal values order is not valid.
@@ -106,7 +106,7 @@ def validate_categorical_ordinal_calculation_type(calculation_type: str) -> None
     Validate the calculation type for categorical nominal features.
 
     Args:
-        calculation_type: The calculation type to validate.
+        calculation_type (str): The calculation type to validate.
 
     Raises:
         ValueError: If the calculation type is not valid.
@@ -126,8 +126,8 @@ def validate_scale_window_and_type(
     Validate the scale window and it's type at the same time.
 
     Args:
-        scale_window : The scale window to validate.
-        scale_window_type : The scale window type to validate.
+        scale_window (Optional[str]): The scale window to validate.
+        scale_window_type (Optional[str]): The scale window type to validate.
 
     Raises:
         ValueError: If the scale window is not valid.
@@ -151,12 +151,12 @@ def validate_scale_window_and_type(
         )
 
 
-def validate_weights_type(weights: Any) -> None:
+def validate_weights_type(weights: str | dict) -> None:
     """
     Validate the weights type.
 
     Args:
-        weights : The weights to validate.
+        weights (str | dict): The weights to validate.
 
     Raises:
         ValueError: If the weights type is not valid.
@@ -173,12 +173,12 @@ def validate_weights_type(weights: Any) -> None:
         )
 
 
-def validate_k_neighbours(k_neighbours: Any) -> None:
+def validate_k_neighbours(k_neighbours: int | None) -> None:
     """
     Validate the k-neighbours type.
 
     Args:
-        k_neighbours : The k-neighbours to validate.
+        k_neighbours (int | None): The k-neighbours to validate.
 
     Raises:
         ValueError: If the k-neighbours type is not valid.
@@ -201,7 +201,7 @@ def validate_conditional_distances(conditional_distances: bool) -> None:
     Validate the conditional distances flag.
 
     Args:
-        conditional_distances : Flag to validate
+        conditional_distances (bool): Flag to validate
 
     Raises:
         ValueError: If conditional_distances flag different from bool

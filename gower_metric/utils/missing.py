@@ -11,7 +11,7 @@ def is_missing(value: Any) -> bool:
     Return True if the value is considered missing.
 
     Args:
-        value: The value to check.
+        value (Any): The value to check.
 
     Returns:
         bool: True if the value is missing, False otherwise.
@@ -28,7 +28,7 @@ def first_not_missing(sequence: Sequence) -> Any | None:
     Return the first non-missing value from a sequence.
 
     Args:
-        sequence: A sequence of values.
+        sequence (Sequence): A sequence of values.
 
     Returns:
         Optional[Any]: The first non-missing value, or None if all values are missing.
@@ -46,13 +46,15 @@ def apply_missing_strategy(
     Apply the chosen missing-values strategy to the raw diff matrix.
 
     Args:
-        diff: raw distance matrix for one feature, shape (n_x, n_y).
-        present: boolean mask where True means both values were non-missing.
-        nan_method: one of "ignore", "max_dist", "raise_error".
+        diff (np.ndarray): raw distance matrix for one feature, shape (n_x, n_y).
+        present (np.ndarray): boolean mask where True means both values were non-missing.
+        nan_method (str): one of "ignore", "max_dist", "raise_error".
 
     Returns:
-        diff: adjusted distance matrix
-        count_mask: int matrix of same shape, how much to add to count_present
+        tuple[np.ndarray, np.ndarray]: Diff is adjusted distance matrix. Count_mask is int matrix of same shape, how much to add to count_present.
+
+    Raises:
+        ValueError: if nan_method is not recognized.
     """
     if nan_method == "ignore":
         diff[~present] = 0.0

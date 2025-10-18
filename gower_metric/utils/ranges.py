@@ -6,11 +6,15 @@ def scale_method(valid: np.ndarray, method: str) -> float:
     Compute the scaling span for a 1D array of valid (non-NaN) values.
 
     Args:
-        valid: 1D array of floats (no NaNs).
-        method: 'range' or 'iqr'.
+        valid (np.ndarray): 1D array of floats (no NaNs).
+        method (str): 'range' or 'iqr'.
 
     Returns:
-        span (float): max-min for 'range', Q3-Q1 for 'iqr', or 0.0 if constant/empty.
+        float:
+            - span: max-min for 'range', Q3-Q1 for 'iqr', or 0.0 if constant/empty.
+
+    Raises:
+        ValueError: if method is unknown.
     """
     if valid.size == 0:
         return 0.0
@@ -36,14 +40,13 @@ def get_numeric_ranges(
     ratio-scale and internal-scale data types.
 
     Args:
-        X: array of shape (n_samples, n_features), dtype = float or object convertible to float.
-        indices: list of column indices to treat as numeric.
-        method: method for scaling, either 'range' or 'iqr'.
+        X (float): array of shape (n_samples, n_features).
+        indices (list[int]): list of column indices to treat as numeric.
+        method (str): method for scaling, either 'range' or 'iqr'.
 
     Returns:
-        1D array of length len(indices), where each entry is
-        max(X[:, idx]) - min(X[:, idx]), for now we ignore NaNs.
-        If all values are NaN or constant, range is set to 0.0.
+        np.ndarray:
+            - 1D array of length len(indices), where each entry is max(X[:, idx]) - min(X[:, idx]). For now we ignore NaNs. If all values are NaN or constant, range is set to 0.0.
     """
     ranges = np.empty(len(indices), dtype=float)
     for pos, j in enumerate(indices):

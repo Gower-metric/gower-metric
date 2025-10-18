@@ -19,15 +19,15 @@ def __compute_row_upper(
     """Compute one upper triangle row of Gower distances.
 
     Args:
-        i: Row index.
-        X_arr: Data array (n_samples, n_features).
-        n: Number of samples.
-        model: Fitted Gower instance.
-        data_type: Data type for the output row array.
-        row_type: Type of row to compute, distance or similarity. Defaults to "distance".
+        i (int): row index.
+        X_arr (np.ndarray): data array of shape (n_samples, n_features).
+        n (int): number of samples.
+        model (Gower): fitted Gower instance.
+        data_type (type[np.integer | np.floating]): data type for the output row array.
+        row_type (str): type of row to compute, distance or similarity. Defaults to "distance".
 
     Returns:
-        (i, row): Tuple of row index and computed row array.
+        tuple[i, row]: tuple of row index and computed row array.
     """
     n = X_arr.shape[0] if n == 0 else n
     xi = X_arr[i]
@@ -55,17 +55,17 @@ def get_results_from_joblib(
     """Get results from joblib parallel processing.
 
     Args:
-        arr: Data array (n_samples, n_features).
-        n_jobs: Number of parallel jobs.
-        verbose: Whether to show progress bar.
-        data_type: Data type for the output rows.
-        model: Fitted Gower instance.
-        matrix_type: Type of matrix to compute, distance or similarity. Defaults to "distance".
-        n: Number of samples (if 0, will be set to arr.shape[0]).
-        backend: Joblib backend to use. Defaults to "multiprocessing".
+        arr (np.ndarray): data array of shape (n_samples, n_features).
+        n_jobs (int): number of parallel jobs.
+        verbose (int): whether to show progress bar.
+        data_type (type[np.floating | np.integer]): data type for the output rows.
+        model (Gower): fitted Gower instance.
+        matrix_type (str): type of matrix to compute, distance or similarity. Defaults to "distance".
+        n (int): number of samples (if 0, will be set to arr.shape[0]).
+        backend (str): joblib backend to use. Defaults to "multiprocessing".
 
     Returns:
-        List of tuples (row index, computed row array).
+        list[tuple[int, np.ndarray]]: List of tuples (row index, computed row array).
     """
     results: list[tuple[int, np.ndarray]] = Parallel(
         n_jobs=n_jobs, backend=backend, verbose=0

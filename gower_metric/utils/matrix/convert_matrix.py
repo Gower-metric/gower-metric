@@ -8,11 +8,11 @@ def __get_csr_matrix(
     """Convert a dense array to a CSR sparse matrix.
 
     Args:
-        data: Dense array (n_samples, n_samples).
-        data_type: Data type for the output sparse matrix.
+        data (np.ndarray): dense array (n_samples, n_samples).
+        data_type (type[np.floating | np.integer]): ata type for the output sparse matrix.
 
     Returns:
-        CSR sparse matrix.
+        csr_matrix: CSR sparse matrix.
     """
     return csr_matrix(data, dtype=data_type)
 
@@ -23,11 +23,11 @@ def __get_csc_matrix(
     """Convert a dense array to a CSC sparse matrix.
 
     Args:
-        data: Dense array (n_samples, n_samples).
-        data_type: Data type for the output sparse matrix.
+        data (np.ndarray): dense array (n_samples, n_samples).
+        data_type (type[np.floating | np.integer]): ata type for the output sparse matrix.
 
     Returns:
-        CSC sparse matrix.
+        csc_matrix: CSC sparse matrix.
     """
     return csc_matrix(data, dtype=data_type)
 
@@ -38,11 +38,11 @@ def __get_coo_matrix(
     """Convert a dense array to a COO sparse matrix.
 
     Args:
-         data: Dense array (n_samples, n_samples).
-         data_type: Data type for the output sparse matrix.
+         data (np.ndarray): dense array (n_samples, n_samples).
+         data_type (type[np.floating | np.integer]): data type for the output sparse matrix.
 
     Returns:
-         COO sparse matrix.
+        coo_matrix: COO sparse matrix.
     """
     return coo_matrix(data, dtype=data_type)
 
@@ -55,12 +55,12 @@ def get_scipy_sparse_matrix(
     """Convert a dense array to a specified format of sparse matrix.
 
     Args:
-        data: Dense array (n_samples, n_samples).
-        matrix_format: Format of the output sparse matrix. Options are 'csr', 'csc', 'coo'.
-        data_type: Data type for the output sparse matrix.
+        data (np.ndarray): dense array (n_samples, n_samples).
+        matrix_format (str): Format of the output sparse matrix. Options are 'csr', 'csc', 'coo'. Default is 'csr'.
+        data_type (type[np.floating | np.integer]): data type for the output sparse matrix. Default is np.float32.
 
     Returns:
-        Sparse matrix in the specified format.
+        csr_matrix | csc_matrix | coo_matrix: Sparse matrix in the specified format.
 
     Raises:
         ValueError: If an unsupported matrix format is provided.
