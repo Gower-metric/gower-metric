@@ -81,7 +81,6 @@ df = pd.DataFrame({
     "age": [23, 45, 23, 31],
     "gender": ["Female", "Male", "Female", "Male"],
     "income": [35000, 81000, 40000, 30000],
-    "education": ["low", "medium", "high", "low"],
     "married": [0, 1, 1, 0],
     "infected": [1, 1, 0, 0],
 })
@@ -90,21 +89,16 @@ feature_types = {
     "age": "ratio_scale_interval",
     "gender": "categorical_nominal",
     "income": "numeric",
-    "education": "categorical_ordinal",
     "married": "binary_symmetric",
     "infected": "binary_asymmetric",
 }
 
 gower = Gower(feature_types, scale="range").fit(df)
 
-n = len(df)
-matrix = np.zeros((n, n))
-for i in range(n):
-    for j in range(n):
-        matrix[i, j] = gower(df.iloc[i], df.iloc[j])
+matrix = gower.matrix(df)
 ```
 > [!Tip]
-> To make matrix based on similarity, just use `gs.metric` instead of `gs.distance`.
+> To make matrix based on similarity, just pass `matrix_type = "similarity"` argument.
 
 ## Advanced usage
 We also provide basic weighting functionality. You can set weights for each feature type in the `Gower` constructor. The weights should be provided as a dictionary where keys are columns indexes and values are weights. Example script can be found in `examples/scripts/weight.py`.
@@ -208,13 +202,3 @@ c, coph_dists = cophenet(Z, pdist(df, metric=_gower_distance))
 > In order to display the results as a matrix, one should use `scipy.spatial.distance.squareform` module.
 
 Script can be found in `examples/scripts/scipy_cophenet.ipynb`.
-
-### Why use joblib?
-
-Let's go back to `adult_reduced.csv` example and reduce dataset to first 5 000 rows. If you want to calculate similarity for all rows, it can take a while. To speed up the process, you can use `joblib` to parallelize the computation.
-
-No joblib | joblib | joblib half matrix |
-| :---: | :---: | :---: |
-| 1199.16 s | 169.11 s | 86.39 s |
-
-Used script can be found in `examples/scripts/matrix_speedup.py`.

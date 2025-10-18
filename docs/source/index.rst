@@ -21,16 +21,6 @@ Main features include:
    or if you find any issues, please visit the main [repository]() and 
    submit a pull request or open an issue.
 
-------------
-Installation
-------------
-
-The easiest way to install the gower_metric package is via pip:
-
-.. code-block:: console
-
-   pip install gower-metric
-
 -----------
 Quick start
 -----------
@@ -61,20 +51,6 @@ Finally, we can fit our data and calculate Gower's distance over first and secon
 
    gower.fit(data)
    distance = gower(data[0], data[1])
-
-.. tip::
-
-   To calculate the pairwise distances for the entire dataset, you can do it manually or 
-   use an auxiliary function, like: `scipy.spatial.distance.pdist <https://docs.scipy.org/doc/scipy/reference/generated/scipy.spatial.distance.pdist.html>`_ 
-   or `sklearn.metrics.pairwise_distances <https://scikit-learn.org/stable/modules/generated/sklearn.metrics.pairwise_distances.html>`_.
-
-
-.. important::
-   
-   It is crucial to not be mistaken here! The keys of the dictionary must correspond to the indices of the columns in your dataset,
-   and the values must accurately represent the type of data in each column. This ensures that the Gower's metric is calculated 
-   correctly based on the nature of each feature.
-
 
 .. toctree::
    :maxdepth: 1

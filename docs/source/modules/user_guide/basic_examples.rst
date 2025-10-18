@@ -1,0 +1,88 @@
+====================
+Basic code examples
+====================
+
+Here we provide some basic code examples to demonstrate how to use the package with different types of data.
+
+.. code-block:: python
+
+   import numpy as np
+
+   data = np.array([[1, 'a', 3.5], [2, 'b', 4.0], [3, 'a', 2.5], [4, 'c', 5.0]], dtype=object)
+
+   feature_types = {
+      0: "ratio_scale_interval",
+      1: "categorical_nominal",
+      2: "ratio_scale_interval"
+   }
+
+   gower = Gower(feature_types=feature_types)
+   gower.fit(data)
+
+.. note::
+   
+   When passing numpy arrays with mixed data types, ensure that the array's dtype is set to *object* to accommodate different types of data.
+
+We can also pass pandas DataFrames directly:
+
+.. code-block:: python
+
+    import pandas as pd
+
+    from gower_metric import Gower
+
+    df = pd.DataFrame({
+        "age": [23, 45, 23, 31],
+        "gender": ["Female", "Male", "Female", "Male"],
+        "income": [35000, 81000, 40000, 30000],
+        "married": [0, 1, 1, 0],
+        "infected": [1, 1, 0, 0],
+    })
+
+    feature_types = {
+        "age": "ratio_scale_interval",
+        "gender": "categorical_nominal",
+        "income": "numeric",
+        "married": "binary_symmetric",
+        "infected": "binary_asymmetric",
+    }
+
+    gower = Gower(feature_types, scale="iqr").fit(df)
+
+Categorical ordinal example
+----------------------------
+
+Here things get a bit more tricky. When dealing with categorical ordinal data, we need to provide an additional mapping that defines the order of the categories.
+
+.. code-block:: python
+
+    import numpy as np
+
+    from gower_metric import Gower
+
+    data = np.array([
+        [1, 'low', 3.5],
+        [2, 'medium', 4.0],
+        [3, 'high', 2.5],
+        [4, 'medium', 5.0]
+    ], dtype=object)
+
+    feature_types = {
+        0: "ratio_scale_interval",
+        1: "categorical_ordinal",
+        2: "ratio_scale_interval"
+    }
+
+    ordinal_mappings = {
+        1: ['low', 'medium', 'high']
+    }
+
+    gower = Gower(feature_types=feature_types, categorical_ordinal_values_order=ordinal_mappings)
+    gower.fit(data)
+
+More advanced examples can be found in next section.
+
+.. automodule:: 
+    :members:
+    :undoc-members:
+    :show-inheritance:

@@ -7,6 +7,12 @@ Distances
    :undoc-members:
    :show-inheritance:
 
+.. tip::
+
+   To calculate the pairwise distances for the entire dataset, you can do it manually or 
+   use an auxiliary function, like: `scipy.spatial.distance.pdist <https://docs.scipy.org/doc/scipy/reference/generated/scipy.spatial.distance.pdist.html>`_ 
+   or `sklearn.metrics.pairwise_distances <https://scikit-learn.org/stable/modules/generated/sklearn.metrics.pairwise_distances.html>`_.
+
 .. toctree::
    :maxdepth: 1
    
