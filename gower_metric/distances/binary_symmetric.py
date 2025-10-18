@@ -3,7 +3,7 @@ import numpy as np
 from gower_metric.utils.missing import apply_missing_strategy, is_missing
 
 
-def binary_symmetric_distance_matrix(
+def binary_symmetric_component(
     X: np.ndarray,
     Y: np.ndarray,
     binary_indices: list[int],
@@ -11,22 +11,24 @@ def binary_symmetric_distance_matrix(
     weights: np.ndarray | None = None,
 ) -> tuple[np.ndarray, np.ndarray]:
     """
-    Compute the symmetric binary component of Gower distance between rows of X and Y.
+    Compute the symmetric binary component of Gower metric between rows of X and Y.
 
-    - Similarity s_ijt = 1 if x_it == x_jt, else 0.
-    - δ_ijt (present) = 1 if both values are non-missing, else 0.
-    - Distance d_ijt = 1 - s_ijt for δ_ijt = 1; ignored otherwise.
+    Description:
+        - Similarity s_ijt = 1 if x_it == x_jt, else 0.
+        - δ_ijt (present) = 1 if both values are non-missing, else 0.
+        - Distance d_ijt = 1 - s_ijt for δ_ijt = 1; ignored otherwise.
 
     Args:
         X (np.ndarray): shape (n_x, n_features).
         Y (np.ndarray): shape (n_y, n_features).
-        binary_indices (List[int]): Indices of binary symmetric features.
+        binary_indices (list[int]): Indices of binary symmetric features.
         missing_strategy (str): Strategy for handling missing values, default is 'ignore'.
         weights (Optional[np.ndarray]): Optional weight per binary feature.
 
     Returns:
-        sum_diff: np.ndarray (n_x, n_y) weighted sum of d_ijt
-        count_present: np.ndarray (n_x, n_y) of δ_ijt counts
+        tuple[np.ndarray, np.ndarray]:
+            - sum_diff: matrix (n_x, n_y); weighted sum of d_ijt
+            - count_present: matrix (n_x, n_y); δ_ijt counts
     """
     n_x, n_y = X.shape[0], Y.shape[0]
     sum_diff = np.zeros((n_x, n_y), dtype=float)

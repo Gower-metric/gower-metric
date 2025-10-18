@@ -3,7 +3,7 @@ import numpy as np
 from gower_metric.utils.missing import apply_missing_strategy, is_missing
 
 
-def numeric_distance_matrix(
+def numeric_component(
     X: np.ndarray,
     Y: np.ndarray,
     numeric_indices: list[int],
@@ -18,22 +18,23 @@ def numeric_distance_matrix(
     in ratio scale.
 
     Args:
-        X: array of shape (n_x, n_features)
-        Y: array of shape (n_y, n_features)
-        numeric_indices: indices of numeric-interval columns
-        ranges: 1D array of ranges for each numeric-interval column
-        h: optional 1D array of bandwidths for KDE scaling
-        missing_strategy: one of "ignore", "max_dist", "raise_error"
-        weights: optional 1D array of same length as numeric_indices
-        scale_window: optional scaling window method
+        X (np.ndarray): array of shape (n_x, n_features)
+        Y (np.ndarray): array of shape (n_y, n_features)
+        numeric_indices (list[int]): indices of numeric-interval columns
+        ranges (np.ndarray): 1D array of ranges for each numeric-interval column
+        h (np.ndarray): optional 1D array of bandwidths for KDE scaling
+        missing_strategy (str): one of "ignore", "max_dist", "raise_error"
+        weights (Optional[np.ndarray]): optional 1D array of same length as numeric_indices
+        scale_window (Optional[str]): optional scaling window method
 
     Returns:
-        sum_diff: (n_x, n_y) weighted sum of per-feature distances
-        count_present: (n_x, n_y) number of non-missing pairs per feature
+        tuple[np.ndarray, np.ndarray]:
+            - sum_diff: matrix (n_x, n_y) weighted sum of per-feature distances
+            - count_present: matrix (n_x, n_y) number of non-missing pairs per feature
     """
     n_x, n_y = X.shape[0], Y.shape[0]
     if not numeric_indices:
-        return np.zeros((n_x, n_y), float), np.zeros((n_x, n_y), int)
+        return np.zeros((n_x, n_y), float), np.zeros((n_x, n_y), float)
 
     sum_diff = np.zeros((n_x, n_y), float)
     count_present = np.zeros((n_x, n_y), float)

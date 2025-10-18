@@ -5,13 +5,13 @@ import pandas as pd
 import scipy.sparse
 
 from gower_metric.distances.binary_asymmetric import (
-    binary_asymmetric_distance_matrix,
+    binary_asymmetric_component,
 )
-from gower_metric.distances.binary_symmetric import binary_symmetric_distance_matrix
-from gower_metric.distances.categorical_nominal import nominal_distance_matrix
-from gower_metric.distances.categorical_ordinal import ordinal_distance_matrix
-from gower_metric.distances.numeric_interval import numeric_distance_matrix
-from gower_metric.distances.ratio_scale_interval import ratio_scale_distance_matrix
+from gower_metric.distances.binary_symmetric import binary_symmetric_component
+from gower_metric.distances.categorical_nominal import categorical_nominal_component
+from gower_metric.distances.categorical_ordinal import categorical_ordinal_component
+from gower_metric.distances.numeric_interval import numeric_component
+from gower_metric.distances.ratio_scale_interval import ratio_scale_component
 from gower_metric.utils.cat_ord_ut import (
     get_cardinalities_mapping,
     map_ordered_values,
@@ -324,8 +324,8 @@ class Gower:
         Compute the Gower distance between two records.
 
         Args:
-            a: First record, can be a pandas Series or 1D numpy array.
-            b: Second record, can be a pandas Series or 1D numpy array.
+            a: First record of data.
+            b: Second record of data.
 
         Returns:
             float: Gower distance in [0,1], or np.nan if no features are comparable.
@@ -359,7 +359,7 @@ class Gower:
         ratio_w = self.weights[self.ratio_scale_indices]
 
         if not self.conditional_distances:
-            num_sum, num_count = numeric_distance_matrix(
+            num_sum, num_count = numeric_component(
                 Xn,
                 Yn,
                 self.numeric_indices,
@@ -370,7 +370,7 @@ class Gower:
                 scale_window=self.scale_window,
             )
 
-            cat_nom_sum, cat_nom_count = nominal_distance_matrix(
+            cat_nom_sum, cat_nom_count = categorical_nominal_component(
                 Xn,
                 Yn,
                 self.categorical_nominal_indices,
@@ -378,7 +378,7 @@ class Gower:
                 weights=cat_nom_w,
             )
 
-            cat_ord_sum, cat_ord_count = ordinal_distance_matrix(
+            cat_ord_sum, cat_ord_count = categorical_ordinal_component(
                 Xn,
                 Yn,
                 self.categorical_ordinal_indices,
@@ -388,7 +388,7 @@ class Gower:
                 weights=cat_ord_w,
             )
 
-            bin_asym_sum, bin_asym_count = binary_asymmetric_distance_matrix(
+            bin_asym_sum, bin_asym_count = binary_asymmetric_component(
                 Xn,
                 Yn,
                 self.binary_asymmetric_indices,
@@ -396,7 +396,7 @@ class Gower:
                 weights=bin_asym_w,
             )
 
-            bin_sym_sum, bin_sym_count = binary_symmetric_distance_matrix(
+            bin_sym_sum, bin_sym_count = binary_symmetric_component(
                 Xn,
                 Yn,
                 self.binary_symmetric_indices,
@@ -404,7 +404,7 @@ class Gower:
                 weights=bin_sym_w,
             )
 
-            ratio_sum, ratio_count = ratio_scale_distance_matrix(
+            ratio_sum, ratio_count = ratio_scale_component(
                 Xn,
                 Yn,
                 self.ratio_scale_indices,
@@ -436,7 +436,7 @@ class Gower:
 
             return float(total_sum[0, 0] / total_count[0, 0])
         else:
-            bin_asym_sum, bin_asym_count = binary_asymmetric_distance_matrix(
+            bin_asym_sum, bin_asym_count = binary_asymmetric_component(
                 Xn,
                 Yn,
                 self.binary_asymmetric_indices,
@@ -444,7 +444,7 @@ class Gower:
                 weights=bin_asym_w,
             )
 
-            bin_sym_sum, bin_sym_count = binary_symmetric_distance_matrix(
+            bin_sym_sum, bin_sym_count = binary_symmetric_component(
                 Xn,
                 Yn,
                 self.binary_symmetric_indices,
@@ -452,7 +452,7 @@ class Gower:
                 weights=bin_sym_w,
             )
 
-            cat_nom_sum, cat_nom_count = nominal_distance_matrix(
+            cat_nom_sum, cat_nom_count = categorical_nominal_component(
                 Xn,
                 Yn,
                 self.categorical_nominal_indices,
@@ -463,7 +463,7 @@ class Gower:
             cat_cnt = 0.0
 
             if self.binary_asymmetric_indices:
-                s, c = binary_asymmetric_distance_matrix(
+                s, c = binary_asymmetric_component(
                     Xn,
                     Yn,
                     self.binary_asymmetric_indices,
@@ -474,7 +474,7 @@ class Gower:
                 cat_cnt += c[0, 0]
 
             if self.binary_symmetric_indices:
-                s, c = binary_symmetric_distance_matrix(
+                s, c = binary_symmetric_component(
                     Xn,
                     Yn,
                     self.binary_symmetric_indices,
@@ -485,7 +485,7 @@ class Gower:
                 cat_cnt += c[0, 0]
 
             if self.categorical_nominal_indices:
-                s, c = nominal_distance_matrix(
+                s, c = categorical_nominal_component(
                     Xn,
                     Yn,
                     self.categorical_nominal_indices,
@@ -504,7 +504,7 @@ class Gower:
             if cat_dist > threshold:
                 return 1.0
 
-            num_sum, num_count = numeric_distance_matrix(
+            num_sum, num_count = numeric_component(
                 Xn,
                 Yn,
                 self.numeric_indices,
@@ -514,7 +514,7 @@ class Gower:
                 weights=num_w,
                 scale_window=self.scale_window,
             )
-            cat_ord_sum, cat_ord_count = ordinal_distance_matrix(
+            cat_ord_sum, cat_ord_count = categorical_ordinal_component(
                 Xn,
                 Yn,
                 self.categorical_ordinal_indices,
@@ -523,7 +523,7 @@ class Gower:
                 calculation_type=self.categorical_ordinal_calculation_type,
                 weights=cat_ord_w,
             )
-            ratio_sum, ratio_count = ratio_scale_distance_matrix(
+            ratio_sum, ratio_count = ratio_scale_component(
                 Xn,
                 Yn,
                 self.ratio_scale_indices,

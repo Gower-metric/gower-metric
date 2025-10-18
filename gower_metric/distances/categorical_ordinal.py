@@ -5,7 +5,7 @@ import numpy as np
 from gower_metric.utils.missing import apply_missing_strategy, is_missing
 
 
-def ordinal_distance_matrix(
+def categorical_ordinal_component(
     X: np.ndarray,
     Y: np.ndarray,
     ordinal_indices: list[int],
@@ -15,13 +15,13 @@ def ordinal_distance_matrix(
     weights: np.ndarray | None = None,
 ) -> tuple[np.ndarray, np.ndarray]:
     """
-    Compute the ordinal categorical component of Gower distance between rows of X and Y.
+    Compute the ordinal categorical component of Gower metric between rows of X and Y.
 
     Args:
         X (np.ndarray): First dataset, shape (n_x, n_features).
         Y (np.ndarray): Second dataset, shape (n_y, n_features).
-        ordinal_indices (List[int]): Indices of ordinal features.
-        metadata (Dict[int, Dict[str, Any]]): Metadata for ordinal features. Computed
+        ordinal_indices (list[int]): Indices of ordinal features.
+        metadata (dict[int, dict[str, Any]]): Metadata for ordinal features. Computed
             by Gower.fit() on whole data range and passed to the distance function.
         missing_strategy (str): Strategy for handling missing values, default is "ignore".
         calculation_type (str): Type of calculation for ordinal distance, available options are
@@ -29,7 +29,7 @@ def ordinal_distance_matrix(
         weights (Optional[np.ndarray]): Optional weight per ordinal feature.
 
     Returns:
-        Tuple[np.ndarray, np.ndarray]:
+        tuple[np.ndarray, np.ndarray]:
             - sum_diff: matrix (n_x, n_y) of weighted, normalized ordinal distances
             - count_present: matrix (n_x, n_y) of counts of present (non-missing) features
     """

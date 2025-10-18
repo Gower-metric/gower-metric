@@ -3,7 +3,7 @@ import numpy as np
 from gower_metric.utils.missing import apply_missing_strategy, is_missing
 
 
-def ratio_scale_distance_matrix(
+def ratio_scale_component(
     X: np.ndarray,
     Y: np.ndarray,
     ratio_indices: list[int],
@@ -17,22 +17,23 @@ def ratio_scale_distance_matrix(
     Compute range-scaled Gower component for ratio-scale features.
 
     Args:
-        X: array (n_x, n_features)
-        Y: array (n_y, n_features)
-        ratio_indices: indices of ratio-scale columns
-        ranges: 1D array of ranges for each ratio-scale column
-        h: optional 1D array of bandwidths for KDE scaling
-        missing_strategy: one of "ignore", "max_dist", "raise_error"
-        weights: optional 1D array of same length as ratio_indices
-        scale_window: optional scaling window method
+        X (np.ndarray): array (n_x, n_features)
+        Y (np.ndarray): array (n_y, n_features)
+        ratio_indices (list[int]): indices of ratio-scale columns
+        ranges (np.ndarray): 1D array of ranges for each ratio-scale column
+        h (np.ndarray): optional 1D array of bandwidths for KDE scaling
+        missing_strategy (str): one of "ignore", "max_dist", "raise_error"
+        weights (Optional[np.ndarray]): optional 1D array of same length as ratio_indices
+        scale_window (Optional[str]): optional scaling window method
 
     Returns:
-        sum_diff: (n_x, n_y) weighted sum of per-feature distances
-        count_present: (n_x, n_y) number of non-missing pairs per feature
+        tuple[np.ndarray, np.ndarray]:
+            - sum_diff: matrix (n_x, n_y) weighted sum of per-feature distances
+            - count_present: matrix (n_x, n_y) number of non-missing pairs per feature
     """
     n_x, n_y = X.shape[0], Y.shape[0]
     if not ratio_indices:
-        return np.zeros((n_x, n_y), dtype=float), np.zeros((n_x, n_y), dtype=int)
+        return np.zeros((n_x, n_y), dtype=float), np.zeros((n_x, n_y), dtype=float)
 
     sum_diff = np.zeros((n_x, n_y), dtype=float)
     count_present = np.zeros((n_x, n_y), dtype=float)
