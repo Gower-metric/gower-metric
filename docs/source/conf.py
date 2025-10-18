@@ -55,4 +55,8 @@ html_theme_options = {
     "navigation_with_keys": True,
 }
 
+html_sidebars = {
+    'metric_description': [],
+}
+
 epub_show_urls = 'footnote'

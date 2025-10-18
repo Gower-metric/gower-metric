@@ -1,6 +1,6 @@
-=============
-API reference
-=============
+==============
+API Reference
+==============
 
 This section contains the complete API reference for all modules in the gower-metric package.
 

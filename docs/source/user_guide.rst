@@ -1,5 +1,6 @@
-User guide
-==========
+===========
+User Guide
+===========
 
 In this section, you will find a quick start guide on how to use the package.
 We provide simple scripts to demonstrate the basic functionality of the package.
