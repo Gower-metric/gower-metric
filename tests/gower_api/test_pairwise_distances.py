@@ -7,7 +7,7 @@ from gower_metric import Gower
 
 def test_scikit_learn_paiwise_distances() -> None:
     n_rows = 500
-    df = pd.read_csv("./comparison/data/adult.csv").head(n_rows)
+    df = pd.read_csv("data/files/adult.csv").head(n_rows)
 
     df = df[
         [
@@ -50,7 +50,7 @@ def test_scikit_learn_paiwise_distances() -> None:
         df, metric=_gower_distance, n_jobs=-1, ensure_all_finite=False
     )
 
-    matrix_gower = gower.matrix(df)
+    matrix_gower = gower.matrix(df, backend="loky")
 
     assert matrix_scikit.shape == (n_rows, n_rows), (
         "The shape of the pairwise distance matrix is incorrect."

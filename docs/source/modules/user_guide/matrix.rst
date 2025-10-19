@@ -3,6 +3,7 @@ Matrix support
 ===============
 
 We also provide endpoint support for calculating various types of matrices. We use `joblib <https://github.com/joblib/joblib>`_ library to parallelize computations and speed up the whole process.
+By default, *backend* is set to *loky*.
 
 .. code-block:: python
 

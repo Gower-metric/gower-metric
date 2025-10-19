@@ -15,7 +15,7 @@ if not rinterface.initr():
 
 
 def test_r_gower() -> None:
-    iris = pd.read_csv("./comparison/data/iris.csv")
+    iris = pd.read_csv("data/files/iris.csv")
 
     dat1 = iris.iloc[0:10].reset_index(drop=True)
     dat2 = iris.iloc[5:15].reset_index(drop=True)

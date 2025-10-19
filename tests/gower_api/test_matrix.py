@@ -7,7 +7,7 @@ from gower_metric import Gower
 
 def test_gower_matrix_endpoint_with_custom_created_matrix() -> None:
     n_rows = 500
-    df = pd.read_csv("./comparison/data/adult.csv").head(n_rows)
+    df = pd.read_csv("data/files/adult.csv").head(n_rows)
 
     df = df[
         [
@@ -40,7 +40,7 @@ def test_gower_matrix_endpoint_with_custom_created_matrix() -> None:
     gower = Gower(feature_types=feature_types).fit(df)
     df = df.to_numpy()
 
-    dist_matrix: np.ndarray = gower.matrix(df)
+    dist_matrix: np.ndarray = gower.matrix(df, backend="loky")
 
     assert dist_matrix.shape == (n_rows, n_rows), (
         f"Unexpected shape: {dist_matrix.shape}"
@@ -58,7 +58,7 @@ def test_gower_matrix_endpoint_with_custom_created_matrix() -> None:
 
 def test_gower_matrix_endpoint_similarity() -> None:
     n_rows = 500
-    df = pd.read_csv("./comparison/data/adult.csv").head(n_rows)
+    df = pd.read_csv("data/files/adult.csv").head(n_rows)
 
     df = df[
         [
@@ -91,7 +91,9 @@ def test_gower_matrix_endpoint_similarity() -> None:
     gower = Gower(feature_types=feature_types).fit(df)
     df = df.to_numpy()
 
-    similarity_matrix: np.ndarray = gower.matrix(df, matrix_type="similarity")
+    similarity_matrix: np.ndarray = gower.matrix(
+        df, matrix_type="similarity", backend="loky"
+    )
 
     matrix_custom: np.ndarray = np.zeros((n_rows, n_rows), dtype=np.float32)
     for i in range(n_rows):
@@ -109,7 +111,7 @@ def test_gower_matrix_endpoint_similarity() -> None:
 
 def test_gower_matrix_endpoint_if_it_symmetrical() -> None:
     n_rows = 500
-    df = pd.read_csv("./comparison/data/adult.csv").head(n_rows)
+    df = pd.read_csv("data/files/adult.csv").head(n_rows)
 
     df = df[
         [
@@ -159,7 +161,7 @@ def test_gower_matrix_endpoint_if_it_symmetrical() -> None:
     ).fit(df)
     df = df.to_numpy()
 
-    dist_matrix: np.ndarray = gower.matrix(df)
+    dist_matrix: np.ndarray = gower.matrix(df, backend="loky")
 
     assert dist_matrix.shape == (n_rows, n_rows), (
         f"Unexpected shape: {dist_matrix.shape}"
@@ -194,7 +196,7 @@ def test_matrix_endpoint_podani_if_symmetrical_distance() -> None:
         categorical_ordinal_calculation_type="podani",
     ).fit(data)
 
-    dist_matrix: np.ndarray = gower.matrix(data)
+    dist_matrix: np.ndarray = gower.matrix(data, backend="loky")
 
     n = data.shape[0]
     custom_matrix = np.zeros((n, n), dtype=np.float32)
@@ -227,7 +229,9 @@ def test_matrix_endpoint_podani_if_symmetrical_similarity() -> None:
         categorical_ordinal_calculation_type="podani",
     ).fit(data)
 
-    dist_matrix: np.ndarray = gower.matrix(data, matrix_type="similarity")
+    dist_matrix: np.ndarray = gower.matrix(
+        data, matrix_type="similarity", backend="loky"
+    )
 
     n = data.shape[0]
     custom_matrix = np.zeros((n, n), dtype=np.float32)
@@ -261,7 +265,7 @@ def test_sparse_matrix_convertion_csr() -> None:
     ).fit(data)
 
     dist_matrix: np.ndarray = gower.matrix(
-        data, convert_to_sparse=True, sparse_type="csr"
+        data, convert_to_sparse=True, sparse_type="csr", backend="loky"
     )
 
     assert sp.issparse(dist_matrix), "Matrix is not sparse"
@@ -284,7 +288,7 @@ def test_sparse_matrix_convertion_csc() -> None:
     ).fit(data)
 
     dist_matrix: np.ndarray = gower.matrix(
-        data, convert_to_sparse=True, sparse_type="csc"
+        data, convert_to_sparse=True, sparse_type="csc", backend="loky"
     )
 
     assert sp.issparse(dist_matrix), "Matrix is not sparse"
@@ -307,7 +311,7 @@ def test_sparse_matrix_convertion_c00() -> None:
     ).fit(data)
 
     dist_matrix: np.ndarray = gower.matrix(
-        data, convert_to_sparse=True, sparse_type="coo"
+        data, convert_to_sparse=True, sparse_type="coo", backend="loky"
     )
 
     assert sp.issparse(dist_matrix), "Matrix is not sparse"

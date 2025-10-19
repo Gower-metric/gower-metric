@@ -31,13 +31,19 @@ def __compute_row_upper(
     """
     n = X_arr.shape[0] if n == 0 else n
     xi = X_arr[i]
+
+    start = i + 1
+    count = n - start
     row = np.zeros(n, dtype=data_type)
 
-    for j in range(i + 1, n):
-        if row_type == "distance":
-            row[j] = model(xi, X_arr[j])
-        elif row_type == "similarity":
-            row[j] = model.similarity(xi, X_arr[j])
+    if count <= 0:
+        return (i, row)
+
+    func = model.similarity if row_type == "similarity" else model
+
+    values = (func(xi, X_arr[j]) for j in range(start, n))
+
+    row[start:n] = np.fromiter(values, dtype=data_type, count=count)
 
     return (i, row)
 
@@ -49,8 +55,8 @@ def get_results_from_joblib(
     data_type: type[np.floating | np.integer],
     model: "Gower",
     matrix_type: str,
+    backend: str = "loky",
     n: int = 0,
-    backend: str = "multiprocessing",
 ) -> list[tuple[int, np.ndarray]]:
     """Get results from joblib parallel processing.
 
@@ -61,14 +67,14 @@ def get_results_from_joblib(
         data_type (type[np.floating | np.integer]): data type for the output rows.
         model (Gower): fitted Gower instance.
         matrix_type (str): type of matrix to compute, distance or similarity. Defaults to "distance".
+        backend (str): joblib backend to use. Defaults to "loky".
         n (int): number of samples (if 0, will be set to arr.shape[0]).
-        backend (str): joblib backend to use. Defaults to "multiprocessing".
 
     Returns:
         list[tuple[int, np.ndarray]]: List of tuples (row index, computed row array).
     """
     results: list[tuple[int, np.ndarray]] = Parallel(
-        n_jobs=n_jobs, backend=backend, verbose=0
+        n_jobs=n_jobs, backend=backend, verbose=verbose
     )(
         delayed(__compute_row_upper)(i, arr, n, model, data_type, matrix_type)
         for i in tqdm(

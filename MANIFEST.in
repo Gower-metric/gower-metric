@@ -15,6 +15,7 @@ recursive-include gower_metric/utils/kde_types *.py
 recursive-include gower_metric/utils/weights *.py
 recursive-include .github *
 recursive-include tests *
+recursive-include data *
 
 exclude MANIFEST.in
 exclude LICENSE.txt

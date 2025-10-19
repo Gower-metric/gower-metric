@@ -573,6 +573,7 @@ class Gower:
         matrix_type: str = "distance",
         convert_to_sparse: bool = False,
         sparse_type: str = "csr",
+        backend: str = "loky",
     ) -> (
         np.ndarray
         | scipy.sparse.csr_matrix
@@ -592,6 +593,7 @@ class Gower:
                 Default is False.
             sparse_type (str): Type of sparse matrix to convert to, either 'csr', 'csc' or 'coo'.
                 Default is 'csr'.
+            backend (str): Backend to use for joblib parallelization. Default is 'loky'.
 
         Returns:
             np.ndarray | scipy.sparse.csr_matrix | scipy.sparse.csc_matrix | scipy.sparse.coo_matrix:
@@ -660,14 +662,13 @@ class Gower:
             model=self,
             data_type=data_type,
             verbose=verbose,
-            backend="multiprocessing",
+            backend=backend,
             matrix_type=matrix_type,
         )
 
-        results.sort(key=lambda x: x[0])
-        rows_upper = [row for _, row in results]
+        for i, row in results:
+            MATRIX[i] = row
 
-        MATRIX = np.vstack(rows_upper)
         MATRIX += MATRIX.T
 
         if matrix_type == "distance":

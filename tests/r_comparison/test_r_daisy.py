@@ -16,7 +16,7 @@ if not rinterface.initr():
 
 def test_r_daisy_no_weights() -> None:
     n_rows = 100
-    df = pd.read_csv("./comparison/data/adult_reduced.csv").head(n_rows)
+    df = pd.read_csv("data/files/adult_reduced.csv").head(n_rows)
     df["race"] = df["race"].astype("category")
     df["sex"] = df["sex"].astype("category")
 
