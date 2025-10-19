@@ -1,7 +1,7 @@
 library(cluster)
 library(readr)
 
-data <- read_csv("path/comparison/data/weights_custom.csv")
+data <- read_csv("data/files/weights_custom.csv")
 
 data$age <- as.numeric(data$age)                
 data$hours_per_week <- as.numeric(data$hours_per_week)
@@ -16,4 +16,4 @@ data$infected <- factor(data$infected, levels = c(0, 1))
 w <- c(age = 1, gender = 2, education = 3, hours_per_week = 4, income = 5, infected = 6)
 
 d <- daisy(data, metric = "gower", type = list(symm = "income", asymm = "infected"), weights = w)
-write.table(round(as.matrix(d), digits = 6), file="path/comparison/scripts/daisy/weights/results/weights_daisy.txt", row.names=FALSE, col.names=FALSE)
+write.table(round(as.matrix(d), digits = 6), file="comparison/scripts/daisy/weights/weights_results/weights_daisy.txt", row.names=FALSE, col.names=FALSE)

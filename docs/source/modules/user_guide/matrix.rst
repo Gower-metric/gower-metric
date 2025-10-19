@@ -50,3 +50,33 @@ On top of that, user can also compute sparse matrices using SciPy's sparse matri
 
 Here, the ``convert_to_sparse`` parameter is set to *True* to indicate that we want the output in a sparse format. The ``sparse_type`` parameter allows you to choose the specific type of sparse matrix representation, such as *csc* (Compressed Sparse Column), *csr* (Compressed Sparse Row) , or *coo* (Coordinate List).
 By default, ``n_jobs`` is set to -1, which means that all available CPU cores will be used for parallel computation. You can adjust this parameter based on your system's capabilities and the size of your dataset. Default sparse type is *csr*.
+
+----------------------
+Custom created matrix
+----------------------
+
+User can also create matrix *by hand* and fill it with values.
+
+.. code-block:: python
+
+   import numpy as np
+
+   from gower_metric import Gower
+
+   data = np.array([[1, 'a'], [2, 'b'], [3, 'a'], [4, 'c']], dtype=object)
+
+   feature_types = {
+      0: "ratio_scale_interval",
+      1: "categorical_nominal",
+   }
+
+   gower = Gower(feature_types=feature_types).fit(data)
+
+   matrix = np.zeros((data.shape[0], data.shape[0]))
+   
+   for i in range(data.shape[0]):
+       for j in range(data.shape[0]):
+           matrix[i, j] = gower(data[i], data[j])
+
+This approach allows for more flexibility, as you can define your own logic for populating the matrix based on specific criteria or conditions.
+It could be improved by *joblib* parallelization if needed.

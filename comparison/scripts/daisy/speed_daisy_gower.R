@@ -1,7 +1,7 @@
 library(cluster)
 library(readr)
 
-data <- read_csv("your_path/adult_reduced.csv")
+data <- read_csv("data/files/adult_reduced.csv")
 
 data$race <- factor(data$race)
 data$sex <- factor(data$sex)

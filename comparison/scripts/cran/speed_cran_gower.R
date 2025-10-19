@@ -1,7 +1,7 @@
 library(gower)
 library(readr)
 
-data <- read.csv("your_path/adult_reduced.csv")
+data <- read.csv("data/files/adult_reduced.csv")
 d1 <- data[1:32558,]
 d2 <- data[2:32559,]
 
