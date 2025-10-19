@@ -13,3 +13,6 @@ for (i in seq_len(n_runs)) {
   d <- gower_dist(d1, d2)
   times[i] <- as.numeric(difftime(Sys.time(), start.time, units = "secs"))
 }
+
+write_lines(format(times, digits = 5),
+            file = "comparison/scripts/cran/cran_results/speed_cran_gower.txt")

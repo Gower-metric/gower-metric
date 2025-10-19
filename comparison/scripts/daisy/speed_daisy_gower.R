@@ -16,3 +16,9 @@ for (i in seq_len(n_runs)) {
   d <- daisy(data, metric = "gower")
   times[i] <- as.numeric(difftime(Sys.time(), start.time, units = "secs"))
 }
+
+write.table(format(times, digits = 5), 
+            file = "comparison/scripts/daisy/daisy_results/daisy_speed.txt", 
+            row.names = FALSE, 
+            col.names = FALSE, 
+            quote = FALSE)

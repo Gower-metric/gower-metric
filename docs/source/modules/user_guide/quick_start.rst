@@ -48,11 +48,6 @@ Let's assume we imported the class as shown above and we have the following data
 As you can see, we initialized the feature types dictionary and created an instance of Gower class. After that, we called the `fit` method with our data.
 We can easly use pd.DataFrame as input data as well.
 
-Code examples
---------------
-
-For basic and more advanced code examples please refer to the following sections or the `examples` folder in the repository.
-
 .. automodule:: 
     :members:
     :undoc-members:
