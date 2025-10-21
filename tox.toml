@@ -1,37 +1,33 @@
 [env_run_base]
 description = "Run tests"
 requires = ["tox>=4"]
-deps = ["uv"]
-allowlist_externals = ["rm", "uv", "pytest"]
+deps = ["pytest", "check-manifest", "rpy2", "setuptools", "scipy", "scikit-learn", "numpy", "pandas", "mypy", "tqdm"]
+allowlist_externals = ["pytest", "python", "check-manifest"]
 commands = [
-    ["uv", "sync", "--group", "tests", "--quiet", "--active"],
-    ["pytest", "tests/gower_api"],
-    ["uv", "sync", "--group", "r_env_tests", "--quiet", "--active"],
-    ["pytest", "tests/r_comparison"],
-    ["uv", "build", "--quiet"],
-    ["uv", "run", "check-manifest"],
-    ["rm", "-rf", "dist/", "gower_metric.egg-info/", ".venv/"],
+    ["pytest", "tests"],
+    ["python", "-m", "build"],
+    ["check-manifest"],
     ]
 
 [env.py310]
 description = "Run tests with Python 3.10"
 base_python = ["python3.10"]
-env_dir = ".venv/"
 
 [env.py311]
 description = "Run tests with Python 3.11" 
 base_python = ["python3.11"]
-env_dir = ".venv/"
 
 [env.py312]
 description = "Run tests with Python 3.12"
 base_python = ["python3.12"]
-env_dir = ".venv/"
 
 [env.py313]
 description = "Run tests with Python 3.13"
 base_python = ["python3.13"]
-env_dir = ".venv/"
+
+[env.py314]
+description = "Run tests with Python 3.14"
+base_python = ["python3.14"]
 
 [env.py]
 description = "Run tests with current Python"

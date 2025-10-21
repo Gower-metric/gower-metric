@@ -30,9 +30,9 @@ Implementation of Gower's Metric in Python.
 
 | | Python 3.10 | Python 3.11 | Python 3.12 | Python 3.13 | Python 3.14 |
 |:---:|:-----------:|:-----------:|:-----------:|:-----------:|:-----------:|
-| Linux | ✅ | ✅ | ✅ | ✅ | 🚧 |
-| Windows | ✅ | ✅ | ✅ | ✅ | 🚧 |
-| macOS | ✅ | ✅ | ✅ | ✅ | 🚧 |
+| Linux | ✅ | ✅ | ✅ | ✅ | ✅ |
+| Windows | ✅ | ✅ | ✅ | ✅ | ✅ |
+| macOS | ✅ | ✅ | ✅ | ✅ | ✅ |
 
 Legend: ✅ - supported and tested, 🚧 - work in progress
 

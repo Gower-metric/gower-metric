@@ -2,8 +2,8 @@
 authors = [
     {name = "Arch4ngel21", email = "adammichal657@gmail.com"},
 ]
-license-files = ["LICENSE.md"]
-requires-python = ">=3.10, <3.14"
+license-files = ["LICENSE.txt"]
+requires-python = ">=3.10, <3.15"
 dependencies = [
     "joblib>=1.5.1",
     "numpy<3.0.0,>=2.2.6",
@@ -17,11 +17,11 @@ readme = "README.md"
 classifiers = [
     "Intended Audience :: Information Technology",
     "Intended Audience :: Science/Research",
-    "License :: OSI Approved :: MIT License",
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
     "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3.14",
     "Topic :: Scientific/Engineering :: Artificial Intelligence",
     "Topic :: Scientific/Engineering :: Information Analysis",
     "Topic :: Software Development :: Libraries :: Python Modules",
@@ -30,7 +30,7 @@ classifiers = [
 
 
 [tool.setuptools]
-packages = ["gower_metric", "gower_metric.core", "gower_metric.distances", "gower_metric.utils", "gower_metric.utils.kde_types", "gower_metric.weights"]
+packages = ["gower_metric", "gower_metric.core", "gower_metric.distances", "gower_metric.utils", "gower_metric.utils.kde_types", "gower_metric.utils.matrix", "gower_metric.weights"]
 include-package-data = true
 
 [tool.uv.workspace]
@@ -50,14 +50,11 @@ dev = [
     "joblib>=1.5.1",
     "mypy>=1.17.0",
     "numpy>=2.2.6",
-    "openml>=0.15.1",
     "pandas>=2.3.1",
     "pip>=25.2",
     "pre-commit>=4.3.0",
     "scikit-learn>=1.7.1",
-    "seaborn>=0.13.2",
     "tqdm>=4.67.1",
-    "tqdm-joblib>=0.0.5",
     "twine>=6.2.0",
 ]
 
@@ -69,6 +66,7 @@ tests = [
     "mypy>=1.17.0",
     "numpy>=2.2.6",
     "pandas>=2.3.1",
+    "tqdm>=4.67.1",
 ]
 
 r_env_tests = [
@@ -80,6 +78,7 @@ r_env_tests = [
     "scikit-learn>=1.7.1",
     "scipy>=1.15.3",
     "setuptools>=80.9.0",
+    "tqdm>=4.67.1",
 ]
 
 docs = [
@@ -88,6 +87,18 @@ docs = [
     "sphinx-autobuild>=2024.10.3",
     "sphinx-copybutton>=0.5.2",
     "sphinx-rtd-theme>=3.0.2",
+]
+
+benchmark = [
+    "gower-metric",
+    "joblib>=1.5.2",
+    "matplotlib>=3.10.7",
+    "numpy>=2.2.6",
+    "openml>=0.15.1",
+    "pandas>=2.3.3",
+    "scikit-learn>=1.7.2",
+    "seaborn>=0.13.2",
+    "tqdm>=4.67.1",
 ]
 
 [build-system]
