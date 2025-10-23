@@ -75,7 +75,7 @@ def _encode_data(
 
 
 def _grid_search_knn(
-    y_train: pd.Series, X_train: pd.DataFrame = None, metric=None, train_matrix=None
+    y_train: pd.Series, X_train: pd.DataFrame = None, metric=None, train_matrix=None, backend: str = "loky"
 ) -> KNeighborsClassifier:
     param_grid = {
         "n_neighbors": [3, 5, 7, 9, 11],
@@ -88,14 +88,14 @@ def _grid_search_knn(
         knn = KNeighborsClassifier(n_jobs=-1, metric="precomputed")
         grid_search = GridSearchCV(knn, param_grid, cv=5, n_jobs=-1, scoring="accuracy")
 
-        with parallel_backend("multiprocessing"):
+        with parallel_backend(backend):
             grid_search.fit(train_matrix, y_train)
 
     else:
         knn = KNeighborsClassifier(n_jobs=-1)
         grid_search = GridSearchCV(knn, param_grid, cv=5, n_jobs=-1, scoring="accuracy")
 
-        with parallel_backend("multiprocessing"):
+        with parallel_backend(backend):
             grid_search.fit(X_train, y_train)
 
     return grid_search.best_estimator_
@@ -124,11 +124,11 @@ def compute_gower_train(i, X_train_np, gower):
 
 
 def _get_gower_matrix_train(
-    train_matrix: np.ndarray, gower: Gower, X_train: pd.DataFrame
+    train_matrix: np.ndarray, gower: Gower, X_train: pd.DataFrame, backend: str = "loky"
 ) -> np.ndarray:
     X_train_np = X_train.to_numpy()
 
-    train_matrix_rows = Parallel(n_jobs=-1, backend="multiprocessing")(
+    train_matrix_rows = Parallel(n_jobs=-1, backend=backend)(
         delayed(compute_gower_train)(i, X_train_np, gower)
         for i in range(X_train_np.shape[0])
     )
@@ -149,45 +149,24 @@ def compute_gower_test(i, X_test_np, X_train_np, gower):
 
 
 def _get_gower_matrix_test(
-    test_matrix: np.ndarray, gower: Gower, X_train: pd.DataFrame, X_test: pd.DataFrame
+    test_matrix: np.ndarray, gower: Gower, X_train: pd.DataFrame, X_test: pd.DataFrame, backend: str = "loky"
 ) -> np.ndarray:
     X_train_np = X_train.to_numpy()
     X_test_np = X_test.to_numpy()
 
-    test_matrix = Parallel(n_jobs=-1, backend="multiprocessing")(
+    test_matrix = Parallel(n_jobs=-1, backend=backend)(
         delayed(compute_gower_test)(i, X_test_np, X_train_np, gower)
         for i in range(X_test_np.shape[0])
     )
     return np.array(test_matrix)
 
 
-def _print_results(
-    results_enc, results_f1_enc, results_gower, results_f1_gower
-) -> None:
-    print(
-        f"Average accuracy over {len(results_enc)} tasks (OneHotEncoding): {sum(results_enc) / len(results_enc):.4f}"
-    )
-    print(f"Standard deviation of accuracy: {pd.Series(results_enc).std():.4f}")
-
-    print(
-        f"Average F1 score over tasks (OneHotEncoding): {sum(results_f1_enc) / len(results_f1_enc):.4f}"
-    )
-    print(f"Standard deviation of F1 score: {pd.Series(results_f1_enc).std():.4f}")
-
-    print(
-        f"Average accuracy over {len(results_gower)} tasks (Gower): {sum(results_gower) / len(results_gower):.4f}"
-    )
-    print(f"Standard deviation of accuracy: {pd.Series(results_gower).std():.4f}")
-
-    print(
-        f"Average F1 score over tasks (Gower): {sum(results_f1_gower) / len(results_f1_gower):.4f}"
-    )
-    print(f"Standard deviation of F1 score: {pd.Series(results_f1_gower).std():.4f}")
-
-
 def main() -> None:
     suite = openml.study.get_suite(99)
     tasks = suite.tasks
+
+    N_ROWS_TO_USE = 100_000
+    joblib_backend = "loky"
 
     strategies = ["onehotencoding", "gower"]
     results_enc = []
@@ -197,17 +176,21 @@ def main() -> None:
     classification_report_enc: list[dict] = []
     classification_report_gower: list[dict] = []
 
+    results_df: pd.DataFrame = pd.DataFrame()
+
     n_tasks_to_run = len(tasks)
 
     with tqdm(total=len(strategies) * n_tasks_to_run) as pbar:
         for strategy in strategies:
             for task_id in tasks[:n_tasks_to_run]:
-                pbar.set_description(f"Strategy: {strategy}, Task ID: {task_id}")
+                pbar.set_description(
+                    f"Strategy: {strategy}, Task ID: {task_id}")
                 pbar.update(1)
 
                 task = openml.tasks.get_task(task_id)
 
-                X, y = _load_data(task.dataset_id)
+                X, y = _load_data(task.dataset_id, n_rows=N_ROWS_TO_USE)
+                n_rows_used: int = X.shape[0]
 
                 X_train, X_test, y_train, y_test = _split_data(X, y)
                 X_train, X_test = _impute_data(X_train, X_test)
@@ -228,20 +211,19 @@ def main() -> None:
 
                 if strategy == "gower":
                     train_matrix = np.zeros(
-                        (X_train.shape[0], X_train.shape[0]), dtype=np.float32
-                    )
-                    test_matrix = np.zeros(
-                        (X_test.shape[0], X_train.shape[0]), dtype=np.float32
-                    )
+                        (X_train.shape[0], X_train.shape[0]), dtype=np.float32)
+                    test_matrix = np.zeros((X_test.shape[0], X_train.shape[0]),
+                                           dtype=np.float32)
 
-                    train_matrix = _get_gower_matrix_train(train_matrix, gower, X_train)
+                    train_matrix = _get_gower_matrix_train(
+                        train_matrix, gower, X_train, joblib_backend)
                     test_matrix = _get_gower_matrix_test(
-                        test_matrix, gower, X_train, X_test
-                    )
+                        test_matrix, gower, X_train, X_test, joblib_backend)
 
-                    knn = _grid_search_knn(
-                        y_train=y_train, metric="precomputed", train_matrix=train_matrix
-                    )
+                    knn = _grid_search_knn(y_train=y_train,
+                                           metric="precomputed",
+                                           train_matrix=train_matrix,
+                                           backend=joblib_backend)
 
                     prefictions = knn.predict(test_matrix)
                     accuracy = accuracy_score(y_test, prefictions)
@@ -251,10 +233,26 @@ def main() -> None:
                     results_f1_gower.append(f1)
 
                     classification_report_gower.append(
-                        classification_report(y_test, prefictions, output_dict=True)
-                    )
+                        classification_report(y_test,
+                                              prefictions,
+                                              output_dict=True))
+
+                    results_df = pd.concat([
+                        results_df,
+                        pd.DataFrame([{
+                            "task_id": task_id,
+                            "strategy": strategy,
+                            "accuracy": accuracy,
+                            "f1": f1,
+                            "dataset_id": task.dataset_id,
+                            "n_rows": n_rows_used
+                        }])
+                    ],
+                                           ignore_index=True)
                 else:
-                    knn = _grid_search_knn(y_train=y_train, X_train=X_train)
+                    knn = _grid_search_knn(y_train=y_train,
+                                           X_train=X_train,
+                                           backend=joblib_backend)
 
                     prefictions = knn.predict(X_test)
                     accuracy = accuracy_score(y_test, prefictions)
@@ -264,10 +262,25 @@ def main() -> None:
                     results_f1_enc.append(f1)
 
                     classification_report_enc.append(
-                        classification_report(y_test, prefictions, output_dict=True)
-                    )
+                        classification_report(y_test,
+                                              prefictions,
+                                              output_dict=True))
 
-    _print_results(results_enc, results_f1_enc, results_gower, results_f1_gower)
+                    results_df = pd.concat([
+                        results_df,
+                        pd.DataFrame([{
+                            "task_id": task_id,
+                            "strategy": strategy,
+                            "accuracy": accuracy,
+                            "f1": f1,
+                            "dataset_id": task.dataset_id,
+                            "n_rows": n_rows_used
+                        }])
+                    ], ignore_index=True)
+
+    results_df.to_excel(
+        f"../benchmark_results/classification_results.xlsx", index=False
+    )
 
 
 if __name__ == "__main__":

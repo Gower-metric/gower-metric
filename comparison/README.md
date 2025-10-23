@@ -80,7 +80,7 @@ Firstly, we consider cran gower based on openMP C implementation. We compare fir
 <details>
 <summary><h4 style="display:inline; margin:0;">Img</h4></summary>
 
-![CRAN gower speed comparison](../data/imgs/comparison/cran_gower_similarity_comparison.png)
+![CRAN gower speed comparison](../data/imgs/comparison/cran_gower_similarity_comparison.svg)
 
 </details>
 
@@ -90,7 +90,7 @@ In contrary, using daisy module we can compare all rows with each other, which c
 <details>
 <summary><h4 style="display:inline; margin:0;">Img</h4></summary>
 
-![Daisy gower speed comparison](../data/imgs/comparison/daisy_gower_distance_comparison.png)
+![Daisy gower speed comparison](../data/imgs/comparison/daisy_gower_distance_comparison.svg)
 
 </details>
 
