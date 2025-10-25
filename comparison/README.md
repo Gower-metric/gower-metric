@@ -69,7 +69,7 @@ Every row contains 4 numeric and 1 categorical data type. Overall range is calcu
 
 </details>
 
-In example above, we compare the same dataset using daisy module from R and our Python implementation. Please be aware, that rows ids in R are 1-based compared to 0-based Python. Results are different due to calculating range scaling on all data not only first 20 rows. 
+In example above, we compare the same dataset using daisy module from R and our Python implementation. Please be aware, that rows ids in R are 1-based compared to 0-based Python.
 
 ## Speed
 Here we compare speed between our Python and R implementation. All calculation are made on [adult_reduced.csv](../data/files/adult_reduced.csv) file, for 100 iterations.
