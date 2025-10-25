@@ -46,18 +46,20 @@ After installing the required tools and checking out [this](#i-want-to-contribut
 
 ### Installing Dependencies
 
-In total, you need to know about four dependency groups:
+In total, you need to know about following dependency groups:
 - `base` - These dependencies are required to run the project
 - `dev` - These dependencies are required for development
 - `tests` - These dependencies are required to run the tests
 - `r_env_tests` - These dependencies are required to run the R environment tests
+- `docs` - These dependencies are required to build the documentation
+- `benchmark` - These dependencies are required to run the benchmarks
 
 You can install desired dependency using following command:
 
 ```bash
 uv sync --group dev
 ```
-This will install all dependencies from `base` and `dev` group. You can replace `dev` with `tests` or `r_env_tests` to install those dependencies.
+This will install all dependencies from `base` and `dev` group. You can replace `dev` with any other group name to install dependencies from that group.
 
 ### Running Tests
 
@@ -69,7 +71,7 @@ tox -e py310
 Where `py310` is the python version you want to use. You can also run tests for other python versions by replacing `py310` with `py311`, `py312`, etc. You can also run tests for all python versions using following command:
 
 ```bash
-tox -e py310,py311,py312,py313
+tox -e py310,py311,py312,py313,py314
 ```
 
 > [!NOTE]

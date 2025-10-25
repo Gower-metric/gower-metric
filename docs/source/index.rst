@@ -23,7 +23,19 @@ Main features include:
    submit a pull request or open an issue.
 
 Installation, user guide, and API reference can be found in the respective sections. We also provide separate section 
-for describing how Gower's metric formula works.
+for describing how Gower's metric formula works and how it can be used with external libraries.
+
+------------------------
+Documentation structure
+------------------------
+
+The documentation is organized into several sections to help you get started and make the most out of the gower-metric package:
+
+- **Installation**: Instructions on how to install the package, how to contribute to its development and how to set up the development environment.
+- **User Guide**: A comprehensive guide on how to use the package, including simple and more advanced examples.
+- **API Reference**: Detailed documentation of all classes, functions, and methods available in the package.
+- **External API Compatibility**: Information about the package's compatibility with external libraries and frameworks, such as SciPy and Scikit-learn. In addition, we also provide comparison with R implementation and benchmark subsection.
+- **Metric Description**: An in-depth explanation of Gower's metric, including the mathematical formulation and how it handles different variable types.
 
 --------------------
 Future improvements
@@ -40,7 +52,7 @@ We understand that there are still some features missing in the current version 
    It is possible to make it iterative, so the algorithm will keep changing the threshold until it reaches desired state. However,
    this will require more numerical speed optimizations.
 - Advanced weights optimization techniques. 
-   Currently, the package supports basic weight handling methodology. We plan to implement more advanced techniques, such as cophenetic correlation optimization and index of agreement.
+   Currently, the package supports basic weight handling methodology. We plan to implement more advanced handling, saving and loading weights to/from files.
 - Kernel density estimator bandwidth selection methods. 
    Currently, the package supports Silverman's rule of thumb for bandwidth selection. We plan to add more methods, such as Scott's rule.
 
