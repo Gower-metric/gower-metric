@@ -3,6 +3,7 @@ from typing import Any
 import numpy as np
 import pandas as pd
 import scipy.sparse
+from sklearn.preprocessing import OrdinalEncoder
 
 from gower_metric.distances.binary_asymmetric import (
     binary_asymmetric_component,
@@ -318,6 +319,96 @@ class Gower:
             + len(self.categorical_nominal_indices)
         )
         return self
+
+    def transform(self, X: pd.DataFrame | np.ndarray) -> pd.DataFrame | np.ndarray:
+        """
+        Transform the input DataFrame or ndarray to contain only floats.
+
+        Useful when applying 'gower' distance metrics in scikit-learn methods
+        (e.g., KNN) requiring numeric input exclusively.
+
+        Args:
+            X (np.ndarray | pd.DataFrame): shape of (n_samples, n_features).
+                For DataFrame inputs, column names in feature_types are converted to indices.
+
+        Returns:
+            X_new: Transformed input data.
+
+        Example:
+            >>> import pandas as pd
+            >>> from gower_metric import Gower
+            >>> data = pd.DataFrame({
+            ...     'feature1': [[1.0], [2.0], [3.0], [4.0]],
+            ...     'feature2': ['A', 'B', 'A', 'C'],
+            ...     'feature3': [False, True, False, True],
+            ... })
+            >>> feature_types = {
+            ...     'feature1': 'numeric_interval',
+            ...     'feature2': 'categorical_nominal',
+            ...     'feature3': 'binary_symmetric',
+            ... }
+            >>> gower = Gower(feature_types=feature_types).fit(data)
+            >>> X_transformed = gower.transform(X)
+        """
+        is_df = isinstance(X, pd.DataFrame)
+        if isinstance(X, pd.DataFrame):
+            df: pd.DataFrame = X
+            X_arr = df.to_numpy()
+        else:
+            arr: np.ndarray = X
+            X_arr = np.asarray(arr, dtype=object)
+
+        transformed_columns: list[np.ndarray] = []
+
+        for col_idx, ftype in self.feature_types.items():
+            if is_df:
+                col = df.iloc[:, col_idx].to_numpy()
+            else:
+                col = X_arr[:, col_idx]
+
+            if ftype in ("binary_asymmetric", "binary_symmetric"):
+                transformed_col = np.array(
+                    [1 if str(v).lower() in ("true", "1", "yes") else 0 for v in col],
+                    dtype=float,
+                )
+
+            elif ftype == "categorical_ordinal":
+                enc = OrdinalEncoder(
+                    categories=[self.categorical_ordinal_values_order[col_idx]],
+                    dtype=float,
+                    handle_unknown="use_encoded_value",
+                    unknown_value=-1,
+                )
+                transformed_col = (
+                    enc.fit_transform(np.array(col).reshape(-1, 1))
+                    .astype(float)
+                    .ravel()
+                )
+
+            elif ftype == "categorical_nominal":
+                enc = OrdinalEncoder(dtype=float)
+                enc.fit(np.array(col).reshape(-1, 1))
+                transformed_col = (
+                    enc.transform(np.array(col).reshape(-1, 1)).astype(float).ravel()
+                )
+            else:
+                transformed_col = col.astype(float)
+
+            transformed_columns.append(transformed_col)
+
+        transformed_data: np.ndarray = np.column_stack(transformed_columns)
+
+        if is_df:
+            X_transformed = pd.DataFrame(
+                transformed_data,
+                columns=df.columns,
+                index=df.index,
+                dtype=np.float64,
+            )
+        else:
+            X_transformed = transformed_data.astype(np.float64)
+
+        return X_transformed
 
     def __call__(self, a: Any, b: Any) -> float:
         """
