@@ -9,7 +9,7 @@ def categorical_ordinal_component(
     X: np.ndarray,
     Y: np.ndarray,
     ordinal_indices: list[int],
-    metadata: dict[int, dict[str, Any]],
+    metadata: dict[int | str, dict[str, Any]],
     missing_strategy: str = "ignore",
     calculation_type: str = "kaufman",
     weights: np.ndarray | None = None,

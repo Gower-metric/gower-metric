@@ -1,25 +1,31 @@
 import numpy as np
 import pandas as pd
-import pytest
 
 from gower_metric import Gower
 
+
 def test_transform_with_np_array() -> None:
-    data = np.array([["low", True, False, "car", 4.5],
-                     ["medium", False, True, "plane", 1.8],
-                     ["high",  False, True, "car", 0.95],
-                     ["low", True, False, "train", 1.11]],
-                     dtype=object)
+    data = np.array(
+        [
+            ["low", True, False, "car", 4.5],
+            ["medium", False, True, "plane", 1.8],
+            ["high", False, True, "car", 0.95],
+            ["low", True, False, "train", 1.11],
+        ],
+        dtype=object,
+    )
     categorical_ordinal_values_order: dict[int | str, list[str]] | None = {
         0: ["low", "medium", "high"],
     }
 
     gower = Gower(
-        {0: "categorical_ordinal",
-         1: "binary_asymmetric", 
-         2: "binary_symmetric",
-         3: "categorical_nominal",
-         4: "ratio_scale_interval"},
+        {
+            0: "categorical_ordinal",
+            1: "binary_asymmetric",
+            2: "binary_symmetric",
+            3: "categorical_nominal",
+            4: "ratio_scale_interval",
+        },
         categorical_ordinal_values_order=categorical_ordinal_values_order,
     )
     gower.fit(data)
@@ -37,34 +43,43 @@ def test_transform_with_np_array() -> None:
 
     np.testing.assert_array_equal(transformed_data, expected_data)
 
-def test_transform_with_df() -> None:
-    
-    data = pd.DataFrame({"level": ["low", "medium", "high", "low"],
-                  "positive": [True, False, False, True],
-                  "negative": [False, True, True, False],
-                  "type": ["car", "plane", "car", "train"],
-                  "price": [4.5, 1.8, 0.95, 1.11]})
 
+def test_transform_with_df() -> None:
+    data = pd.DataFrame(
+        {
+            "level": ["low", "medium", "high", "low"],
+            "positive": [True, False, False, True],
+            "negative": [False, True, True, False],
+            "type": ["car", "plane", "car", "train"],
+            "price": [4.5, 1.8, 0.95, 1.11],
+        }
+    )
 
     categorical_ordinal_values_order: dict[int | str, list[str]] | None = {
         "level": ["low", "medium", "high"],
     }
 
     gower = Gower(
-        {"level": "categorical_ordinal",
-         "positive": "binary_asymmetric", 
-         "negative": "binary_symmetric",
-         "type": "categorical_nominal",
-         "price": "ratio_scale_interval"},
+        {
+            "level": "categorical_ordinal",
+            "positive": "binary_asymmetric",
+            "negative": "binary_symmetric",
+            "type": "categorical_nominal",
+            "price": "ratio_scale_interval",
+        },
         categorical_ordinal_values_order=categorical_ordinal_values_order,
     )
     gower.fit(data)
     transformed_data = gower.transform(data)
 
-    expected_data = pd.DataFrame({"level": [0.0, 1.0, 2.0, 0.0],
-                  "positive": [1.0, 0.0, 0.0, 1.0],
-                  "negative": [0.0, 1.0, 1.0, 0.0],
-                  "type": [0.0, 1.0, 0.0, 2.0],
-                  "price": [4.5, 1.8, 0.95, 1.11]})
+    expected_data = pd.DataFrame(
+        {
+            "level": [0.0, 1.0, 2.0, 0.0],
+            "positive": [1.0, 0.0, 0.0, 1.0],
+            "negative": [0.0, 1.0, 1.0, 0.0],
+            "type": [0.0, 1.0, 0.0, 2.0],
+            "price": [4.5, 1.8, 0.95, 1.11],
+        }
+    )
 
     pd.testing.assert_frame_equal(transformed_data, expected_data)

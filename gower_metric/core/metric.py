@@ -288,7 +288,7 @@ class Gower:
             self._h_ratio = np.empty(0)
             self._h_numeric = np.empty(0)
 
-        self.cat_ord_metadata: dict[int, dict[str, Any]] = {}
+        self.cat_ord_metadata: dict[int | str, dict[str, Any]] = {}
         for j in self.categorical_ordinal_indices:
             col = arr[:, j]
             ranks_map, mn, mx = map_ordered_values(
@@ -324,6 +324,8 @@ class Gower:
         """
         Transform the input DataFrame or ndarray to contain only floats.
 
+        Updates the Gower model feature ranges calculated by the fitting.
+
         Useful when applying 'gower' distance metrics in scikit-learn methods
         (e.g., KNN) requiring numeric input exclusively.
 
@@ -348,7 +350,7 @@ class Gower:
             ...     'feature3': 'binary_symmetric',
             ... }
             >>> gower = Gower(feature_types=feature_types).fit(data)
-            >>> X_transformed = gower.transform(X)
+            >>> data_transformed = gower.transform(data)
         """
         is_df = isinstance(X, pd.DataFrame)
         if isinstance(X, pd.DataFrame):
@@ -397,6 +399,13 @@ class Gower:
             transformed_columns.append(transformed_col)
 
         transformed_data: np.ndarray = np.column_stack(transformed_columns)
+
+        for col_idx, _ in (
+            (i, t) for i, t in self.feature_types.items() if t == "categorical_ordinal"
+        ):
+            self.cat_ord_metadata[col_idx]["ranks"] = {
+                v: v for v in self.cat_ord_metadata[col_idx]["ranks"].values()
+            }
 
         if is_df:
             X_transformed = pd.DataFrame(

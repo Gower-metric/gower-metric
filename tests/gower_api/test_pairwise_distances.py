@@ -38,7 +38,11 @@ def test_scikit_learn_paiwise_distances() -> None:
     }
 
     gower = Gower(feature_types=feature_types).fit(df)
+    transformed_df = gower.transform(df)
+
     df = df.to_numpy()
+    if isinstance(transformed_df, pd.DataFrame):
+        transformed_df = transformed_df.to_numpy()
 
     def _gower_distance(x, y):
         """
@@ -47,7 +51,7 @@ def test_scikit_learn_paiwise_distances() -> None:
         return gower(x, y)
 
     matrix_scikit = pairwise_distances(
-        df, metric=_gower_distance, n_jobs=-1, ensure_all_finite=False
+        transformed_df, metric=_gower_distance, n_jobs=-1, ensure_all_finite=False
     )
 
     matrix_gower = gower.matrix(df, backend="loky")
