@@ -15,8 +15,7 @@ def test_categorical_ordinal_kaufman_uniform_ndarray() -> None:
         {0: "categorical_ordinal"},
         categorical_ordinal_values_order=categorical_ordinal_values_order,
     )
-    gower.fit(data)
-    transformed_data = gower.transform(data)
+    transformed_data = gower.fit_transform(data)
 
     expected = np.array(
         [
@@ -57,8 +56,7 @@ def test_categorical_ordinal_podani_uniform_ndarray() -> None:
         categorical_ordinal_values_order=categorical_ordinal_values_order,
         categorical_ordinal_calculation_type="podani",
     )
-    gower.fit(data)
-    transformed_data = gower.transform(data)
+    transformed_data = gower.fit_transform(data)
 
     for i in range(transformed_data.shape[0]):
         for j in range(transformed_data.shape[0]):
@@ -81,8 +79,7 @@ def test_categorical_ordinal_podani_uniform_df() -> None:
         categorical_ordinal_values_order=categorical_ordinal_values_order,
         categorical_ordinal_calculation_type="podani",
     )
-    gower.fit(data)
-    transformed_data = gower.transform(data)
+    transformed_data = gower.fit_transform(data)
 
     if isinstance(transformed_data, pd.DataFrame):
         assert (transformed_data.dtypes == "float").all()

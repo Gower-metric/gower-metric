@@ -425,6 +425,20 @@ class Gower:
 
         return X_transformed
 
+    def fit_transform(self, X: pd.DataFrame | np.ndarray) -> pd.DataFrame | np.ndarray:
+        """
+        Fit to data, then transform it.
+
+        Args:
+            X (np.ndarray | pd.DataFrame): shape of (n_samples, n_features).
+                For DataFrame inputs, column names in feature_types are converted to indices.
+
+        Returns:
+            X_new: Transformed input data.
+        """
+        self.fit(X)
+        return self.transform(X)
+
     def __call__(self, a: Any, b: Any) -> float:
         """
         Compute the Gower distance between two records.
