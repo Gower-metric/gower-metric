@@ -1,7 +1,16 @@
 import numpy as np
 import pandas as pd
+import pytest
 
 from gower_metric import Gower
+
+
+def test_transform_before_fit() -> None:
+    data = np.array([[0], [1], [0]], dtype=object)
+    gower = Gower({0: "binary_symmetric"})
+
+    with pytest.raises(ValueError, match="Operation not allowed: model is not fitted"):
+        gower.transform(data)
 
 
 def test_transform_with_np_array() -> None:

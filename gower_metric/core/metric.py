@@ -336,6 +336,9 @@ class Gower:
         Returns:
             X_new: Transformed input data.
 
+        Raises:
+            ValueError: If fit(X) was not performed before calling transform(X).
+
         Example:
             >>> import pandas as pd
             >>> from gower_metric import Gower
@@ -352,6 +355,9 @@ class Gower:
             >>> gower = Gower(feature_types=feature_types).fit(data)
             >>> data_transformed = gower.transform(data)
         """
+        if not self._is_fitted:
+            raise ValueError("Operation not allowed: model is not fitted")
+
         is_df = isinstance(X, pd.DataFrame)
         if isinstance(X, pd.DataFrame):
             df: pd.DataFrame = X
