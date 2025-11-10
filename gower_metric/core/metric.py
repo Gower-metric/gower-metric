@@ -375,17 +375,21 @@ class Gower:
                 col = X_arr[:, col_idx]
 
             if ftype in ("binary_asymmetric", "binary_symmetric"):
-                transformed_col = np.array(
-                    [1 if str(v).lower() in ("true", "1", "yes") else 0 for v in col],
-                    dtype=float,
-                )
+                transformed_col = np.zeros(col.shape[0], dtype=float)
+                for i, v in enumerate(col):
+                    if pd.isna(v):
+                        transformed_col[i] = np.nan
+                    elif str(v).lower() in ("true", "1", "yes", "1.0"):
+                        transformed_col[i] = 1.0
+                    else:
+                        transformed_col[i] = 0.0
 
             elif ftype == "categorical_ordinal":
                 enc = OrdinalEncoder(
                     categories=[self.categorical_ordinal_values_order[col_idx]],
                     dtype=float,
                     handle_unknown="use_encoded_value",
-                    unknown_value=-1,
+                    unknown_value=np.nan,
                 )
                 transformed_col = (
                     enc.fit_transform(np.array(col).reshape(-1, 1))
@@ -394,7 +398,11 @@ class Gower:
                 )
 
             elif ftype == "categorical_nominal":
-                enc = OrdinalEncoder(dtype=float)
+                enc = OrdinalEncoder(
+                    dtype=float,
+                    handle_unknown="use_encoded_value",
+                    unknown_value=np.nan,
+                )
                 enc.fit(np.array(col).reshape(-1, 1))
                 transformed_col = (
                     enc.transform(np.array(col).reshape(-1, 1)).astype(float).ravel()

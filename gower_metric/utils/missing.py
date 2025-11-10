@@ -20,6 +20,7 @@ def is_missing(value: Any) -> bool:
         value is None
         or (isinstance(value, float) and math.isnan(value))
         or (hasattr(pd, "isna") and pd.isna(value))
+        or (isinstance(value, float) and np.isnan(value))
     )
 
 
