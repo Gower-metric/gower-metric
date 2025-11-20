@@ -1,5 +1,5 @@
 ================
-R compatibility
+R environment
 ================
 
 In this section we dive deeper into numerical comparison between our implementation and R's enviroment. We used two main R packages:
