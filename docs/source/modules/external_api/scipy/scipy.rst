@@ -2,7 +2,7 @@
 SciPy
 ======
 
-We assume that you called the `transform` method and imported scipy library.
+We assume that you called the ``transform`` method and imported scipy library.
 
 -----------------
 Spatial distance
