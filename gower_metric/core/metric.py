@@ -19,8 +19,7 @@ from gower_metric.utils.cat_ord_ut import (
 )
 from gower_metric.utils.kde_types.silverman import silverman_bandwidth
 from gower_metric.utils.knn_bandwidth import knn_bandwidth
-from gower_metric.utils.matrix.calculate_matrix import get_results_from_joblib
-from gower_metric.utils.matrix.convert_matrix import get_scipy_sparse_matrix
+from gower_metric.utils.matrix.calculate_matrix import get_full_matrix
 from gower_metric.utils.ranges import get_numeric_ranges
 from gower_metric.utils.to_array import to_array
 from gower_metric.utils.validators import (
@@ -708,7 +707,7 @@ class Gower:
         | scipy.sparse.csc_matrix
         | scipy.sparse.coo_matrix
     ):
-        """Compute symmetric pairwise Gower distance matrix using joblib (parallel).
+        """Return symmetric pairwise Gower distance matrix using joblib (parallel).
 
         Args:
             X (pd.DataFrame | np.ndarray): shape of (n_samples, n_features).
@@ -774,39 +773,14 @@ class Gower:
             self.fit(X)
             raise Warning("Calling .fit(X) inside .matrix(X).")
 
-        if isinstance(X, pd.DataFrame):
-            arr = X.to_numpy(dtype=object)
-        else:
-            arr = np.array(X, dtype=object)
-
-        n: int = arr.shape[0]
-
-        MATRIX: np.ndarray = np.zeros((n, n), dtype=data_type)
-
-        results: list[tuple[int, np.ndarray]] = get_results_from_joblib(
-            n_jobs=n_jobs,
-            n=n,
-            arr=arr,
-            model=self,
+        return get_full_matrix(
+            self,
+            X,
             data_type=data_type,
+            n_jobs=n_jobs,
             verbose=verbose,
-            backend=backend,
             matrix_type=matrix_type,
+            convert_to_sparse=convert_to_sparse,
+            sparse_type=sparse_type,
+            backend=backend,
         )
-
-        for i, row in results:
-            MATRIX[i] = row
-
-        MATRIX += MATRIX.T
-
-        if matrix_type == "distance":
-            np.fill_diagonal(MATRIX, 0.0)
-        elif matrix_type == "similarity":
-            np.fill_diagonal(MATRIX, 1.0)
-
-        if convert_to_sparse:
-            MATRIX = get_scipy_sparse_matrix(
-                MATRIX, matrix_format=sparse_type, data_type=data_type
-            )
-
-        return MATRIX
