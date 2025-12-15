@@ -1,4 +1,5 @@
 import warnings
+
 import numpy as np
 import pandas as pd
 from rpy2 import rinterface, robjects
@@ -16,24 +17,19 @@ if not rinterface.initr():
 def test_big_matrix() -> None:
     df = pd.read_excel("data/files/artificially_generated.xlsx")
 
-    features = {
+    features: dict[int | str, str] = {
         "Age": "numeric",
         "Salary": "ratio_scale_interval",
         "Have_children": "binary_symmetric",
         "Is_smoking": "binary_asymmetric",
         "Birth": "categorical_nominal",
-        "Education": "categorical_ordinal"
+        "Education": "categorical_ordinal",
     }
-    ord_order = {"Education": ["Low", "Medium", "High", "PhD", "Prof"]}
+    ord_order: dict[int | str, list[str]] = {
+        "Education": ["Low", "Medium", "High", "PhD", "Prof"]
+    }
 
-    weights = {
-        0: 1.0,
-        1: 2.0,
-        2: 1.5,
-        3: 1.2,
-        4: 3.75,
-        5: 2.72
-    }
+    weights = {0: 1.0, 1: 2.0, 2: 1.5, 3: 1.2, 4: 3.75, 5: 2.72}
 
     gower = Gower(
         features,
@@ -59,29 +55,33 @@ def test_big_matrix() -> None:
     # Education -> Ordered Factor
     r_df[colnames.index("Education")] = robjects.r["ordered_f"](
         r_df[colnames.index("Education")],
-        robjects.StrVector(["Low", "Medium", "High", "PhD", "Prof"]))
+        robjects.StrVector(["Low", "Medium", "High", "PhD", "Prof"]),
+    )
 
     # Have_children -> Factor (Binary Symmetric)
     r_df[colnames.index("Have_children")] = robjects.r["factor_f"](
-        r_df[colnames.index("Have_children")])
+        r_df[colnames.index("Have_children")]
+    )
 
     # Is_smoking -> Logical (Binary Asymmetric)
     r_df[colnames.index("Is_smoking")] = robjects.r["logical_f"](
-        r_df[colnames.index("Is_smoking")])
+        r_df[colnames.index("Is_smoking")]
+    )
 
     # Birth -> Factor (Nominal)
     r_df[colnames.index("Birth")] = robjects.r["factor_f"](
-        r_df[colnames.index("Birth")])
+        r_df[colnames.index("Birth")]
+    )
 
     importr("cluster")
     daisy = robjects.r["daisy"]
 
-    type_list = robjects.ListVector({
-        'asymm':
-        robjects.StrVector(["Is_smoking"]),
-        'symm':
-        robjects.StrVector(["Have_children"]),
-    })
+    type_list = robjects.ListVector(
+        {
+            "asymm": robjects.StrVector(["Is_smoking"]),
+            "symm": robjects.StrVector(["Have_children"]),
+        }
+    )
 
     weights = robjects.FloatVector([1.0, 2.0, 1.5, 1.2, 3.75, 2.72])
     dist_matrix = daisy(r_df, metric="gower", type=type_list, weights=weights)
@@ -103,6 +103,5 @@ def test_big_matrix() -> None:
             print(f"R: {np_matrix[rows[0], cols[0]]}")
 
     assert np_matrix.shape == (len(df), len(df))
-    assert np.allclose(np_matrix, gower_matrix,
-                       atol=1e-6), "Matrices are not equal!"
+    assert np.allclose(np_matrix, gower_matrix, atol=1e-6), "Matrices are not equal!"
     print("Test passed! Matrices are identical.")
