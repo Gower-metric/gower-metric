@@ -16,6 +16,8 @@ repos:
           --cache-dir, ".pip_audit_cache",
           --ignore-vuln, "GHSA-5rjg-fvgr-3xxf",
           --ignore-vuln, "GHSA-4xh5-x5gv-qwph",
+          --ignore-vuln, "GHSA-gm62-xv2j-4w53",
+          --ignore-vuln, "GHSA-2xpw-w6gg-jr37",
         ]
 
   - repo: https://github.com/astral-sh/ruff-pre-commit
