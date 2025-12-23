@@ -1,6 +1,6 @@
-====================
+===============
 Basic examples
-====================
+===============
 
 Here we provide some basic code examples to demonstrate how to use the package with different types of data.
 
@@ -51,9 +51,29 @@ We can also pass pandas DataFrames directly:
 
     gower = Gower(feature_types, scale="iqr").fit(df)
 
-More advanced examples, as well as categorical ordinal example, can be found in next section.
 
-.. automodule:: 
-    :members:
-    :undoc-members:
-    :show-inheritance:
+-------------------------
+Calculating similarities
+-------------------------
+
+Package provides an option to calculate similarities instead of distances.
+
+.. code-block:: python
+
+   import numpy as np
+
+   from gower_metric import Gower
+
+   data = np.array([[1, 'a'], [2, 'b'], [3, 'a'], [4, 'c']], dtype=object)
+
+   feature_types = {
+      0: "ratio_scale_interval",
+      1: "categorical_nominal",
+   }
+
+   gower = Gower(feature_types=feature_types).fit(data)
+   
+   similarity = gower.similarity(data[0], data[1])
+
+
+More advanced examples, as well as categorical ordinal example, can be found in next section.

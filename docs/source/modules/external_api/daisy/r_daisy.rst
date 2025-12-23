@@ -4,9 +4,9 @@ Daisy Module
 
 We used iris data.
 
----------------------
-Numerical Comparison
----------------------
+---------------------------
+Daisy Numerical Comparison
+---------------------------
 
 Python
 ------
@@ -266,20 +266,14 @@ R
      - 0.055226
      - 0.143503
 
------------------
-Speed Comparison
------------------
+-----------------------
+Daisy Speed Comparison
+-----------------------
 
 .. image:: ../../../../../data/imgs/comparison/daisy_gower_distance_comparison.svg
 
------------------
-More information
------------------
+-----------------------
+Daisy More information
+-----------------------
 
 For more detailed description, please refer to `this <https://github.com/mwardynski/gower-metric/blob/refactor_newapi/comparison/README.md>`_ file.
-
-
-.. automodule::
-    :members:
-    :undoc-members:
-    :show-inheritance:

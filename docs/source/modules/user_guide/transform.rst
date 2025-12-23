@@ -60,8 +60,3 @@ For convenience, Gower also implements `fit_transform` method, which combines `f
     Therefore, calling `transform` on the same data before and after re-fitting the instance may result in different numerical representations
     or even NaN values. The same applies to the `fit_transform` method. If your data does not contain any categorical ordinal features,
     this warning may not apply (we have not implemented tests for this scenario).
-
-.. automodule:: 
-    :members:
-    :undoc-members:
-    :show-inheritance:

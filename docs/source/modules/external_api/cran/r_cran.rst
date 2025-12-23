@@ -4,9 +4,9 @@ Cran Module
 
 We used iris data.
 
----------------------
-Numerical Comparison
----------------------
+--------------------------
+Cran Numerical Comparison
+--------------------------
 
 +-----+------------+------------+
 | row |     R      |   Python   |
@@ -32,20 +32,14 @@ Numerical Comparison
 |  9  | 0.45030303 | 0.45030303 |
 +-----+------------+------------+
 
------------------
-Speed Comparison
------------------
+----------------------
+Cran Speed Comparison
+----------------------
 
 .. image:: ../../../../../data/imgs/comparison/cran_gower_similarity_comparison.svg
 
------------------
-More information
------------------
+----------------------
+Cran More information
+----------------------
 
 For more detailed description, please refer to `this <https://github.com/mwardynski/gower-metric/blob/refactor_newapi/comparison/README.md>`_ file.
-
-
-.. automodule::
-    :members:
-    :undoc-members:
-    :show-inheritance:

@@ -1,6 +1,6 @@
-====================
-Categorical ordinal
-====================
+==========================
+Categorical Ordinal Utils
+==========================
 
 .. automodule:: gower_metric.utils.cat_ord_ut
    :members:

@@ -52,9 +52,9 @@ KNeighborsClassifier
     print("Classification Report:")
     print(classification_report(y_test, y_pred))
 
---------
-HDBSCAN
---------
+---------------------
+Scikit-learn HDBSCAN
+---------------------
 
 .. code-block:: python
 
@@ -71,8 +71,3 @@ HDBSCAN
     labels = clusterer.labels_
     silhouette_avg = silhouette_score(df_transformed, labels)
     print(f"Silhouette Score: {silhouette_avg:.2f}")
-
-.. automodule::
-    :members:
-    :undoc-members:
-    :show-inheritance:

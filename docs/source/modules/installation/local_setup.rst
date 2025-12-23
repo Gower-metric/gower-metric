@@ -16,8 +16,3 @@ To set up a local development environment for our project, we suggest to use fol
 - **Pre-commit**: A framework for managing and maintaining multi-language pre-commit hooks. It helps ensure code quality before commits.
 
 In addition, we use ruff and mypy for linting and type checking, respectively.
-
-.. automodule::
-    :members:
-    :undoc-members:
-    :show-inheritance:
