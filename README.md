@@ -5,13 +5,11 @@ Welcome to the Gower-metric library! This library provides an implementation of 
 ## Table of Contents
 
 - [Introduction](#introduction)
-- [Compatibility](#compatibility)
+- [Compatibility matrix](#compatibility-matrix)
 - [Documentation](#documentation)
 - [Installation](#installation)
 - [Quick start](#quick-start)
-- [Gower characteristics](#gower-characteristics)
-- [Metric enhancements](#metric-enhancements)
-- [Metrics comparison](#metrics-comparison)
+- [Examples](#examples)
 - [History](#history)
 - [Citation](#citation)
 - [References](#references)
@@ -41,10 +39,6 @@ Legend: ✅ - supported and tested, 🚧 - work in progress
 @TODO: add ref  
 Documentation is available [here]().
 
-## Examples
-
-Beside documentation, we provide easy to copy-paste jupyter notebooks under the [examples](examples) folder.
-
 ## Installation
 
 The easiest way to install the package is via pip:
@@ -59,14 +53,20 @@ uv add gower-metric
 
 ## Quick start
 
-In order to import class, which calculate Gower's metric, you need to import it as follows:
+Gower metric, by definition, is being designed to work with mixed, non-changed data types. We provide simple, two methods to how user can use algorithm. First, on original data. Second, on transformed ones (numericly encoded).
+
+### Original data
+
+In this scenarion, user operates on imported, original and unchanged data.
 ```python
+import numpy as np
+
 from gower_metric import Gower
 ```
 
 then initialize passing the variable types:
 ```python
-data = [[1, 'a', 3.5], [2, 'b', 4.0], [3, 'a', 2.5], [4, 'c', 5.0]]
+data = np.array([[1, 'a', 3.5], [2, 'b', 4.0], [3, 'a', 2.5], [4, 'c', 5.0]], dtype=object)
 
 feature_types = {
     0: "ratio_scale_interval",
@@ -74,22 +74,59 @@ feature_types = {
     2: "ratio_scale_interval"
 }
 
-gower = Gower(feature_types=feature_types)
+gower = Gower(feature_types=feature_types).fit(data)
 ```
 
-fit it to the data:
-```python
-gower.fit(data)
-```
+Now class is ready to use, you can calculate distance between two samples:
 
-and finally run for two samples from the dataset:
 ```python
 distance = gower(data[0], data[1])
 ```
 
-> [!Tip]
-> To calculate the pairwise distances for the entire dataset, you can do it manually or use an auxiliary function, like: [scipy.spatial.distance.pdist](https://docs.scipy.org/doc/scipy/reference/generated/scipy.spatial.distance.pdist.html) or [sklearn.metrics.pairwise_distances](https://scikit-learn.org/stable/modules/generated/sklearn.metrics.pairwise_distances.html).
+### Transformation
 
+We also provide a way to transform original data into it's numerical representation. It can be very useful when working with external libraries, 
+such as scikit-learn and scipy. More about how to use them with gower-metric can be found within [examples](examples) folder and documentation.
+
+```python
+import numpy as np
+
+from gower_metric import Gower
+
+data = np.array([[1, 'a', 3.5], [2, 'b', 4.0], [3, 'a', 2.5], [4, 'c', 5.0]], dtype=object)
+
+feature_types = {
+    0: "ratio_scale_interval",
+    1: "categorical_nominal",
+    2: "ratio_scale_interval"
+}
+
+gower = Gower(feature_types=feature_types).fit(data)
+```
+
+Now here is a difference. You can call `transform` method on class object as follows:
+
+```python
+transformed_data = gower.transform(data)
+```
+
+Under the hood, we map and convert all non-numerical values into numerical representation. With that in mind, all components calculated during fitting stage are being adjusted to transformed data and later used during distance calculation.
+
+> [!IMPORTANT]
+> Note that after calling `transform` method, user should NOT calculate components on original data anymore! This may lead to incorrect results.
+
+Calculating distance between two samples is the same:
+
+```python
+distance = gower(transformed_data[0], transformed_data[1])
+```
+
+Why should you use transformed data? The main reason is compatibility with external libraries, that does not support gower metric natively and
+require numerical input data.
+
+### Examples
+
+Besides above description and documentation, we provide easy to copy-paste jupyter notebooks under the [examples](examples) folder.
 
 ## Contribution
 
