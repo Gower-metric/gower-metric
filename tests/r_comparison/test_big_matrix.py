@@ -7,6 +7,7 @@ from rpy2.robjects import pandas2ri
 from rpy2.robjects.packages import importr
 
 from gower_metric import Gower
+from gower_metric.core.config import Config
 
 warnings.filterwarnings("ignore", category=UserWarning, module="rpy2")
 
@@ -31,11 +32,12 @@ def test_big_matrix() -> None:
 
     weights = {0: 1.0, 1: 2.0, 2: 1.5, 3: 1.2, 4: 3.75, 5: 2.72}
 
-    gower = Gower(
-        features,
-        weights,
+    cfg = Config(
+        feature_types=features,
+        feature_weights=weights,
         categorical_ordinal_values_order=ord_order,
-    ).fit(df)
+    )
+    gower = Gower(cfg).fit(df)
 
     gower_matrix = gower.matrix(df)
 
