@@ -2,12 +2,15 @@ import numpy as np
 import pytest
 
 from gower_metric import Gower
+from gower_metric.core.config import Config
 
 
 def test_binary_asymmetric_only() -> None:
     data = np.array([[0], [1], [0]], dtype=object)
-    gower = Gower({0: "binary_asymmetric"})
-    gower.fit(data)
+    cfg = Config(
+        feature_types={0: "binary_asymmetric"},
+    )
+    gower = Gower(cfg).fit(data)
 
     # 0/0: NaN
     assert np.isnan(gower(data[0], data[2]))

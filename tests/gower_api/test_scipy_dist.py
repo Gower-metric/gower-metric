@@ -3,6 +3,7 @@ import pandas as pd
 from scipy.spatial.distance import pdist, squareform
 
 from gower_metric import Gower
+from gower_metric.core.config import Config
 
 
 def test_scikit_learn_paiwise_distances() -> None:
@@ -36,8 +37,12 @@ def test_scikit_learn_paiwise_distances() -> None:
         "education": "categorical_nominal",
         "workclass": "categorical_nominal",
     }
+    
+    cfg = Config(
+        feature_types=feature_types,
+    )
+    gower = Gower(cfg).fit(df)
 
-    gower = Gower(feature_types=feature_types).fit(df)
     df = df.to_numpy()
 
     def _gower_distance(x, y):

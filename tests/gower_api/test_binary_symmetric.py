@@ -3,12 +3,15 @@ import pandas as pd
 import pytest
 
 from gower_metric import Gower
+from gower_metric.core.config import Config
 
 
 def test_binary_symmetric_only() -> None:
     data = np.array([[0], [1], [0]], dtype=object)
-    gower = Gower({0: "binary_symmetric"})
-    gower.fit(data)
+    cfg = Config(
+        feature_types={0: "binary_symmetric"},
+    )
+    gower = Gower(cfg).fit(data)
 
     # (0,0) -> distance 0, similarity 1
     assert pytest.approx(gower(data[0], data[2]), rel=1e-6) == 0.0
@@ -23,8 +26,10 @@ def test_binary_symmetric_only() -> None:
 
 def test_binary_symmetric_only_pandas() -> None:
     data = pd.DataFrame({"column": [0, 1, 0]})
-    gower = Gower({"column": "binary_symmetric"})
-    gower.fit(data)
+    cfg = Config(
+        feature_types={"column": "binary_symmetric"},
+    )
+    gower = Gower(cfg).fit(data)
 
     # (0,0) -> distance 0, similarity 1
     assert pytest.approx(gower(data.iloc[0], data.iloc[2]), rel=1e-6) == 0.0

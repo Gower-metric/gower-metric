@@ -4,13 +4,18 @@ import numpy as np
 import pytest
 
 from gower_metric import Gower
+from gower_metric.core.config import Config
 from gower_metric.utils.kde_types.silverman import silverman_bandwidth
 
 
 def test_ratio_scale_range_ndarray() -> None:
     data = np.array([[1.0], [2.0], [3.0], [1.0]], dtype=float)
-    gower = Gower({0: "ratio_scale_interval"}, scale="range")
-    gower.fit(data)
+
+    cfg = Config(
+        feature_types={0: "ratio_scale_interval"},
+        scale_method="range"
+    )
+    gower = Gower(cfg).fit(data)
 
     # Range: max - min = 3 - 1 = 2 -> so matematically it will be |x - y| / 2
 
@@ -38,20 +43,24 @@ def test_ratio_scale_kde_window_h() -> None:
     col = data[:, 0]
     manual_h = silverman_bandwidth(col)
 
-    gs_kde = Gower(
-        {0: "ratio_scale_interval"},
-        scale="range",
+    cfg = Config(
+        feature_types={0: "ratio_scale_interval"},
+        scale_method="range",
         scale_window="kde",
         scale_window_type="silverman",
     )
-    gs_kde.fit(data)
+    gs_kde = Gower(cfg).fit(data)
 
     assert isinstance(gs_kde._h_ratio, np.ndarray)
     assert gs_kde._h_ratio.shape == (1,)
     assert pytest.approx(gs_kde._h_ratio[0], rel=1e-6) == manual_h
 
-    gs_plain = Gower({0: "ratio_scale_interval"}, scale="range")
-    gs_plain.fit(data)
+
+    cfg2 = Config(
+        feature_types={0: "ratio_scale_interval"},
+        scale_method="range",
+    )
+    gs_plain = Gower(cfg2).fit(data)
 
     for xi, xj in itertools.product(data, data):
         d1 = gs_plain(xi, xj)

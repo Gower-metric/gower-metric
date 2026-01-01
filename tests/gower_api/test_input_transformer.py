@@ -3,12 +3,17 @@ import pandas as pd
 import pytest
 
 from gower_metric import Gower
+from gower_metric.core.config import Config
 from gower_metric.core.exceptions import IllegalStateError
 
 
 def test_transform_before_fit() -> None:
     data = np.array([[0], [1], [0]], dtype=object)
-    gower = Gower({0: "binary_symmetric"})
+
+    cfg = Config(
+        feature_types={0: "binary_symmetric"},
+    )
+    gower = Gower(cfg)
 
     with pytest.raises(
         IllegalStateError, match="Operation not allowed: model is not fitted"
@@ -30,8 +35,8 @@ def test_transform_with_np_array() -> None:
         0: ["low", "medium", "high"],
     }
 
-    gower = Gower(
-        {
+    cfg = Config(
+        feature_types={
             0: "categorical_ordinal",
             1: "binary_asymmetric",
             2: "binary_symmetric",
@@ -40,7 +45,7 @@ def test_transform_with_np_array() -> None:
         },
         categorical_ordinal_values_order=categorical_ordinal_values_order,
     )
-    gower.fit(data)
+    gower = Gower(cfg).fit(data)
     transformed_data = gower.transform(data)
 
     expected_data = np.array(
@@ -71,8 +76,8 @@ def test_transform_with_df() -> None:
         "level": ["low", "medium", "high"],
     }
 
-    gower = Gower(
-        {
+    cfg = Config(
+        feature_types={
             "level": "categorical_ordinal",
             "positive": "binary_asymmetric",
             "negative": "binary_symmetric",
@@ -81,7 +86,7 @@ def test_transform_with_df() -> None:
         },
         categorical_ordinal_values_order=categorical_ordinal_values_order,
     )
-    gower.fit(data)
+    gower = Gower(cfg).fit(data)
     transformed_data = gower.transform(data)
 
     expected_data = pd.DataFrame(

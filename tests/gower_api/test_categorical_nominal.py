@@ -3,12 +3,14 @@ import pandas as pd
 import pytest
 
 from gower_metric import Gower
-
+from gower_metric.core.config import Config
 
 def test_categorical_nominal_ndarray() -> None:
     data = np.array([["A"], ["B"], ["C"], ["A"]], dtype=object)
-    gower = Gower({0: "categorical_nominal"})
-    gower.fit(data)
+    cfg = Config(
+        feature_types={0: "categorical_nominal"},
+    )
+    gower = Gower(cfg).fit(data)
 
     # A, B, C, A
     expected = np.array(
@@ -31,8 +33,10 @@ def test_categorical_nominal_ndarray() -> None:
 
 def test_categorical_nominal_pandas() -> None:
     df = pd.DataFrame({"color": ["red", "blue", "green", "red"]})
-    gower = Gower({"color": "categorical_nominal"})
-    gower.fit(df)
+    cfg = Config(
+        feature_types={"color": "categorical_nominal"},
+    )
+    gower = Gower(cfg).fit(df)
 
     # red, blue, green, red
     expected = np.array(
