@@ -5,6 +5,7 @@ import pandas as pd
 import scipy.sparse
 from sklearn.preprocessing import OrdinalEncoder
 
+from gower_metric.core.config import Config
 from gower_metric.core.exceptions import IllegalStateError
 from gower_metric.distances.binary_asymmetric import (
     binary_asymmetric_component,
@@ -24,17 +25,7 @@ from gower_metric.utils.matrix.calculate_matrix import get_full_matrix
 from gower_metric.utils.ranges import get_numeric_ranges
 from gower_metric.utils.to_array import to_array
 from gower_metric.utils.validators import (
-    validate_categorical_ordinal_calculation_type,
-    validate_categorical_ordinal_values_order,
-    validate_conditional_distances,
-    validate_conditional_distances_threshold_coeff,
-    validate_feature_types,
     validate_feature_types_for_conditional_distances,
-    validate_k_neighbours,
-    validate_missing_strategy,
-    validate_scale_method,
-    validate_scale_window_and_type,
-    validate_weights_type,
 )
 from gower_metric.weights.weights import get_weights
 
@@ -46,17 +37,18 @@ class Gower:
 
     def __init__(
         self,
-        feature_types: dict[int | str, str],
-        feature_weights: dict[int, float] | str | None = None,
-        scale: str = "range",
-        missing_strategy: str = "ignore",
-        categorical_ordinal_values_order: dict[int | str, list[str]] | None = None,
-        categorical_ordinal_calculation_type: str = "kaufman",
-        scale_window: str | None = None,
-        scale_window_type: str | None = None,
-        k_neighbours: int | None = None,
-        conditional_distances: bool = False,
-        conditional_distances_threshold_coeff: int = 1,
+        config: Config,
+        # feature_types: dict[int | str, str],
+        # feature_weights: dict[int, float] | str | None = None,
+        # scale: str = "range",
+        # missing_strategy: str = "ignore",
+        # categorical_ordinal_values_order: dict[int | str, list[str]] | None = None,
+        # categorical_ordinal_calculation_type: str = "kaufman",
+        # scale_window: str | None = None,
+        # scale_window_type: str | None = None,
+        # k_neighbours: int | None = None,
+        # conditional_distances: bool = False,
+        # conditional_distances_threshold_coeff: int = 1,
     ) -> None:
         """
         Initialize Gower with explicit feature type and weight mappings.
@@ -111,11 +103,11 @@ class Gower:
             ...     2: 1.0,
             >>> gower = Gower(feature_types=feature_types, feature_weights=feature_weights)
         """
-        validate_feature_types(feature_types)
-        self.feature_types: dict[int | str, str] = feature_types
+        # validate_feature_types(feature_types)
+        self.feature_types = config.feature_types
 
-        self.feature_weights = feature_weights or {}
-        validate_weights_type(self.feature_weights)
+        self.feature_weights = config.feature_weights
+        # validate_weights_type(self.feature_weights)
 
         self.numeric_indices: list[int] = []
         self.categorical_nominal_indices: list[int] = []
@@ -126,44 +118,39 @@ class Gower:
         self.ratio_ranges: np.ndarray = np.array([])
         self.numeric_ranges: np.ndarray = np.array([])
 
-        self.scale_method: str = (scale or "range").lower()
-        validate_scale_method(self.scale_method)
+        self.scale_method: str = config.scale_method
+        # validate_scale_method(self.scale_method)
 
-        self.missing_strategy: str = (missing_strategy or "ignore").lower()
-        validate_missing_strategy(self.missing_strategy)
+        self.missing_strategy: str = config.missing_strategy
+        # validate_missing_strategy(self.missing_strategy)
+        self.categorical_ordinal_values_order = config.categorical_ordinal_values_order
+        # validate_categorical_ordinal_values_order(
+        #     self.categorical_ordinal_values_order, self.feature_types
+        # )
 
-        if categorical_ordinal_values_order is None:
-            categorical_ordinal_values_order = {}
-        self.categorical_ordinal_values_order = categorical_ordinal_values_order
-        validate_categorical_ordinal_values_order(
-            self.categorical_ordinal_values_order, self.feature_types
+        self.categorical_ordinal_calculation_type = (
+            config.categorical_ordinal_calculation_type
         )
+        # validate_categorical_ordinal_calculation_type(
+        #     self.categorical_ordinal_calculation_type
+        # )
 
-        self.categorical_ordinal_calculation_type: str = (
-            categorical_ordinal_calculation_type or "kaufman"
-        ).lower()
-        validate_categorical_ordinal_calculation_type(
-            self.categorical_ordinal_calculation_type
-        )
+        self.scale_window: str | None = config.scale_window
+        self.scale_window_type: str | None = config.scale_window_type
+        # validate_scale_window_and_type(self.scale_window, self.scale_window_type)
 
-        self.scale_window: str | None = scale_window if scale_window else None
-        self.scale_window_type: str | None = (
-            scale_window_type if scale_window_type else None
-        )
-        validate_scale_window_and_type(self.scale_window, self.scale_window_type)
+        self.k_neighbours = config.k_neighbours
+        # validate_k_neighbours(self.k_neighbours)
 
-        self.k_neighbours = k_neighbours if k_neighbours else None
-        validate_k_neighbours(self.k_neighbours)
-
-        self.conditional_distances = conditional_distances
-        validate_conditional_distances(self.conditional_distances)
+        self.conditional_distances = config.conditional_distances
+        # validate_conditional_distances(self.conditional_distances)
 
         self.conditional_distances_threshold_coeff = (
-            conditional_distances_threshold_coeff
+            config.conditional_distances_threshold_coeff
         )
-        validate_conditional_distances_threshold_coeff(
-            self.conditional_distances_threshold_coeff
-        )
+        # validate_conditional_distances_threshold_coeff(
+        #     self.conditional_distances_threshold_coeff
+        # )
 
         self._is_fitted = False
 
