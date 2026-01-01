@@ -16,6 +16,7 @@ ALLOWED_CATEGORICAL_ORDINAL_CALCULATION_TYPES = {"kaufman", "podani"}
 ALLOWED_WEIGHTS_TYPES = {None, "uniform"}
 ALLOWED_K_NEIGHBOURS_TYPES = {None, int}
 ALLOWED_CONDITIONAL_DISTANCES = {False, True}
+ALLOWED_CONDITIONAL_DISTANCES_THRESHOLD_COEFF_MIN_VALUE = 1
 
 
 def validate_feature_types(feature_types: dict[Any, str]) -> None:
@@ -213,6 +214,30 @@ def validate_conditional_distances(conditional_distances: bool) -> None:
         )
 
 
+def validate_conditional_distances_threshold_coeff(
+    conditional_distances_threshold_coeff: int,
+) -> None:
+    """
+    Validate the conditional distances threshold coefficient.
+
+    Args:
+        conditional_distances_threshold_coeff (int): Value of the threshold coefficient
+
+    Raises:
+        ValueError: If conditional_distances_threshold_coeff not an int or lower than 1.
+    """
+    if (
+        not isinstance(conditional_distances_threshold_coeff, int)
+        or conditional_distances_threshold_coeff
+        < ALLOWED_CONDITIONAL_DISTANCES_THRESHOLD_COEFF_MIN_VALUE
+    ):
+        raise ValueError(
+            f"Conditional_distances_threshold_coeff must be of type `int` "
+            f"at least equal to {ALLOWED_CONDITIONAL_DISTANCES_THRESHOLD_COEFF_MIN_VALUE}, "
+            f"got {conditional_distances_threshold_coeff}"
+        )
+
+
 def validate_feature_types_for_conditional_distances(n_feats: int, p_cat: int) -> None:
     """
     Validate the data passed to use with the conditional ditances.
@@ -222,7 +247,7 @@ def validate_feature_types_for_conditional_distances(n_feats: int, p_cat: int) -
         p_cat (int): Number of categorical features
 
     Raises:
-        ValueError: If there are either no categorical or no numerical features passed
+        ValueError: If there are either no categorical or no numerical features passed.
     """
     if p_cat in (0, n_feats):
         raise ValueError(

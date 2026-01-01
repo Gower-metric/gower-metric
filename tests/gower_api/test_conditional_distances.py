@@ -119,7 +119,7 @@ def test_value_error_on_no_numerical_features() -> None:
     }
 
     with pytest.raises(ValueError):
-        gower = Gower(
+        Gower(
             feature_types=f_types,
             conditional_distances=True,
             categorical_ordinal_values_order=categorical_ordinal_values_order,
@@ -140,7 +140,61 @@ def test_value_error_on_no_categorical_features() -> None:
     }
 
     with pytest.raises(ValueError):
-        gower = Gower(
+        Gower(
             feature_types=f_types,
             conditional_distances=True,
         ).fit(raw)
+
+
+def test_value_error_on_too_small_threshold_coeff() -> None:
+    f_types: dict[int | str, str] = {
+        0: "numeric",
+    }
+
+    with pytest.raises(ValueError):
+        Gower(
+            feature_types=f_types,
+            conditional_distances=True,
+            conditional_distances_threshold_coeff=0,
+        )
+
+
+def test_conditional_distances_threshold_coeff() -> None:
+    raw = np.array(
+        [
+            ["A", "X", 0.0],
+            ["B", "Y", 2.0],
+            ["C", "Z", 0.0],
+        ],
+        dtype=object,
+    )
+    f_types: dict[int | str, str] = {
+        0: "categorical_nominal",
+        1: "categorical_ordinal",
+        2: "numeric",
+    }
+
+    categorical_ordinal_values_order: dict[int | str, list[str]] | None = {
+        1: ["X", "Y", "Z"],
+    }
+
+    gower = Gower(
+        feature_types=f_types,
+        conditional_distances=True,
+        categorical_ordinal_values_order=categorical_ordinal_values_order,
+    ).fit(raw)
+
+    assert gower(raw[0], raw[1]) == 1.0
+    assert gower(raw[0], raw[2]) == 1.0
+    assert gower(raw[1], raw[2]) == 1.0
+
+    gower = Gower(
+        feature_types=f_types,
+        categorical_ordinal_values_order=categorical_ordinal_values_order,
+        conditional_distances=True,
+        conditional_distances_threshold_coeff=2,
+    ).fit(raw)
+
+    assert gower(raw[0], raw[1]) == 1.0
+    assert gower(raw[0], raw[2]) == 0.0
+    assert gower(raw[1], raw[2]) == 1.0

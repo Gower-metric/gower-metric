@@ -27,6 +27,7 @@ from gower_metric.utils.validators import (
     validate_categorical_ordinal_calculation_type,
     validate_categorical_ordinal_values_order,
     validate_conditional_distances,
+    validate_conditional_distances_threshold_coeff,
     validate_feature_types,
     validate_feature_types_for_conditional_distances,
     validate_k_neighbours,
@@ -55,6 +56,7 @@ class Gower:
         scale_window_type: str | None = None,
         k_neighbours: int | None = None,
         conditional_distances: bool = False,
+        conditional_distances_threshold_coeff: int = 1,
     ) -> None:
         """
         Initialize Gower with explicit feature type and weight mappings.
@@ -83,6 +85,9 @@ class Gower:
                 set to the square root of the number of points.
             conditional_distances (bool): Default to False. If set to True, two-step approach will be
                 triggered to calculate formula. More information in references -> chapter 3.
+            conditional_distances_threshold_coeff (int): Value to be used as the numerator in the fraction (with p_cat as the denominator)
+                that defines the threshold above which the distance will be set to 1. More information in references -> chapter 3.
+
 
         Raises:
             ValueError: If feature_types is not a non-empty dict.
@@ -152,6 +157,13 @@ class Gower:
 
         self.conditional_distances = conditional_distances
         validate_conditional_distances(self.conditional_distances)
+
+        self.conditional_distances_threshold_coeff = (
+            conditional_distances_threshold_coeff
+        )
+        validate_conditional_distances_threshold_coeff(
+            self.conditional_distances_threshold_coeff
+        )
 
         self._is_fitted = False
 
@@ -551,7 +563,7 @@ class Gower:
                 return float("nan")
 
             cat_dist = cat_sum / cat_cnt
-            threshold = 1.0 / self.p_cat
+            threshold = self.conditional_distances_threshold_coeff / self.p_cat
 
             if cat_dist > threshold:
                 return 1.0
