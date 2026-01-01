@@ -10,7 +10,9 @@ def test_transform_before_fit() -> None:
     data = np.array([[0], [1], [0]], dtype=object)
     gower = Gower({0: "binary_symmetric"})
 
-    with pytest.raises(IllegalStateError, match="Operation not allowed: model is not fitted"):
+    with pytest.raises(
+        IllegalStateError, match="Operation not allowed: model is not fitted"
+    ):
         gower.transform(data)
 
 

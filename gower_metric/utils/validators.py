@@ -211,3 +211,20 @@ def validate_conditional_distances(conditional_distances: bool) -> None:
             f"Conditional_distances flag must be one of {ALLOWED_CONDITIONAL_DISTANCES}, "
             f"got {conditional_distances}"
         )
+
+
+def validate_feature_types_for_conditional_distances(n_feats: int, p_cat: int) -> None:
+    """
+    Validate the data passed to use with the conditional ditances.
+
+    Args:
+        n_feats (int): Number of passed features
+        p_cat (int): Number of categorical features
+
+    Raises:
+        ValueError: If there are either no categorical or no numerical features passed
+    """
+    if p_cat in (0, n_feats):
+        raise ValueError(
+            "For computing conditional distances both type of data: categorical and numerical need to be provided."
+        )

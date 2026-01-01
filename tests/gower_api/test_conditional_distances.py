@@ -98,3 +98,49 @@ def test_conditional_distances_clip() -> None:
             dist = gower(raw[i], raw[j])
 
             assert pytest.approx(dist, rel=1e-6) == expected[i, j]
+
+
+def test_value_error_on_no_numerical_features() -> None:
+    raw = np.array(
+        [
+            [True, "A", "X"],
+            [False, "B", "X"],
+        ],
+        dtype=object,
+    )
+    f_types: dict[int | str, str] = {
+        0: "binary_asymmetric",
+        1: "categorical_nominal",
+        2: "categorical_ordinal",
+    }
+
+    categorical_ordinal_values_order: dict[int | str, list[str]] | None = {
+        2: ["X", "Y"],
+    }
+
+    with pytest.raises(ValueError):
+        gower = Gower(
+            feature_types=f_types,
+            conditional_distances=True,
+            categorical_ordinal_values_order=categorical_ordinal_values_order,
+        ).fit(raw)
+
+
+def test_value_error_on_no_categorical_features() -> None:
+    raw = np.array(
+        [
+            [12, 100.0],
+            [15, 150.0],
+        ],
+        dtype=object,
+    )
+    f_types: dict[int | str, str] = {
+        0: "numeric",
+        1: "ratio_scale_interval",
+    }
+
+    with pytest.raises(ValueError):
+        gower = Gower(
+            feature_types=f_types,
+            conditional_distances=True,
+        ).fit(raw)

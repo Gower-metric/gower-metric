@@ -28,6 +28,7 @@ from gower_metric.utils.validators import (
     validate_categorical_ordinal_values_order,
     validate_conditional_distances,
     validate_feature_types,
+    validate_feature_types_for_conditional_distances,
     validate_k_neighbours,
     validate_missing_strategy,
     validate_scale_method,
@@ -165,6 +166,9 @@ class Gower:
         Returns:
             Gower: The fitted instance.
 
+        Raises:
+            ValueError: For incorrect input data and configuration parameters.
+
         Example:
             >>> import pandas as pd
             >>> from gower_metric import Gower
@@ -240,6 +244,16 @@ class Gower:
             else np.array(X, dtype=object)
         )
 
+        self.n_feats = arr.shape[1]
+        if self.conditional_distances:
+            self.p_cat = (
+                len(self.binary_symmetric_indices)
+                + len(self.binary_asymmetric_indices)
+                + len(self.categorical_nominal_indices)
+                + len(self.categorical_ordinal_indices)
+            )
+            validate_feature_types_for_conditional_distances(self.n_feats, self.p_cat)
+
         if self.ratio_scale_indices:
             self.ratio_ranges = get_numeric_ranges(
                 arr, self.ratio_scale_indices, self.scale_method
@@ -305,20 +319,12 @@ class Gower:
                 "max": mx,
             }
 
-        n_feats = arr.shape[1]
         self.weights = get_weights(
-            n_features=n_feats,
+            n_features=self.n_feats,
             config=self.feature_weights,
         )
 
         self._is_fitted = True
-
-        self.p_cat = (
-            len(self.binary_symmetric_indices)
-            + len(self.binary_asymmetric_indices)
-            + len(self.categorical_nominal_indices)
-            + len(self.categorical_ordinal_indices)
-        )
         return self
 
     def transform(self, X: pd.DataFrame | np.ndarray) -> pd.DataFrame | np.ndarray:
