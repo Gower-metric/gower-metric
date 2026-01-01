@@ -1,7 +1,9 @@
 import numpy as np
 import pytest
+from sklearn.metrics import pairwise_distances
 
 from gower_metric import Gower
+from gower_metric.utils.aux import all_ones_off_diagonal
 
 
 def test_conditional_distances() -> None:
@@ -183,10 +185,11 @@ def test_conditional_distances_threshold_coeff() -> None:
         conditional_distances=True,
         categorical_ordinal_values_order=categorical_ordinal_values_order,
     ).fit(raw)
+    transformed_data = gower.transform(raw)
 
-    assert gower(raw[0], raw[1]) == 1.0
-    assert gower(raw[0], raw[2]) == 1.0
-    assert gower(raw[1], raw[2]) == 1.0
+    pairwise_dist_result = pairwise_distances(transformed_data, metric=gower)
+
+    assert all_ones_off_diagonal(pairwise_dist_result)
 
     gower = Gower(
         feature_types=f_types,
@@ -194,7 +197,8 @@ def test_conditional_distances_threshold_coeff() -> None:
         conditional_distances=True,
         conditional_distances_threshold_coeff=2,
     ).fit(raw)
+    transformed_data = gower.transform(raw)
 
-    assert gower(raw[0], raw[1]) == 1.0
-    assert gower(raw[0], raw[2]) == 0.0
-    assert gower(raw[1], raw[2]) == 1.0
+    pairwise_dist_result = pairwise_distances(transformed_data, metric=gower)
+
+    assert not all_ones_off_diagonal(pairwise_dist_result)
