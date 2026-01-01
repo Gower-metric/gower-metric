@@ -58,13 +58,18 @@ def test_conditional_distances_clip() -> None:
     )
     f_types: dict[int | str, str] = {
         0: "categorical_nominal",
-        1: "categorical_nominal",
+        1: "categorical_ordinal",
         2: "numeric",
+    }
+
+    categorical_ordinal_values_order: dict[int | str, list[str]] | None = {
+        1: ["X", "Y"],
     }
 
     gower = Gower(
         feature_types=f_types,
         conditional_distances=True,
+        categorical_ordinal_values_order=categorical_ordinal_values_order,
     ).fit(raw)
 
     assert gower(raw[0], raw[3]) == 1.0

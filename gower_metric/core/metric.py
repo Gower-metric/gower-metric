@@ -317,6 +317,7 @@ class Gower:
             len(self.binary_symmetric_indices)
             + len(self.binary_asymmetric_indices)
             + len(self.categorical_nominal_indices)
+            + len(self.categorical_ordinal_indices)
         )
         return self
 
@@ -510,6 +511,16 @@ class Gower:
             weights=cat_nom_w,
         )
 
+        cat_ord_sum, cat_ord_count = categorical_ordinal_component(
+            Xn,
+            Yn,
+            self.categorical_ordinal_indices,
+            metadata=self.cat_ord_metadata,
+            missing_strategy=self.missing_strategy,
+            calculation_type=self.categorical_ordinal_calculation_type,
+            weights=cat_ord_w,
+        )
+
         if self.conditional_distances:
             cat_sum = 0.0
             cat_cnt = 0.0
@@ -525,6 +536,10 @@ class Gower:
             if self.categorical_nominal_indices:
                 cat_sum += cat_nom_sum[0, 0]
                 cat_cnt += cat_nom_count[0, 0]
+
+            if self.categorical_ordinal_indices:
+                cat_sum += cat_ord_sum[0, 0]
+                cat_cnt += cat_ord_count[0, 0]
 
             if cat_cnt == 0:
                 return float("nan")
@@ -545,15 +560,7 @@ class Gower:
             weights=num_w,
             scale_window=self.scale_window,
         )
-        cat_ord_sum, cat_ord_count = categorical_ordinal_component(
-            Xn,
-            Yn,
-            self.categorical_ordinal_indices,
-            metadata=self.cat_ord_metadata,
-            missing_strategy=self.missing_strategy,
-            calculation_type=self.categorical_ordinal_calculation_type,
-            weights=cat_ord_w,
-        )
+
         ratio_sum, ratio_count = ratio_scale_component(
             Xn,
             Yn,
@@ -566,8 +573,8 @@ class Gower:
         )
 
         if self.conditional_distances:
-            total_sum = num_sum + cat_ord_sum + ratio_sum
-            total_count = num_count + cat_ord_count + ratio_count
+            total_sum = num_sum + ratio_sum
+            total_count = num_count + ratio_count
         else:
             total_sum = (
                 num_sum
