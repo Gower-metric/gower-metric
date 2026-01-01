@@ -5,6 +5,7 @@ import pandas as pd
 import scipy.sparse
 from sklearn.preprocessing import OrdinalEncoder
 
+from gower_metric.core.exceptions import IllegalStateError
 from gower_metric.distances.binary_asymmetric import (
     binary_asymmetric_component,
 )
@@ -336,7 +337,7 @@ class Gower:
             X_new: Transformed input data.
 
         Raises:
-            ValueError: If fit(X) was not performed before calling transform(X).
+            IllegalStateError: If fit(X) was not performed before calling transform(X).
 
         Example:
             >>> import pandas as pd
@@ -355,7 +356,7 @@ class Gower:
             >>> data_transformed = gower.transform(data)
         """
         if not self._is_fitted:
-            raise ValueError("Operation not allowed: model is not fitted")
+            raise IllegalStateError("Operation not allowed: model is not fitted")
 
         is_df = isinstance(X, pd.DataFrame)
         if isinstance(X, pd.DataFrame):
@@ -458,7 +459,7 @@ class Gower:
             float: Gower distance in [0,1], or np.nan if no features are comparable.
 
         Raises:
-            ValueError: If fit(X) was not called before computing distance.
+            IllegalStateError: If fit(X) was not called before computing distance.
 
         Example:
             >>> import pandas as pd
@@ -471,7 +472,7 @@ class Gower:
             >>> distance = gower(data.iloc[0], data.iloc[1])
         """
         if not self._is_fitted:
-            raise ValueError("Must call .fit(X) before computing distances.")
+            raise IllegalStateError("Must call .fit(X) before computing distances.")
 
         x = to_array(a)
         y = to_array(b)
