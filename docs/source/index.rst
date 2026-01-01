@@ -19,7 +19,7 @@ Main features include:
 .. note::
 
    This project is under active development. If you would like to contribute,
-   or if you find any issues, please visit the main [repository]() and 
+   or if you find any issues, please visit the main `repository <https://github.com/mwardynski/gower-metric>`_ and 
    submit a pull request or open an issue.
 
 Installation, user guide, and API reference can be found in the respective sections. We also provide separate section 

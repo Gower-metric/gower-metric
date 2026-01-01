@@ -36,8 +36,7 @@ Legend: ✅ - supported and tested, 🚧 - work in progress
 
 ## Documentation
 
-@TODO: add ref  
-Documentation is available [here]().
+Documentation is available [here](https://gower-metric.readthedocs.io/en/latest/index.html).
 
 ## Installation
 
