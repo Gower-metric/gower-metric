@@ -46,6 +46,8 @@ gower-metric = { workspace = true }
 [dependency-groups]
 dev = [
     "check-manifest>=0.50",
+    "filelock>=3.20.1",
+    "fonttools>4.60.2",
     "gower-metric",
     "ipykernel>=6.30.1",
     "joblib>=1.5.1",
