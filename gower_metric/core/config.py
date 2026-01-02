@@ -1,4 +1,4 @@
-from typing import Dict, List, Literal, Optional, Union
+from typing import Dict, List, Literal
 from pydantic import BaseModel, field_validator
 
 # Allowed values as Literals
@@ -57,14 +57,14 @@ class Config(BaseModel):
     """
 
     feature_types: Dict[int | str, FeatureType]
-    feature_weights: Optional[Union[str, Dict[int | str, float]]] = {}
+    feature_weights: str | Dict[int | str, float] | None = {}
     scale_method: ScaleMethod = "range"
-    scale_window: Optional[ScaleWindow] = None
-    scale_window_type: Optional[ScaleWindowType] = None
+    scale_window: ScaleWindow | None = None
+    scale_window_type: ScaleWindowType | None = None
     missing_strategy: MissingStrategy = "ignore"
-    categorical_ordinal_values_order: Optional[Dict[int | str, List[str]]] = {}
-    categorical_ordinal_calculation_type: Optional[CategoricalOrdinalCalcType] = "kaufman"
-    k_neighbours: Optional[int] = None
+    categorical_ordinal_values_order: Dict[int | str, List[str]] | None = {}
+    categorical_ordinal_calculation_type: CategoricalOrdinalCalcType | None = "kaufman"
+    k_neighbours: int | None = None
     conditional_distances: ConditionalDistancesFlag = False
     conditional_distances_threshold_coeff: int = 1
 
