@@ -27,7 +27,9 @@ from gower_metric.utils.validators import (
     validate_categorical_ordinal_calculation_type,
     validate_categorical_ordinal_values_order,
     validate_conditional_distances,
+    validate_conditional_distances_threshold_coeff,
     validate_feature_types,
+    validate_feature_types_for_conditional_distances,
     validate_k_neighbours,
     validate_missing_strategy,
     validate_scale_method,
@@ -54,6 +56,7 @@ class Gower:
         scale_window_type: str | None = None,
         k_neighbours: int | None = None,
         conditional_distances: bool = False,
+        conditional_distances_threshold_coeff: int = 1,
     ) -> None:
         """
         Initialize Gower with explicit feature type and weight mappings.
@@ -82,6 +85,9 @@ class Gower:
                 set to the square root of the number of points.
             conditional_distances (bool): Default to False. If set to True, two-step approach will be
                 triggered to calculate formula. More information in references -> chapter 3.
+            conditional_distances_threshold_coeff (int): Value to be used as the numerator in the fraction (with p_cat as the denominator)
+                that defines the threshold above which the distance will be set to 1. More information in references -> chapter 3.
+
 
         Raises:
             ValueError: If feature_types is not a non-empty dict.
@@ -152,6 +158,13 @@ class Gower:
         self.conditional_distances = conditional_distances
         validate_conditional_distances(self.conditional_distances)
 
+        self.conditional_distances_threshold_coeff = (
+            conditional_distances_threshold_coeff
+        )
+        validate_conditional_distances_threshold_coeff(
+            self.conditional_distances_threshold_coeff
+        )
+
         self._is_fitted = False
 
     def fit(self, X: pd.DataFrame | np.ndarray) -> "Gower":
@@ -164,6 +177,9 @@ class Gower:
 
         Returns:
             Gower: The fitted instance.
+
+        Raises:
+            ValueError: For incorrect input data and configuration parameters.
 
         Example:
             >>> import pandas as pd
@@ -240,6 +256,16 @@ class Gower:
             else np.array(X, dtype=object)
         )
 
+        self.n_feats = arr.shape[1]
+        if self.conditional_distances:
+            self.p_cat = (
+                len(self.binary_symmetric_indices)
+                + len(self.binary_asymmetric_indices)
+                + len(self.categorical_nominal_indices)
+                + len(self.categorical_ordinal_indices)
+            )
+            validate_feature_types_for_conditional_distances(self.n_feats, self.p_cat)
+
         if self.ratio_scale_indices:
             self.ratio_ranges = get_numeric_ranges(
                 arr, self.ratio_scale_indices, self.scale_method
@@ -305,19 +331,12 @@ class Gower:
                 "max": mx,
             }
 
-        n_feats = arr.shape[1]
         self.weights = get_weights(
-            n_features=n_feats,
+            n_features=self.n_feats,
             config=self.feature_weights,
         )
 
         self._is_fitted = True
-
-        self.p_cat = (
-            len(self.binary_symmetric_indices)
-            + len(self.binary_asymmetric_indices)
-            + len(self.categorical_nominal_indices)
-        )
         return self
 
     def transform(self, X: pd.DataFrame | np.ndarray) -> pd.DataFrame | np.ndarray:
@@ -510,6 +529,16 @@ class Gower:
             weights=cat_nom_w,
         )
 
+        cat_ord_sum, cat_ord_count = categorical_ordinal_component(
+            Xn,
+            Yn,
+            self.categorical_ordinal_indices,
+            metadata=self.cat_ord_metadata,
+            missing_strategy=self.missing_strategy,
+            calculation_type=self.categorical_ordinal_calculation_type,
+            weights=cat_ord_w,
+        )
+
         if self.conditional_distances:
             cat_sum = 0.0
             cat_cnt = 0.0
@@ -526,11 +555,15 @@ class Gower:
                 cat_sum += cat_nom_sum[0, 0]
                 cat_cnt += cat_nom_count[0, 0]
 
+            if self.categorical_ordinal_indices:
+                cat_sum += cat_ord_sum[0, 0]
+                cat_cnt += cat_ord_count[0, 0]
+
             if cat_cnt == 0:
                 return float("nan")
 
             cat_dist = cat_sum / cat_cnt
-            threshold = 1.0 / self.p_cat
+            threshold = self.conditional_distances_threshold_coeff / self.p_cat
 
             if cat_dist > threshold:
                 return 1.0
@@ -545,15 +578,7 @@ class Gower:
             weights=num_w,
             scale_window=self.scale_window,
         )
-        cat_ord_sum, cat_ord_count = categorical_ordinal_component(
-            Xn,
-            Yn,
-            self.categorical_ordinal_indices,
-            metadata=self.cat_ord_metadata,
-            missing_strategy=self.missing_strategy,
-            calculation_type=self.categorical_ordinal_calculation_type,
-            weights=cat_ord_w,
-        )
+
         ratio_sum, ratio_count = ratio_scale_component(
             Xn,
             Yn,
@@ -566,8 +591,8 @@ class Gower:
         )
 
         if self.conditional_distances:
-            total_sum = num_sum + cat_ord_sum + ratio_sum
-            total_count = num_count + cat_ord_count + ratio_count
+            total_sum = num_sum + ratio_sum
+            total_count = num_count + ratio_count
         else:
             total_sum = (
                 num_sum
