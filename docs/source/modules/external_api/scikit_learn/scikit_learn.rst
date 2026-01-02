@@ -13,8 +13,13 @@ Pairwise distances
 
     from sklearn.metrics import pairwise_distances
     from gower_metric import Gower
+    from gower_metric.core.config import Config
 
-    gower = Gower(feature_types=feature_types).fit(df)
+
+    cfg = Config(
+        feature_types=feature_types,
+    )
+    gower = Gower(cfg).fit(df)
     df_num = gower.transform(df)
 
     matrix_scikit = pairwise_distances(df_num, metric=gower, n_jobs=-1, ensure_all_finite=False)
@@ -33,10 +38,14 @@ KNeighborsClassifier
     from sklearn.model_selection import train_test_split
     from sklearn.neighbors import KNeighborsClassifier
     from gower_metric import Gower
+    from gower_metric.core.config import Config
 
     X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42, stratify=y)
 
-    gower = Gower(feature_types=feature_types).fit(X_train)
+    cfg = Config(
+        feature_types=feature_types,
+    )
+    gower = Gower(cfg).fit(X_train)
     X_train = gower.transform(X_train)
     X_test = gower.transform(X_test)
 
@@ -61,8 +70,12 @@ HDBSCAN
     from sklearn.cluster import HDBSCAN
     from sklearn.metrics import silhouette_score
     from gower_metric import Gower
+    from gower_metric.core.config import Config
 
-    gower = Gower(feature_types=feature_types).fit(df)
+    cfg = Config(
+        feature_types=feature_types,
+    )
+    gower = Gower(cfg).fit(df)
     df_transformed = gower.transform(df)
 
     clusterer = HDBSCAN(metric=gower, min_cluster_size=10, min_samples=5)

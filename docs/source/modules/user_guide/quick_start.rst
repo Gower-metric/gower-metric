@@ -39,11 +39,15 @@ Let's assume we imported the class as shown above and we have the following data
    import numpy as np
    
    from gower_metric import Gower
+   from gower_metric.core.config import Config
    
    data = np.array([[1], [4], [7]], dtype=float)
    f_types = {0: "ratio_scale_interval"}
    
-   gower = Gower(f_types).fit(data)
+   cfg = Config(
+      feature_types=f_types,
+   )
+   gower = Gower(cfg).fit(data)
 
 As you can see, we initialized the feature types dictionary and created an instance of Gower class. After that, we called the `fit` method with our data.
 We can easly use pd.DataFrame as input data as well.

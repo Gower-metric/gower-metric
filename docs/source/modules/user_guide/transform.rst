@@ -16,6 +16,7 @@ It is done by calling the `transform` method on a fitted Gower instance.
    import numpy as np
 
    from gower_metric import Gower
+   from gower_metric.core.config import Config
 
    data = np.array([[1, 'a'], [2, 'b'], [3, 'a'], [4, 'c']], dtype=object)
 
@@ -24,7 +25,10 @@ It is done by calling the `transform` method on a fitted Gower instance.
       1: "categorical_nominal",
    }
 
-   gower = Gower(feature_types=feature_types).fit(data)
+   cfg = Config(
+      feature_types=feature_types,
+   )
+   gower = Gower(cfg).fit(data)
 
    transformed_data = gower.transform(data)
 
@@ -42,6 +46,7 @@ For convenience, Gower also implements `fit_transform` method, which combines `f
    import numpy as np
 
    from gower_metric import Gower
+   from gower_metric.core.config import Config
 
    data = np.array([[1, 'a'], [2, 'b'], [3, 'a'], [4, 'c']], dtype=object)
 
@@ -50,7 +55,10 @@ For convenience, Gower also implements `fit_transform` method, which combines `f
       1: "categorical_nominal",
    }
 
-   gower = Gower(feature_types=feature_types)
+   cfg = Config(
+      feature_types=feature_types,
+   )
+   gower = Gower(cfg)
 
    transformed_data = gower.fit_transform(data)
 

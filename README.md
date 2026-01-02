@@ -59,6 +59,7 @@ pip install gower-metric
 In order to import class, which calculate Gower's metric, you need to import it as follows:
 ```python
 from gower_metric import Gower
+from gower_metric.core.config import Config
 ```
 
 then initialize passing the variable types:
@@ -71,7 +72,11 @@ feature_types = {
     2: "ratio_scale_interval"
 }
 
-gower = Gower(feature_types=feature_types)
+cfg = Config(
+    feature_types=feature_types
+)
+
+gower = Gower(cfg)
 ```
 
 fit it to the data:

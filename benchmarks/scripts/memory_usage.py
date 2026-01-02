@@ -14,6 +14,7 @@ from sklearn.preprocessing import OneHotEncoder
 from tqdm import tqdm
 
 from gower_metric import Gower
+from gower_metric.core.config import Config
 
 
 def _load_data(dataset_id: int) -> pd.DataFrame:
@@ -43,7 +44,10 @@ def gower_joblib_upper(
     gc.collect()
     data: pd.DataFrame = _load_data(DATASET_ID)
     data = data.head(n_rows)
-    gower = Gower(feature_types=feature_types).fit(data)
+    cfg = Config(
+        feature_types=feature_types
+    )
+    gower = Gower(cfg).fit(data)
     data = data.to_numpy()
 
     matrix = np.zeros((len(data), len(data)), dtype=np.float32)
@@ -70,7 +74,10 @@ def gower_onehot_enc(
     gc.collect()
     data: pd.DataFrame = _load_data(DATASET_ID)
     data = data.head(n_rows)
-    gower = Gower(feature_types=feature_types).fit(data)
+    cfg = Config(
+        feature_types=feature_types
+    )
+    gower = Gower(cfg).fit(data)
     data = data.to_numpy()
 
     tracemalloc.start()
@@ -91,7 +98,10 @@ def gower_scipy(
     gc.collect()
     data: pd.DataFrame = _load_data(DATASET_ID)
     data = data.head(n_rows)
-    gower = Gower(feature_types=feature_types).fit(data)
+    cfg = Config(
+        feature_types=feature_types
+    )
+    gower = Gower(cfg).fit(data)
 
     tracemalloc.start()
     dist_array = pdist(data, metric=gower)
@@ -110,7 +120,10 @@ def gower_sklearn(
     gc.collect()
     data: pd.DataFrame = _load_data(DATASET_ID)
     data = data.head(n_rows)
-    gower = Gower(feature_types=feature_types).fit(data)
+    cfg = Config(
+        feature_types=feature_types
+    )
+    gower = Gower(cfg).fit(data)
 
     tracemalloc.start()
     matrix_sklearn = pairwise_distances(

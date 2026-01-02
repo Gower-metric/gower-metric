@@ -12,6 +12,7 @@ from sklearn.preprocessing import OneHotEncoder
 from tqdm import tqdm
 
 from gower_metric import Gower
+from gower_metric.core.config import Config
 
 warnings.simplefilter(action="ignore", category=FutureWarning)
 
@@ -208,7 +209,10 @@ def main() -> None:
                     if type(gower_features) is not dict:
                         raise ValueError("gower_features must be a dictionary")
 
-                    gower = Gower(feature_types=gower_features).fit(X_train)
+                    cfg = Config(
+                        feature_types=gower_features
+                    )
+                    gower = Gower(cfg).fit(X_train)
 
                 if strategy == "onehotencoding":
                     X_train, X_test = _encode_data(X_train, X_test)

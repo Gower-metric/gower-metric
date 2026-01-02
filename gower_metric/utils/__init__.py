@@ -4,7 +4,6 @@ from gower_metric.utils import (
     missing,
     ranges,
     to_array,
-    validators,
 )
 
 __all__ = [
@@ -13,7 +12,6 @@ __all__ = [
     "missing",
     "ranges",
     "to_array",
-    "validators",
 ]
 
 __doc__ = """
