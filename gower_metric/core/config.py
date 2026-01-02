@@ -1,5 +1,5 @@
 from typing import Dict, List, Literal, Optional, Union
-from pydantic import BaseModel, Field, field_validator
+from pydantic import BaseModel, field_validator
 
 # Allowed values as Literals
 FeatureType = Literal[
@@ -21,14 +21,49 @@ ConditionalDistancesFlag = Literal[True, False]
 
 
 class Config(BaseModel):
+    """
+    Configuration object to initialize Gower.
+
+    Args:
+        feature_types (dict[int | str, str]): Mapping of column indices (or DataFrame column names) to
+            specific type.
+        feature_weights (dict[int, float] | str | None): Optional mapping of column indices (or names) to a float weight.
+            If None or "uniform", all features will have equal weight of 1. Otherwise,
+            the weights must be a dictionary mapping feature indices to weights, i.e.
+            {0: 1.0, 1: 2.0}.
+        scale_method (str): Optional scaling method for numeric features. Can be 'range' or 'iqr'.
+            Default is 'range' if omitted.
+        scale_window (Optional[str]): Optional scaling window for numeric or ratio features. Can be None, 'kde'
+            or 'kNN'. Default is None if omitted.
+        scale_window_type (Optional[str]): Optional type of scaling window. Can be None or 'silverman'.
+            Default is None if omitted, not recommended to use without scale_window.
+        missing_strategy (str): Optional strategy for handling missing values. Can be 'ignore',
+            'max_dist' or 'raise_error'. Default is 'ignore' if omitted.
+        categorical_ordinal_values_order (dict[int | str, list[str]] | None): Optional dict defining the order of the values contained in
+            the columns of type 'categorical_ordinal'. Must contain values for all such columns.
+        categorical_ordinal_calculation_type (str): Optional calculation type for categorical
+            ordinal features. Can be 'kaufman' or 'podani'. Default is 'kaufman' if omitted.
+        k_neighbours (Optional[int]): Optional number of nearest neighbors for 'kNN' scaling window.
+            Default is None if omitted. If k_neighbours is None or less than 1, it will be
+            set to the square root of the number of points.
+        conditional_distances (bool): Default to False. If set to True, two-step approach will be
+            triggered to calculate formula. More information in references -> chapter 3.
+        conditional_distances_threshold_coeff (int): Value to be used as the numerator in the fraction (with p_cat as the denominator)
+            that defines the threshold above which the distance will be set to 1. More information in references -> chapter 3.
+
+
+        Raises:
+            ValueError: If custom validation rule fail.
+    """
+
     feature_types: Dict[int | str, FeatureType]
+    feature_weights: Optional[Union[str, Dict[int | str, float]]] = {}
     scale_method: ScaleMethod = "range"
     scale_window: Optional[ScaleWindow] = None
     scale_window_type: Optional[ScaleWindowType] = None
     missing_strategy: MissingStrategy = "ignore"
     categorical_ordinal_values_order: Optional[Dict[int | str, List[str]]] = {}
     categorical_ordinal_calculation_type: Optional[CategoricalOrdinalCalcType] = "kaufman"
-    feature_weights: Optional[Union[str, Dict[int | str, float]]] = {}
     k_neighbours: Optional[int] = None
     conditional_distances: ConditionalDistancesFlag = False
     conditional_distances_threshold_coeff: int = 1
@@ -42,12 +77,6 @@ class Config(BaseModel):
             missing = ord_cols - v.keys()
             if missing:
                 raise ValueError(f"Missing order definitions for columns: {missing}")
-        return v
-
-    @field_validator("categorical_ordinal_calculation_type")
-    def check_categorical_ordinal_calculation_type(cls, v, values):
-        if v is not None and v not in ("kaufman", "podani"):
-            raise ValueError(f"Invalid categorical ordinal calculation type: {v}")
         return v
 
     @field_validator("scale_window_type")
@@ -69,24 +98,19 @@ class Config(BaseModel):
                 raise ValueError(f"weights must be str, dict, or None, got {type(v).__name__}")
         return v
 
-    @field_validator("k_neighbours")
-    def check_k_neighbours(cls, v):
-        if v is not None and not isinstance(v, int):
-            raise ValueError(f"k_neighbours must be an int or None, got {type(v).__name__}")
-        return v
+    @field_validator("conditional_distances")
+    def check_conditional_distances(cls, v, values):
+        print(v)
+        if v not in (True, False):
+            raise ValueError(f"conditional_distances must be True or False, got {v}")
 
-    #TODO move it to better place
-    # @field_validator("conditional_distances")
-    # def check_conditional_distances(cls, v):
-    #     if v not in (True, False):
-    #         raise ValueError(f"conditional_distances must be True or False, got {v}")
-    #     # Optional: validate that conditional distances make sense
-    #     if v:
-    #         n_feats = len(cls.__fields__['feature_types'])
-    #         n_cat = sum(1 for t in cls.__fields__['feature_types'] if t.startswith("categorical"))
-    #         if n_cat == 0 or n_feats == n_cat:
-    #             raise ValueError("For conditional distances both categorical and numerical features must be present")
-    #     return v
+        if v:
+            feature_types = values.data.get("feature_types", {})
+            n_feats = len(feature_types)
+            n_num_feats = sum(1 for t in feature_types.values() if t in ("numeric", "ratio_scale_interval"))
+            if n_num_feats == 0 or n_feats == n_num_feats:
+                raise ValueError("For conditional distances both categorical and numerical features must be present")
+        return v
 
     @field_validator("conditional_distances_threshold_coeff")
     def check_threshold_coeff(cls, v: int) -> int:

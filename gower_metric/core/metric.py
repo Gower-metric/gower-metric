@@ -24,9 +24,6 @@ from gower_metric.utils.knn_bandwidth import knn_bandwidth
 from gower_metric.utils.matrix.calculate_matrix import get_full_matrix
 from gower_metric.utils.ranges import get_numeric_ranges
 from gower_metric.utils.to_array import to_array
-from gower_metric.utils.validators import (
-    validate_feature_types_for_conditional_distances,
-)
 from gower_metric.weights.weights import get_weights
 
 
@@ -38,48 +35,12 @@ class Gower:
     def __init__(
         self,
         config: Config,
-        # feature_types: dict[int | str, str],
-        # feature_weights: dict[int, float] | str | None = None,
-        # scale: str = "range",
-        # missing_strategy: str = "ignore",
-        # categorical_ordinal_values_order: dict[int | str, list[str]] | None = None,
-        # categorical_ordinal_calculation_type: str = "kaufman",
-        # scale_window: str | None = None,
-        # scale_window_type: str | None = None,
-        # k_neighbours: int | None = None,
-        # conditional_distances: bool = False,
-        # conditional_distances_threshold_coeff: int = 1,
     ) -> None:
         """
-        Initialize Gower with explicit feature type and weight mappings.
+        Initialize Gower with passed Config object.
 
         Args:
-            feature_types (dict[int | str, str]): Mapping of column indices (or DataFrame column names) to
-                specific type.
-            feature_weights (dict[int, float] | str | None): Optional mapping of column indices (or names) to a float weight.
-                If None or "uniform", all features will have equal weight of 1. Otherwise,
-                the weights must be a dictionary mapping feature indices to weights, i.e.
-                {0: 1.0, 1: 2.0}.
-            scale (str): Optional scaling method for numeric features. Can be 'range' or 'iqr'.
-                Default is 'range' if omitted.
-            missing_strategy (str): Optional strategy for handling missing values. Can be 'ignore',
-                'max_dist' or 'raise_error'. Default is 'ignore' if omitted.
-            categorical_ordinal_values_order (dict[int | str, list[str]] | None): Optional dict defining the order of the values contained in
-                the columns of type 'categorical_ordinal'. Must contain values for all such columns.
-            categorical_ordinal_calculation_type (str): Optional calculation type for categorical
-                ordinal features. Can be 'kaufman' or 'podani'. Default is 'kaufman' if omitted.
-            scale_window (Optional[str]): Optional scaling window for numeric or ratio features. Can be None, 'kde'
-                or 'kNN'. Default is None if omitted.
-            scale_window_type (Optional[str]): Optional type of scaling window. Can be None or 'silverman'.
-                Default is None if omitted, not recommended to use without scale_window.
-            k_neighbours (Optional[int]): Optional number of nearest neighbors for 'kNN' scaling window.
-                Default is None if omitted. If k_neighbours is None or less than 1, it will be
-                set to the square root of the number of points.
-            conditional_distances (bool): Default to False. If set to True, two-step approach will be
-                triggered to calculate formula. More information in references -> chapter 3.
-            conditional_distances_threshold_coeff (int): Value to be used as the numerator in the fraction (with p_cat as the denominator)
-                that defines the threshold above which the distance will be set to 1. More information in references -> chapter 3.
-
+            config (Config): Configuration object containing all parameters needed for initialization.
 
         Raises:
             ValueError: If feature_types is not a non-empty dict.
@@ -87,6 +48,7 @@ class Gower:
         Example:
             >>> import pandas as pd
             >>> from gower_metric import Gower
+            >>> from gower_metric.core.config import Config
             >>> data = pd.DataFrame({
             ...     'feature1': [[1.0], [2.0], [3.0], [4.0]],
             ...     'feature2': ['A', 'B', 'A', 'C'],
@@ -101,7 +63,15 @@ class Gower:
             ...     0: 1.0,
             ...     1: 2.0,
             ...     2: 1.0,
-            >>> gower = Gower(feature_types=feature_types, feature_weights=feature_weights)
+            >>> cfg = Config(
+            ...     feature_types=feature_types,
+            ...     feature_weights=feature_weights,
+            ... )
+            >>> gower = Gower(cfg)
+    )
+
+    gower = Gower(cfg).fit(raw)
+            gower = Gower(feature_types=feature_types, feature_weights=feature_weights)
         """
         # validate_feature_types(feature_types)
         self.feature_types = config.feature_types
@@ -251,7 +221,6 @@ class Gower:
                 + len(self.categorical_nominal_indices)
                 + len(self.categorical_ordinal_indices)
             )
-            validate_feature_types_for_conditional_distances(self.n_feats, self.p_cat)
 
         if self.ratio_scale_indices:
             self.ratio_ranges = get_numeric_ranges(
