@@ -100,7 +100,9 @@ def test_gower_matrix_endpoint_similarity() -> None:
     df = df.to_numpy()
 
     similarity_matrix: np.ndarray = gower.matrix(
-        df, matrix_type="similarity", backend="loky"
+        df,
+        matrix_type="similarity",
+        backend="loky",
     )
 
     matrix_custom: np.ndarray = np.zeros((n_rows, n_rows), dtype=np.float32)
@@ -160,7 +162,7 @@ def test_gower_matrix_endpoint_if_it_symmetrical() -> None:
         7: 8.0,
         8: 9.0,
     }
-    
+
     cfg = Config(
         feature_types=feature_types,
         feature_weights=feature_weights,
@@ -242,7 +244,9 @@ def test_matrix_endpoint_podani_if_symmetrical_similarity() -> None:
     gower = Gower(cfg).fit(data)
 
     dist_matrix: np.ndarray = gower.matrix(
-        data, matrix_type="similarity", backend="loky"
+        data,
+        matrix_type="similarity",
+        backend="loky",
     )
 
     n = data.shape[0]
@@ -278,7 +282,10 @@ def test_sparse_matrix_convertion_csr() -> None:
     gower = Gower(cfg).fit(data)
 
     dist_matrix: np.ndarray = gower.matrix(
-        data, convert_to_sparse=True, sparse_type="csr", backend="loky"
+        data,
+        convert_to_sparse=True,
+        sparse_type="csr",
+        backend="loky",
     )
 
     assert sp.issparse(dist_matrix), "Matrix is not sparse"
@@ -302,7 +309,10 @@ def test_sparse_matrix_convertion_csc() -> None:
     gower = Gower(cfg).fit(data)
 
     dist_matrix: np.ndarray = gower.matrix(
-        data, convert_to_sparse=True, sparse_type="csc", backend="loky"
+        data,
+        convert_to_sparse=True,
+        sparse_type="csc",
+        backend="loky",
     )
 
     assert sp.issparse(dist_matrix), "Matrix is not sparse"
@@ -326,7 +336,10 @@ def test_sparse_matrix_convertion_c00() -> None:
     gower = Gower(cfg).fit(data)
 
     dist_matrix: np.ndarray = gower.matrix(
-        data, convert_to_sparse=True, sparse_type="coo", backend="loky"
+        data,
+        convert_to_sparse=True,
+        sparse_type="coo",
+        backend="loky",
     )
 
     assert sp.issparse(dist_matrix), "Matrix is not sparse"

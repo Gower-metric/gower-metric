@@ -13,7 +13,7 @@ def test_ratio_scale_range_ndarray() -> None:
 
     cfg = Config(
         feature_types={0: "ratio_scale_interval"},
-        scale_method="range"
+        scale_method="range",
     )
     gower = Gower(cfg).fit(data)
 
@@ -54,7 +54,6 @@ def test_ratio_scale_kde_window_h() -> None:
     assert isinstance(gs_kde._h_ratio, np.ndarray)
     assert gs_kde._h_ratio.shape == (1,)
     assert pytest.approx(gs_kde._h_ratio[0], rel=1e-6) == manual_h
-
 
     cfg2 = Config(
         feature_types={0: "ratio_scale_interval"},

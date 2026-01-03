@@ -7,9 +7,7 @@ from gower_metric.core.config import Config
 
 
 def test_missing_values_skip_nan() -> None:
-    """
-    Test that missing values are handled correctly (ignored) in Gower similarity.
-    """
+    """Test that missing values are handled correctly (ignored) in Gower similarity."""
     data = [
         [np.nan, "A"],
         [10.0, "A"],

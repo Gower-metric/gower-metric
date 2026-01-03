@@ -66,7 +66,7 @@ def test_r_daisy_weights() -> None:
             "education": ["high", "low", "medium", "low"],
             "married": [0, 1, 1, 0],
             "infected": [1, 1, 0, 0],
-        }
+        },
     )
 
     feature_types: dict[int | str, str] = {
@@ -82,7 +82,7 @@ def test_r_daisy_weights() -> None:
         "education": ["low", "medium", "high"],
     }
 
-    feature_weights: dict[int, float] | str | None = {
+    feature_weights = {
         0: 1.0,
         1: 2.0,
         2: 3.0,
@@ -111,23 +111,25 @@ def test_r_daisy_weights() -> None:
     colnames = list(r_df.colnames)
 
     robjects.r(
-        "ordered <- function(x, levels) { factor(x, levels=levels, ordered=TRUE) }"
+        "ordered <- function(x, levels) { factor(x, levels=levels, ordered=TRUE) }",
     )
 
     r_df[colnames.index("education")] = robjects.r["ordered"](
-        r_df[colnames.index("education")], robjects.StrVector(["low", "medium", "high"])
+        r_df[colnames.index("education")],
+        robjects.StrVector(["low", "medium", "high"]),
     )
 
     r_df[colnames.index("married")] = robjects.r["factor"](
-        r_df[colnames.index("married")], levels=robjects.IntVector([0, 1])
+        r_df[colnames.index("married")],
+        levels=robjects.IntVector([0, 1]),
     )
 
     r_df[colnames.index("infected")] = robjects.r["as.logical"](
-        r_df[colnames.index("infected")]
+        r_df[colnames.index("infected")],
     )
 
     r_df[colnames.index("gender")] = robjects.r["factor"](
-        r_df[colnames.index("gender")]
+        r_df[colnames.index("gender")],
     )
 
     importr("cluster")

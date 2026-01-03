@@ -125,7 +125,9 @@ def test_value_error_on_no_numerical_features() -> None:
             categorical_ordinal_values_order=categorical_ordinal_values_order,
         )
 
+
 test_value_error_on_no_numerical_features()
+
 
 def test_value_error_on_no_categorical_features() -> None:
     f_types: dict[int | str, str] = {
@@ -135,10 +137,11 @@ def test_value_error_on_no_categorical_features() -> None:
 
     with pytest.raises(ValueError):
         Config(
-            feature_tyepes=f_types,
+            feature_types=f_types,
             conditional_distances=True,
         )
-        
+
+
 def test_value_error_on_too_small_threshold_coeff() -> None:
     f_types: dict[int | str, str] = {
         0: "numeric",

@@ -20,7 +20,8 @@ warnings.simplefilter(action="ignore", category=FutureWarning)
 def _load_data(dataset_id: int, n_rows: int = 5_000) -> pd.DataFrame:
     dataset = openml.datasets.get_dataset(dataset_id)
     X, _, _, _ = dataset.get_data(
-        target=dataset.default_target_attribute, dataset_format="dataframe"
+        target=dataset.default_target_attribute,
+        dataset_format="dataframe",
     )
 
     return X.head(n_rows)
@@ -93,24 +94,17 @@ def _get_gower_matrix(X: pd.DataFrame, gower: Gower) -> np.ndarray:
 
 
 def _print_results(
-    results_enc: list[float], results_gower: list[float], valid_results: int
+    results_enc: list[float],
+    results_gower: list[float],
+    valid_results: int,
 ) -> print:
-    print(
-        f"Average silhouette score over {valid_results} tasks (OneHotEncoding): {sum(results_enc) / valid_results:.4f}"
-    )
-    print(f"Standard deviation of silhouette score: {pd.Series(results_enc).std():.4f}")
-
-    print(
-        f"Average silhouette score over {valid_results} tasks (Gower): {sum(results_gower) / valid_results:.4f}"
-    )
-    print(
-        f"Standard deviation of silhouette score: {pd.Series(results_gower).std():.4f}"
-    )
+    pass
 
 
-def main():
+def main() -> None:
     clustering_tasks = openml.tasks.list_tasks(
-        task_type=TaskType.CLUSTERING, output_format="dataframe"
+        task_type=TaskType.CLUSTERING,
+        output_format="dataframe",
     )
     task_ids = clustering_tasks["tid"].astype(int).tolist()
 
@@ -137,10 +131,11 @@ def main():
                     gower_features = _get_gower_features(X)
 
                     if type(gower_features) is not dict:
-                        raise ValueError("gower_features must be a dictionary")
-                    
+                        msg = "gower_features must be a dictionary"
+                        raise ValueError(msg)
+
                     cfg = Config(
-                        feature_types=gower_features
+                        feature_types=gower_features,
                     )
                     gower = Gower(cfg).fit(X)
 
@@ -158,7 +153,7 @@ def main():
 
                     if clusterer.labels_.max() > 1:
                         results_enc.append(
-                            silhouette_score(enc_data, clusterer.labels_)
+                            silhouette_score(enc_data, clusterer.labels_),
                         )
                         valid_results += 1
 
@@ -178,8 +173,10 @@ def main():
                     if clusterer.labels_.max() > 1:
                         results_gower.append(
                             silhouette_score(
-                                gower_matrix, clusterer.labels_, metric="precomputed"
-                            )
+                                gower_matrix,
+                                clusterer.labels_,
+                                metric="precomputed",
+                            ),
                         )
                         valid_results += 1
 

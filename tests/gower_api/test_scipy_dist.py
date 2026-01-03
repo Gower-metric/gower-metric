@@ -37,7 +37,7 @@ def test_scikit_learn_paiwise_distances() -> None:
         "education": "categorical_nominal",
         "workclass": "categorical_nominal",
     }
-    
+
     cfg = Config(
         feature_types=feature_types,
     )
@@ -46,9 +46,7 @@ def test_scikit_learn_paiwise_distances() -> None:
     df = df.to_numpy()
 
     def _gower_distance(x, y):
-        """
-        Compute Gower distance between two vectors.
-        """
+        """Compute Gower distance between two vectors."""
         return gower(x, y)
 
     array_scipy = pdist(df, metric=_gower_distance)

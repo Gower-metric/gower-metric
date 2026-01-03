@@ -10,8 +10,7 @@ def categorical_nominal_component(
     missing_strategy: str = "ignore",
     weights: np.ndarray | None = None,
 ) -> tuple[np.ndarray, np.ndarray]:
-    """
-    Compute the nominal categorical component of Gower metric between rows of X and Y.
+    """Compute the nominal categorical component of Gower metric between rows of X and Y.
 
     Args:
         X (np.ndarray): First dataset, shape (n_x, n_features).
@@ -24,6 +23,7 @@ def categorical_nominal_component(
         tuple[np.ndarray, np.ndarray]:
             - sum_diff: matrix (n_x, n_y) of weighted counts of differing features
             - count_present: matrix (n_x, n_y) of counts of present (non-missing) features
+
     """
     n_x, n_y = X.shape[0], Y.shape[0]
     if not categorical_indices:

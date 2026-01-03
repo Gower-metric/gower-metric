@@ -2,8 +2,7 @@ import numpy as np
 
 
 def knn_bandwidth(x: np.ndarray, k: int | None = None) -> float:
-    """
-    Compute the k-nearest neighbor bandwidth for a 1D array.
+    """Compute the k-nearest neighbor bandwidth for a 1D array.
 
     Args:
         x (np.ndarray): 1D array of data points
@@ -12,6 +11,7 @@ def knn_bandwidth(x: np.ndarray, k: int | None = None) -> float:
     Returns:
         float:
             - bandwidth value
+
     """
     x = np.sort(np.asarray(x, dtype=float))
     n = x.size

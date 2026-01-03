@@ -28,16 +28,13 @@ from gower_metric.weights.weights import get_weights
 
 
 class Gower:
-    """
-    Compute Gower distance for mixed data types.
-    """
+    """Compute Gower distance for mixed data types."""
 
     def __init__(
         self,
         config: Config,
     ) -> None:
-        """
-        Initialize Gower with passed Config object.
+        """Initialize Gower with passed Config object.
 
         Args:
             config (Config): Configuration object containing all parameters needed for initialization.
@@ -68,12 +65,11 @@ class Gower:
             ...     feature_weights=feature_weights,
             ... )
             >>> gower = Gower(cfg)
+
         """
-        # validate_feature_types(feature_types)
         self.feature_types = config.feature_types
 
         self.feature_weights = config.feature_weights
-        # validate_weights_type(self.feature_weights)
 
         self.numeric_indices: list[int] = []
         self.categorical_nominal_indices: list[int] = []
@@ -85,44 +81,29 @@ class Gower:
         self.numeric_ranges: np.ndarray = np.array([])
 
         self.scale_method: str = config.scale_method
-        # validate_scale_method(self.scale_method)
 
         self.missing_strategy: str = config.missing_strategy
-        # validate_missing_strategy(self.missing_strategy)
         self.categorical_ordinal_values_order = config.categorical_ordinal_values_order
-        # validate_categorical_ordinal_values_order(
-        #     self.categorical_ordinal_values_order, self.feature_types
-        # )
 
         self.categorical_ordinal_calculation_type = (
             config.categorical_ordinal_calculation_type
         )
-        # validate_categorical_ordinal_calculation_type(
-        #     self.categorical_ordinal_calculation_type
-        # )
 
         self.scale_window: str | None = config.scale_window
         self.scale_window_type: str | None = config.scale_window_type
-        # validate_scale_window_and_type(self.scale_window, self.scale_window_type)
 
         self.k_neighbours = config.k_neighbours
-        # validate_k_neighbours(self.k_neighbours)
 
         self.conditional_distances = config.conditional_distances
-        # validate_conditional_distances(self.conditional_distances)
 
         self.conditional_distances_threshold_coeff = (
             config.conditional_distances_threshold_coeff
         )
-        # validate_conditional_distances_threshold_coeff(
-        #     self.conditional_distances_threshold_coeff
-        # )
 
         self._is_fitted = False
 
     def fit(self, X: pd.DataFrame | np.ndarray) -> "Gower":
-        """
-        Fit the Gower model by computing numeric feature ranges.
+        """Fit the Gower model by computing numeric feature ranges.
 
         Args:
             X (np.ndarray | pd.DataFrame): shape of (n_samples, n_features).
@@ -157,6 +138,7 @@ class Gower:
             ...     feature_weights=feature_weights,
             ... )
             >>> gower = Gower(cfg).fit(data)
+
         """
         if isinstance(X, pd.DataFrame):
             cols = list(X.columns)
@@ -165,7 +147,8 @@ class Gower:
             for k, t in self.feature_types.items():
                 if isinstance(k, str):
                     if k not in cols:
-                        raise ValueError(f"Column name '{k}' not found in DataFrame.")
+                        msg = f"Column name '{k}' not found in DataFrame."
+                        raise ValueError(msg)
                     ft[cols.index(k)] = t
                 else:
                     ft[k] = t
@@ -175,9 +158,8 @@ class Gower:
                 for k in list(self.categorical_ordinal_values_order.keys()):
                     if isinstance(k, str):
                         if k not in cols:
-                            raise ValueError(
-                                f"Column name '{k}' specified for categorical ordinal values not found in DataFrame."
-                            )
+                            msg = f"Column name '{k}' specified for categorical ordinal values not found in DataFrame."
+                            raise ValueError(msg)
                         self.categorical_ordinal_values_order[cols.index(k)] = (
                             self.categorical_ordinal_values_order.pop(k)
                         )
@@ -229,14 +211,18 @@ class Gower:
 
         if self.ratio_scale_indices:
             self.ratio_ranges = get_numeric_ranges(
-                arr, self.ratio_scale_indices, self.scale_method
+                arr,
+                self.ratio_scale_indices,
+                self.scale_method,
             )
         else:
             self.ratio_ranges = np.array([])
 
         if self.numeric_indices:
             self.numeric_ranges = get_numeric_ranges(
-                arr, self.numeric_indices, self.scale_method
+                arr,
+                self.numeric_indices,
+                self.scale_method,
             )
         else:
             self.numeric_ranges = np.array([])
@@ -278,8 +264,11 @@ class Gower:
         self.cat_ord_metadata: dict[int | str, dict[str, Any]] = {}
         for j in self.categorical_ordinal_indices:
             col = arr[:, j]
+            if self.categorical_ordinal_values_order is None:
+                msg = "Categorical ordinal values order is missing"
+                raise ValueError(msg)
             ranks_map, mn, mx = map_ordered_values(
-                self.categorical_ordinal_values_order[j]
+                self.categorical_ordinal_values_order[j],
             )
             counts_map, _ = get_cardinalities_mapping(col)
             counts_arr = np.asarray([counts_map[v] for v in ranks_map], dtype=float)
@@ -301,8 +290,7 @@ class Gower:
         return self
 
     def transform(self, X: pd.DataFrame | np.ndarray) -> pd.DataFrame | np.ndarray:
-        """
-        Transform the input DataFrame or ndarray to contain only floats.
+        """Transform the input DataFrame or ndarray to contain only floats.
 
         Updates the Gower model feature ranges calculated by the fitting.
 
@@ -318,6 +306,7 @@ class Gower:
 
         Raises:
             IllegalStateError: If fit(X) was not performed before calling transform(X).
+            ValueError: For incorrect input data and configuration parameters.
 
         Example:
             >>> import pandas as pd
@@ -339,9 +328,11 @@ class Gower:
             ... )
             >>> gower = Gower(cfg).fit(data)
             >>> data_transformed = gower.transform(data)
+
         """
         if not self._is_fitted:
-            raise IllegalStateError("Operation not allowed: model is not fitted")
+            msg = "Operation not allowed: model is not fitted"
+            raise IllegalStateError(msg)
 
         is_df = isinstance(X, pd.DataFrame)
         if isinstance(X, pd.DataFrame):
@@ -354,10 +345,7 @@ class Gower:
         transformed_columns: list[np.ndarray] = []
 
         for col_idx, ftype in self.feature_types.items():
-            if is_df:
-                col = df.iloc[:, col_idx].to_numpy()
-            else:
-                col = X_arr[:, col_idx]
+            col = df.iloc[:, col_idx].to_numpy() if is_df else X_arr[:, col_idx]
 
             if ftype in ("binary_asymmetric", "binary_symmetric"):
                 transformed_col = np.zeros(col.shape[0], dtype=float)
@@ -370,8 +358,13 @@ class Gower:
                         transformed_col[i] = 0.0
 
             elif ftype == "categorical_ordinal":
+                if self.categorical_ordinal_values_order is None:
+                    msg = "Categorical ordinal values order is missing"
+                    raise ValueError(msg)
                 enc = OrdinalEncoder(
-                    categories=[self.categorical_ordinal_values_order[col_idx]],
+                    categories=[
+                        self.categorical_ordinal_values_order[col_idx],
+                    ],
                     dtype=float,
                     handle_unknown="use_encoded_value",
                     unknown_value=np.nan,
@@ -406,21 +399,19 @@ class Gower:
                 v: v for v in self.cat_ord_metadata[col_idx]["ranks"].values()
             }
 
-        if is_df:
-            X_transformed = pd.DataFrame(
+        return (
+            pd.DataFrame(
                 transformed_data,
                 columns=df.columns,
                 index=df.index,
                 dtype=np.float64,
             )
-        else:
-            X_transformed = transformed_data.astype(np.float64)
-
-        return X_transformed
+            if is_df
+            else transformed_data.astype(np.float64)
+        )
 
     def fit_transform(self, X: pd.DataFrame | np.ndarray) -> pd.DataFrame | np.ndarray:
-        """
-        Fit to data, then transform it.
+        """Fit to data, then transform it.
 
         Args:
             X (np.ndarray | pd.DataFrame): shape of (n_samples, n_features).
@@ -428,13 +419,13 @@ class Gower:
 
         Returns:
             X_new: Transformed input data.
+
         """
         self.fit(X)
         return self.transform(X)
 
     def __call__(self, a: Any, b: Any) -> float:
-        """
-        Compute the Gower distance between two records.
+        """Compute the Gower distance between two records.
 
         Args:
             a (Any): First record of data.
@@ -461,9 +452,11 @@ class Gower:
             ... )
             >>> gower = Gower(cfg).fit(data)
             >>> distance = gower(data.iloc[0], data.iloc[1])
+
         """
         if not self._is_fitted:
-            raise IllegalStateError("Must call .fit(X) before computing distances.")
+            msg = "Must call .fit(X) before computing distances."
+            raise IllegalStateError(msg)
 
         x = to_array(a)
         y = to_array(b)
@@ -589,8 +582,7 @@ class Gower:
         return float(total_sum[0, 0] / total_count[0, 0])
 
     def similarity(self, a: Any, b: Any) -> float:
-        """
-        Compute the Gower similarity between two records.
+        """Compute the Gower similarity between two records.
 
         Args:
             a (Any): First record of data.
@@ -614,6 +606,7 @@ class Gower:
             ... )
             >>> gower = Gower(cfg).fit(data)
             >>> similarity = gower.similarity(data.iloc[0], data.iloc[1])
+
         """
         return 1.0 - self(a, b)
 
@@ -708,7 +701,8 @@ class Gower:
         """
         if not self._is_fitted:
             self.fit(X)
-            raise Warning("Calling .fit(X) inside .matrix(X).")
+            msg = "Calling .fit(X) inside .matrix(X)."
+            raise Warning(msg)
 
         return get_full_matrix(
             self,

@@ -16,7 +16,8 @@ def test_transform_before_fit() -> None:
     gower = Gower(cfg)
 
     with pytest.raises(
-        IllegalStateError, match="Operation not allowed: model is not fitted"
+        IllegalStateError,
+        match="Operation not allowed: model is not fitted",
     ):
         gower.transform(data)
 
@@ -69,7 +70,7 @@ def test_transform_with_df() -> None:
             "negative": [False, True, True, False],
             "type": ["car", "plane", "car", "train"],
             "price": [4.5, 1.8, 0.95, 1.11],
-        }
+        },
     )
 
     categorical_ordinal_values_order: dict[int | str, list[str]] | None = {
@@ -96,7 +97,7 @@ def test_transform_with_df() -> None:
             "negative": [0.0, 1.0, 1.0, 0.0],
             "type": [0.0, 1.0, 0.0, 2.0],
             "price": [4.5, 1.8, 0.95, 1.11],
-        }
+        },
     )
 
     pd.testing.assert_frame_equal(transformed_data, expected_data)

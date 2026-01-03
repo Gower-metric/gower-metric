@@ -5,6 +5,7 @@ import pytest
 from gower_metric import Gower
 from gower_metric.core.config import Config
 
+
 def test_categorical_nominal_ndarray() -> None:
     data = np.array([["A"], ["B"], ["C"], ["A"]], dtype=object)
     cfg = Config(

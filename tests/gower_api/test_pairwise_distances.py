@@ -49,7 +49,10 @@ def test_scikit_learn_paiwise_distances() -> None:
         transformed_df = transformed_df.to_numpy()
 
     matrix_scikit = pairwise_distances(
-        transformed_df, metric=gower, n_jobs=-1, ensure_all_finite=False
+        transformed_df,
+        metric=gower,
+        n_jobs=-1,
+        ensure_all_finite=False,
     )
 
     matrix_gower = gower.matrix(df, backend="loky")
