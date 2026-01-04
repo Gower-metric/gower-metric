@@ -16,9 +16,7 @@ include = [
     ".github/CODE_OF_CONDUCT.md",
     ".github/SECURITY.md",
     ".github/SUPPORT.md",
-]
-exclude = [
-    "docs/**"
+    "docs/**/*.rst",
 ]
 
 [lint]

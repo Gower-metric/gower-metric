@@ -48,7 +48,7 @@ We understand that there are still some features missing in the current version 
 - GPU parallelization support. 
    Leveraging GPU capabilities can significantly speed up computations, especially for large datasets. We plan to explore libraries like CuPy or RAPIDS for this purpose.
 - Conditional distances support. 
-   Here is the problem. For now, conditional distances optimization is not being done iteratively. It compares calculated results with set threshold only once.
+   Here is the problem. For now, conditional distances optimization is not being done iteratively. It compares calculated results with set, by user, threshold only once.
    It is possible to make it iterative, so the algorithm will keep changing the threshold until it reaches desired state. However,
    this will require more numerical speed optimizations. More on that `here <https://arxiv.org/abs/2101.02481>`_ (chapter 3).
 - Advanced weights optimization techniques. 

@@ -11,3 +11,5 @@ Core functionality
    :maxdepth: 1
 
    core/metric
+   core/config
+   core/exceptions

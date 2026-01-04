@@ -27,7 +27,7 @@ In order to import class module, you might import it as follows:
 
    from gower_metric import Gower
 
-Using `fit` method
+Using ``fit`` method
 -------------------
 
 To calculate Gower's distance, you first need to initialize the feature types dictionary and fit the model to your data.
@@ -49,8 +49,15 @@ Let's assume we imported the class as shown above and we have the following data
    )
    gower = Gower(cfg).fit(data)
 
-As you can see, we initialized the feature types dictionary and created an instance of Gower class. After that, we called the `fit` method with our data.
+As you can see, we initialized the feature types dictionary and created an instance of Gower class. After that, we called the ``fit`` method with our data.
 We can easly use pd.DataFrame as input data as well.
+
+--------------------
+Class configuration
+--------------------
+
+It is worth to mention that Gower class possesses multiple configuration variables that can be set during metric initialization.
+More detailed description can be found in the :doc:`configuration section </modules/core/config>`.
 
 .. automodule:: 
     :members:

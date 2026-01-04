@@ -9,7 +9,7 @@ How to make Gower compatible
 -----------------------------
 
 User can not call our metric directly in those libraries, due to the fact that those libraries expect numerical input data. 
-Therefore, user needs to first transform the original data into its numerical representation using the `transform` or `fit_transform` methods.
+Therefore, user needs to first transform the original data into its numerical representation using the ``transform`` or ``fit_transform`` methods.
 More information with examples can be found in following subsections.
 
 .. note::
@@ -17,7 +17,7 @@ More information with examples can be found in following subsections.
     We are aware that calling external libraries can be slower in performance. User can try to optimize the pipeline binary
     calculating Gower's distance matrix first using our implementation, and then passing the resulting distance matrix to external libraries.
 
-Examples can be found in the `examples` folder of the repository.
+Examples can be found in the ``examples`` folder of the repository.
 
 .. toctree::
    :maxdepth: 1
