@@ -1,9 +1,12 @@
 import warnings
+from pathlib import Path
 
+import matplotlib.pyplot as plt
 import numpy as np
 import openml
 import pandas as pd
-from joblib import Parallel, delayed, parallel_backend
+import seaborn as sns
+from joblib import Parallel, delayed
 from openml.tasks import TaskType
 from sklearn.cluster import HDBSCAN
 from sklearn.impute import KNNImputer, SimpleImputer
@@ -93,12 +96,57 @@ def _get_gower_matrix(X: pd.DataFrame, gower: Gower) -> np.ndarray:
     return matrix
 
 
-def _print_results(
-    results_enc: list[float],
-    results_gower: list[float],
-    valid_results: int,
-) -> print:
-    pass
+def _print_results(df: pd.DataFrame) -> None:
+    df_clean = df.dropna(subset=["OHE", "Gower"])
+    valid_count = len(df_clean)
+
+    df_long = df_clean.melt(
+        id_vars=["task_id"],
+        value_vars=["OHE", "Gower"],
+        var_name="Method",
+        value_name="Score",
+    )
+
+    _fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(16, 6))
+
+    sns.boxplot(data=df_long, x="Method", y="Score", ax=ax1, palette="Set2")
+    sns.stripplot(data=df_long, x="Method", y="Score", ax=ax1, color=".3", alpha=0.5)
+    ax1.set_title(f"Distribution of Scores (n={valid_count})")
+
+    sns.scatterplot(data=df_clean, x="OHE", y="Gower", ax=ax2, s=100, alpha=0.7)
+
+    [
+        max(ax2.get_xlim()[0], ax2.get_ylim()[0]),
+        min(ax2.get_xlim()[1], ax2.get_ylim()[1]),
+    ]
+    ax2.plot(
+        [-1, 1],
+        [-1, 1],
+        color="red",
+        linestyle="--",
+        alpha=0.5,
+        label="Identity Line",
+    )
+
+    ax2.set_xlim(-1, 1)
+    ax2.set_ylim(-1, 1)
+    ax2.set_title("Direct Comparison per Dataset")
+    ax2.set_xlabel("Silhouette Score (OneHotEncoding)")
+    ax2.set_ylabel("Silhouette Score (Gower)")
+    ax2.legend()
+    ax2.grid(True, alpha=0.3)
+
+    plt.suptitle(
+        f"Clustering Benchmark: Gower Distance vs OneHotEncoding\nValid paired results: {valid_count}/{len(df)}",
+        fontsize=16,
+    )
+
+    output_dir = Path(__file__).parent.parent.parent / "data" / "imgs" / "benchmarks"
+    output_dir.mkdir(parents=True, exist_ok=True)
+    output_path = output_dir / "clustering_results.svg"
+
+    plt.savefig(output_path)
+    plt.close()
 
 
 def main() -> None:
@@ -108,79 +156,62 @@ def main() -> None:
     )
     task_ids = clustering_tasks["tid"].astype(int).tolist()
 
-    strategies = ["onehotencoding", "gower"]
-
-    results_enc = []
-    results_gower = []
-    valid_results: int = 0
-
     n_tasks_to_run = 100
+    all_results = []
 
-    with tqdm(total=len(strategies) * n_tasks_to_run) as pbar:
-        for strategy in strategies:
-            for task_id in task_ids[:n_tasks_to_run]:
-                pbar.set_description(f"Strategy: {strategy}, Task ID: {task_id}")
-                pbar.update(1)
+    for task_id in tqdm(task_ids[:n_tasks_to_run], desc="Benchmarking Tasks"):
+        try:
+            task = openml.tasks.get_task(task_id)
+            X_raw = _load_data(task.dataset_id)
+            X = _impute_data(X_raw)
 
-                task = openml.tasks.get_task(task_id)
+            # OneHotEncoding
+            enc_data = _encode_data(X.copy())
+            clusterer_ohe = HDBSCAN(
+                metric="euclidean",
+                min_cluster_size=10,
+                min_samples=5,
+            )
+            clusterer_ohe.fit(enc_data)
 
-                X = _load_data(task.dataset_id)
-                X = _impute_data(X)
+            ohe_score = None
+            if clusterer_ohe.labels_.max() > 0:
+                ohe_score = silhouette_score(enc_data, clusterer_ohe.labels_)
 
-                if strategy == "gower":
-                    gower_features = _get_gower_features(X)
+            # Gower
+            gower_features = _get_gower_features(X)
+            cfg = Config(feature_types=gower_features)
+            gower_engine = Gower(cfg).fit(X)
+            gower_matrix = _get_gower_matrix(X, gower_engine)
 
-                    if type(gower_features) is not dict:
-                        msg = "gower_features must be a dictionary"
-                        raise ValueError(msg)
+            clusterer_gower = HDBSCAN(
+                metric="precomputed",
+                min_cluster_size=10,
+                min_samples=5,
+            )
+            clusterer_gower.fit(gower_matrix)
 
-                    cfg = Config(
-                        feature_types=gower_features,
-                    )
-                    gower = Gower(cfg).fit(X)
+            gower_score = None
+            if clusterer_gower.labels_.max() > 0:
+                gower_score = silhouette_score(
+                    gower_matrix,
+                    clusterer_gower.labels_,
+                    metric="precomputed",
+                )
 
-                if strategy == "onehotencoding":
-                    enc_data = _encode_data(X)
+            all_results.append(
+                {
+                    "task_id": task_id,
+                    "OHE": ohe_score,
+                    "Gower": gower_score,
+                },
+            )
 
-                    with parallel_backend("multiprocessing"):
-                        clusterer = HDBSCAN(
-                            metric="euclidean",
-                            min_cluster_size=10,
-                            min_samples=5,
-                            n_jobs=-1,
-                        )
-                        clusterer.fit(enc_data)
+        except Exception:
+            pass
 
-                    if clusterer.labels_.max() > 1:
-                        results_enc.append(
-                            silhouette_score(enc_data, clusterer.labels_),
-                        )
-                        valid_results += 1
-
-                if strategy == "gower":
-                    gower_matrix = _get_gower_matrix(X, gower)
-
-                    with parallel_backend("multiprocessing"):
-                        clusterer = HDBSCAN(
-                            metric="precomputed",
-                            min_cluster_size=10,
-                            min_samples=5,
-                            n_jobs=-1,
-                        )
-                        clusterer.fit(gower_matrix)
-
-                    # make sure that there are more than 1 cluster
-                    if clusterer.labels_.max() > 1:
-                        results_gower.append(
-                            silhouette_score(
-                                gower_matrix,
-                                clusterer.labels_,
-                                metric="precomputed",
-                            ),
-                        )
-                        valid_results += 1
-
-    _print_results(results_enc, results_gower, valid_results)
+    df_results = pd.DataFrame(all_results)
+    _print_results(df_results)
 
 
 if __name__ == "__main__":

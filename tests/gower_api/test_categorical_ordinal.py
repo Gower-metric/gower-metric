@@ -99,8 +99,6 @@ def test_categorical_ordinal_podani_uniform_df() -> None:
 
 
 def test_categorical_ordinal_not_valid_uniform_ndarray_() -> None:
-    np.array([["low"], ["medium"], ["high"], ["low"]], dtype=object)
-
     with pytest.raises(ValueError):
         Config(
             feature_types={"level": "categorical_ordinal"},
@@ -109,10 +107,6 @@ def test_categorical_ordinal_not_valid_uniform_ndarray_() -> None:
 
 
 def test_categorical_ordinal_no_values_order_def_for_all_columns_() -> None:
-    np.array(
-        [["low", "high"], ["medium", "high"], ["high", "high"], ["low", "high"]],
-        dtype=object,
-    )
     categorical_ordinal_values_order: dict[int | str, list[str]] | None = {
         0: ["low", "medium", "high"],
     }
