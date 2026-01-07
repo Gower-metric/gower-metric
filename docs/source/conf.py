@@ -21,6 +21,7 @@ extensions = [
     "sphinx.ext.autosectionlabel",
     "sphinx_copybutton",
     "sphinx-pydantic",
+    "sphinx_new_tab_link",
 ]
 
 # enable google and numpy style docstrings

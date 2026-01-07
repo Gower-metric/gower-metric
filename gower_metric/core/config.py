@@ -44,10 +44,9 @@ class Config(BaseModel):
         categorical_ordinal_calculation_type (str): Optional calculation type for categorical
             ordinal features. Can be 'kaufman' or 'podani'. Default is 'kaufman' if omitted.
         k_neighbours (int | None): Optional number of nearest neighbors for 'kNN' scaling window.
-            Default is None if omitted. If k_neighbours is None or less than 1, it will be
-            set to the square root of the number of points.
+            Default is None if omitted. If k_neighbours is None, it will be set to the square root of the number of points.
         conditional_distances (bool): Default to False. If set to True, two-step approach will be
-            triggered to calculate formula. More information in references year 2021 -> chapter 3.
+            triggered to calculate formula. More information in `references year 2021 -> chapter 3 <https://arxiv.org/abs/2101.02481>`_.
         conditional_distances_threshold_coeff (int): Value to be used as the numerator in the fraction (with p_cat as the denominator)
             that defines the threshold above which the distance will be set to 1. More information in reference from year 2021 -> chapter 3.
 

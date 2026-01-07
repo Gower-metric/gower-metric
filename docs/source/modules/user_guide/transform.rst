@@ -2,14 +2,14 @@
 Transform method
 =================
 
-The `transform` method alows user to convert original dataframe into it's numerical representation. Thanks to that, 
-we can use our metric with external libraries such as scipy or scikit-learn. More on that in `External Api Compatibility` section.
+The ``transform`` method allows user to convert original dataframe into its numerical representation. Thanks to that, 
+we can use our metric with external libraries such as scipy or scikit-learn. More on that in :ref:`Python External Api Compatibility <python_environment_external_api>` section.
 
 ----------
 Transform
 ----------
 
-It is done by calling the `transform` method on a fitted Gower instance.
+It is done by calling the ``transform`` method on a fitted Gower instance.
 
 .. code-block:: python
 
@@ -39,7 +39,7 @@ Categorical nominal and ordinal features are encoded using ordinal encoding from
 Fit transform
 --------------
 
-For convenience, Gower also implements `fit_transform` method, which combines `fit` and `transform` in one call.
+For convenience, Gower also implements ``fit_transform`` method, which combines ``fit`` and ``transform`` in one call.
 
 .. code-block:: python
 
@@ -64,10 +64,10 @@ For convenience, Gower also implements `fit_transform` method, which combines `f
 
 .. warning::
 
-    Under the hood, the `fit` method learns the mapping of categorical ordinal values to their numerical representation.
-    Therefore, calling `transform` on the same data before and after re-fitting the instance may result in different numerical representations
-    or even NaN values. The same applies to the `fit_transform` method. If your data does not contain any categorical ordinal features,
-    this warning may not apply (we have not implemented tests for this scenario).
+    Under the hood, the ``fit`` method learns the mapping of categorical ordinal values to their numerical representation.
+    Therefore, calling ``transform`` on the same data before and after re-fitting the instance may result in different numerical representations
+    or even NaN values. The same applies to the ``fit_transform`` method. If your data does not contain any categorical ordinal features,
+    this warning may not apply (we have not yet implemented tests for this scenario).
 
 .. automodule:: 
     :members:

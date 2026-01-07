@@ -1,3 +1,5 @@
+.. _python_environment_external_api:
+
 ===================
 Python environment
 ===================
@@ -14,8 +16,8 @@ More information with examples can be found in following subsections.
 
 .. note::
 
-    We are aware that calling external libraries can be slower in performance. User can try to optimize the pipeline binary
-    calculating Gower's distance matrix first using our implementation, and then passing the resulting distance matrix to external libraries.
+    We are aware that calling external libraries can be slower in performance. Please do wait for future updates, where we will provide
+    more optimized kernels.
 
 Examples can be found in the ``examples`` folder of the repository.
 
