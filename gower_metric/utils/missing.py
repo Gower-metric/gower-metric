@@ -7,32 +7,32 @@ import pandas as pd
 
 
 def is_missing(value: Any) -> bool:
-    """
-    Return True if the value is considered missing.
+    """Return True if the value is considered missing.
 
     Args:
         value (Any): The value to check.
 
     Returns:
         bool: True if the value is missing, False otherwise.
+
     """
     return bool(
         value is None
         or (isinstance(value, float) and math.isnan(value))
         or (hasattr(pd, "isna") and pd.isna(value))
-        or (isinstance(value, float) and np.isnan(value))
+        or (isinstance(value, float) and np.isnan(value)),
     )
 
 
 def first_not_missing(sequence: Sequence) -> Any | None:
-    """
-    Return the first non-missing value from a sequence.
+    """Return the first non-missing value from a sequence.
 
     Args:
         sequence (Sequence): A sequence of values.
 
     Returns:
         Optional[Any]: The first non-missing value, or None if all values are missing.
+
     """
     for value in sequence:
         if not is_missing(value):
@@ -41,10 +41,11 @@ def first_not_missing(sequence: Sequence) -> Any | None:
 
 
 def apply_missing_strategy(
-    diff: np.ndarray, present: np.ndarray, nan_method: str
+    diff: np.ndarray,
+    present: np.ndarray,
+    nan_method: str,
 ) -> tuple[np.ndarray, np.ndarray]:
-    """
-    Apply the chosen missing-values strategy to the raw diff matrix.
+    """Apply the chosen missing-values strategy to the raw diff matrix.
 
     Args:
         diff (np.ndarray): raw distance matrix for one feature, shape (n_x, n_y).
@@ -56,6 +57,7 @@ def apply_missing_strategy(
 
     Raises:
         ValueError: if nan_method is not recognized.
+
     """
     if nan_method == "ignore":
         diff[~present] = 0.0
@@ -71,6 +73,7 @@ def apply_missing_strategy(
         count_mask = present.astype(int)
 
     else:
-        raise ValueError(f"Unknown nan_method '{nan_method}'")
+        msg = f"Unknown nan_method '{nan_method}'"
+        raise ValueError(msg)
 
     return diff, count_mask

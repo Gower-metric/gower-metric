@@ -3,6 +3,7 @@ import pandas as pd
 import scipy.sparse as sp
 
 from gower_metric import Gower
+from gower_metric.core.config import Config
 
 
 def test_gower_matrix_endpoint_with_custom_created_matrix() -> None:
@@ -37,7 +38,11 @@ def test_gower_matrix_endpoint_with_custom_created_matrix() -> None:
         "workclass": "categorical_nominal",
     }
 
-    gower = Gower(feature_types=feature_types).fit(df)
+    cfg = Config(
+        feature_types=feature_types,
+    )
+    gower = Gower(cfg).fit(df)
+
     df = df.to_numpy()
 
     dist_matrix: np.ndarray = gower.matrix(df, backend="loky")
@@ -87,12 +92,17 @@ def test_gower_matrix_endpoint_similarity() -> None:
         "education": "categorical_nominal",
         "workclass": "categorical_nominal",
     }
+    cfg = Config(
+        feature_types=feature_types,
+    )
+    gower = Gower(cfg).fit(df)
 
-    gower = Gower(feature_types=feature_types).fit(df)
     df = df.to_numpy()
 
     similarity_matrix: np.ndarray = gower.matrix(
-        df, matrix_type="similarity", backend="loky"
+        df,
+        matrix_type="similarity",
+        backend="loky",
     )
 
     matrix_custom: np.ndarray = np.zeros((n_rows, n_rows), dtype=np.float32)
@@ -153,12 +163,14 @@ def test_gower_matrix_endpoint_if_it_symmetrical() -> None:
         8: 9.0,
     }
 
-    gower = Gower(
+    cfg = Config(
         feature_types=feature_types,
         feature_weights=feature_weights,
-        scale="iqr",
+        scale_method="iqr",
         scale_window="kde",
-    ).fit(df)
+    )
+    gower = Gower(cfg).fit(df)
+
     df = df.to_numpy()
 
     dist_matrix: np.ndarray = gower.matrix(df, backend="loky")
@@ -190,11 +202,12 @@ def test_matrix_endpoint_podani_if_symmetrical_distance() -> None:
         0: ["low", "medium", "high"],
     }
 
-    gower = Gower(
-        {0: "categorical_ordinal", 1: "categorical_nominal"},
+    cfg = Config(
+        feature_types={0: "categorical_ordinal", 1: "categorical_nominal"},
         categorical_ordinal_values_order=categorical_ordinal_values_order,
         categorical_ordinal_calculation_type="podani",
-    ).fit(data)
+    )
+    gower = Gower(cfg).fit(data)
 
     dist_matrix: np.ndarray = gower.matrix(data, backend="loky")
 
@@ -223,14 +236,17 @@ def test_matrix_endpoint_podani_if_symmetrical_similarity() -> None:
         0: ["low", "medium", "high"],
     }
 
-    gower = Gower(
-        {0: "categorical_ordinal", 1: "categorical_nominal"},
+    cfg = Config(
+        feature_types={0: "categorical_ordinal", 1: "categorical_nominal"},
         categorical_ordinal_values_order=categorical_ordinal_values_order,
         categorical_ordinal_calculation_type="podani",
-    ).fit(data)
+    )
+    gower = Gower(cfg).fit(data)
 
     dist_matrix: np.ndarray = gower.matrix(
-        data, matrix_type="similarity", backend="loky"
+        data,
+        matrix_type="similarity",
+        backend="loky",
     )
 
     n = data.shape[0]
@@ -258,14 +274,18 @@ def test_sparse_matrix_convertion_csr() -> None:
         0: ["low", "medium", "high"],
     }
 
-    gower = Gower(
-        {0: "categorical_ordinal", 1: "categorical_nominal"},
+    cfg = Config(
+        feature_types={0: "categorical_ordinal", 1: "categorical_nominal"},
         categorical_ordinal_values_order=categorical_ordinal_values_order,
         categorical_ordinal_calculation_type="podani",
-    ).fit(data)
+    )
+    gower = Gower(cfg).fit(data)
 
     dist_matrix: np.ndarray = gower.matrix(
-        data, convert_to_sparse=True, sparse_type="csr", backend="loky"
+        data,
+        convert_to_sparse=True,
+        sparse_type="csr",
+        backend="loky",
     )
 
     assert sp.issparse(dist_matrix), "Matrix is not sparse"
@@ -281,14 +301,18 @@ def test_sparse_matrix_convertion_csc() -> None:
         0: ["low", "medium", "high"],
     }
 
-    gower = Gower(
-        {0: "categorical_ordinal", 1: "categorical_nominal"},
+    cfg = Config(
+        feature_types={0: "categorical_ordinal", 1: "categorical_nominal"},
         categorical_ordinal_values_order=categorical_ordinal_values_order,
         categorical_ordinal_calculation_type="podani",
-    ).fit(data)
+    )
+    gower = Gower(cfg).fit(data)
 
     dist_matrix: np.ndarray = gower.matrix(
-        data, convert_to_sparse=True, sparse_type="csc", backend="loky"
+        data,
+        convert_to_sparse=True,
+        sparse_type="csc",
+        backend="loky",
     )
 
     assert sp.issparse(dist_matrix), "Matrix is not sparse"
@@ -304,14 +328,18 @@ def test_sparse_matrix_convertion_c00() -> None:
         0: ["low", "medium", "high"],
     }
 
-    gower = Gower(
-        {0: "categorical_ordinal", 1: "categorical_nominal"},
+    cfg = Config(
+        feature_types={0: "categorical_ordinal", 1: "categorical_nominal"},
         categorical_ordinal_values_order=categorical_ordinal_values_order,
         categorical_ordinal_calculation_type="podani",
-    ).fit(data)
+    )
+    gower = Gower(cfg).fit(data)
 
     dist_matrix: np.ndarray = gower.matrix(
-        data, convert_to_sparse=True, sparse_type="coo", backend="loky"
+        data,
+        convert_to_sparse=True,
+        sparse_type="coo",
+        backend="loky",
     )
 
     assert sp.issparse(dist_matrix), "Matrix is not sparse"

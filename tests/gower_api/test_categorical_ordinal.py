@@ -3,6 +3,7 @@ import pandas as pd
 import pytest
 
 from gower_metric import Gower
+from gower_metric.core.config import Config
 
 
 def test_categorical_ordinal_kaufman_uniform_ndarray() -> None:
@@ -11,10 +12,11 @@ def test_categorical_ordinal_kaufman_uniform_ndarray() -> None:
         0: ["low", "medium", "high"],
     }
 
-    gower = Gower(
-        {0: "categorical_ordinal"},
+    cfg = Config(
+        feature_types={0: "categorical_ordinal"},
         categorical_ordinal_values_order=categorical_ordinal_values_order,
     )
+    gower = Gower(cfg)
     transformed_data = gower.fit_transform(data)
 
     expected = np.array(
@@ -51,11 +53,13 @@ def test_categorical_ordinal_podani_uniform_ndarray() -> None:
     categorical_ordinal_values_order: dict[int | str, list[str]] | None = {
         0: ["low", "medium", "high"],
     }
-    gower = Gower(
-        {0: "categorical_ordinal"},
+
+    cfg = Config(
+        feature_types={0: "categorical_ordinal"},
         categorical_ordinal_values_order=categorical_ordinal_values_order,
         categorical_ordinal_calculation_type="podani",
     )
+    gower = Gower(cfg)
     transformed_data = gower.fit_transform(data)
 
     for i in range(transformed_data.shape[0]):
@@ -74,11 +78,13 @@ def test_categorical_ordinal_podani_uniform_df() -> None:
     categorical_ordinal_values_order: dict[int | str, list[str]] | None = {
         "level": ["low", "medium", "high"],
     }
-    gower = Gower(
-        {"level": "categorical_ordinal"},
+
+    cfg = Config(
+        feature_types={"level": "categorical_ordinal"},
         categorical_ordinal_values_order=categorical_ordinal_values_order,
         categorical_ordinal_calculation_type="podani",
     )
+    gower = Gower(cfg)
     transformed_data = gower.fit_transform(data)
 
     if isinstance(transformed_data, pd.DataFrame):
@@ -93,30 +99,20 @@ def test_categorical_ordinal_podani_uniform_df() -> None:
 
 
 def test_categorical_ordinal_not_valid_uniform_ndarray_() -> None:
-    data = np.array([["low"], ["medium"], ["high"], ["low"]], dtype=object)
-
     with pytest.raises(ValueError):
-        gower = Gower(
-            {0: "categorical_ordinal"}, categorical_ordinal_calculation_type="not_valid"
+        Config(
+            feature_types={"level": "categorical_ordinal"},
+            categorical_ordinal_calculation_type="not_valid",  # type: ignore[arg-type]
         )
-        gower.fit(data)
 
 
 def test_categorical_ordinal_no_values_order_def_for_all_columns_() -> None:
-    data = np.array(
-        [["low", "high"], ["medium", "high"], ["high", "high"], ["low", "high"]],
-        dtype=object,
-    )
     categorical_ordinal_values_order: dict[int | str, list[str]] | None = {
         0: ["low", "medium", "high"],
     }
 
     with pytest.raises(ValueError):
-        gower = Gower(
-            {0: "categorical_ordinal", 1: "categorical_ordinal"},
+        Config(
+            feature_types={0: "categorical_ordinal", 1: "categorical_ordinal"},
             categorical_ordinal_values_order=categorical_ordinal_values_order,
         )
-        gower.fit(data)
-
-
-test_categorical_ordinal_podani_uniform_df()

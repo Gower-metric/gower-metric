@@ -10,6 +10,7 @@ By default, *backend* is set to *loky*.
    import numpy as np
 
    from gower_metric import Gower
+   from gower_metric.core.config import Config
 
    data = np.array([[1, 'a'], [2, 'b'], [3, 'a'], [4, 'c']], dtype=object)
 
@@ -18,7 +19,10 @@ By default, *backend* is set to *loky*.
       1: "categorical_nominal",
    }
 
-   gower = Gower(feature_types=feature_types).fit(data)
+   cfg = Config(
+      feature_types=feature_types,
+   )
+   gower = Gower(cfg).fit(data)
 
    distance_matrix = gower.matrix(data)
    similarity_matrix = gower.matrix(data, matrix_type='similarity')
@@ -36,6 +40,7 @@ On top of that, user can also compute sparse matrices using SciPy's sparse matri
    import numpy as np
 
    from gower_metric import Gower
+   from gower_metric.core.config import Config
 
    data = np.array([[1, 'a'], [2, 'b'], [3, 'a'], [4, 'c']], dtype=object)
 
@@ -44,7 +49,10 @@ On top of that, user can also compute sparse matrices using SciPy's sparse matri
       1: "categorical_nominal",
    }
 
-   gower = Gower(feature_types=feature_types).fit(data)
+   cfg = Config(
+      feature_types=feature_types,
+   )
+   gower = Gower(cfg).fit(data)
 
    sparse_distance_matrix = gower.matrix(data, convert_to_sparse=True, sparse_type="csc")
    sparse_similarity_matrix = gower.matrix(data, matrix_type='similarity', convert_to_sparse=True, sparse_type="coo")
@@ -63,6 +71,7 @@ User can also create matrix *by hand* and fill it with values.
    import numpy as np
 
    from gower_metric import Gower
+   from gower_metric.core.config import Config
 
    data = np.array([[1, 'a'], [2, 'b'], [3, 'a'], [4, 'c']], dtype=object)
 
@@ -71,7 +80,10 @@ User can also create matrix *by hand* and fill it with values.
       1: "categorical_nominal",
    }
 
-   gower = Gower(feature_types=feature_types).fit(data)
+   cfg = Config(
+      feature_types=feature_types,
+   )
+   gower = Gower(cfg).fit(data)
 
    matrix = np.zeros((data.shape[0], data.shape[0]))
    

@@ -12,6 +12,7 @@ from sklearn.preprocessing import OneHotEncoder
 from tqdm import tqdm
 
 from gower_metric import Gower
+from gower_metric.core.config import Config
 
 warnings.simplefilter(action="ignore", category=FutureWarning)
 
@@ -19,19 +20,22 @@ warnings.simplefilter(action="ignore", category=FutureWarning)
 def _load_data(dataset_id: int, n_rows: int = 5_000) -> tuple[pd.DataFrame, pd.Series]:
     dataset = openml.datasets.get_dataset(dataset_id)
     X, y, _, _ = dataset.get_data(
-        target=dataset.default_target_attribute, dataset_format="dataframe"
+        target=dataset.default_target_attribute,
+        dataset_format="dataframe",
     )
     return X.head(n_rows), y.head(n_rows)
 
 
 def _split_data(
-    X: pd.DataFrame, y: pd.Series
+    X: pd.DataFrame,
+    y: pd.Series,
 ) -> tuple[pd.DataFrame, pd.DataFrame, pd.Series, pd.Series]:
     return train_test_split(X, y, test_size=0.2, random_state=42, stratify=y)
 
 
 def _impute_data(
-    X_train: pd.DataFrame, X_test: pd.DataFrame
+    X_train: pd.DataFrame,
+    X_test: pd.DataFrame,
 ) -> tuple[pd.DataFrame, pd.DataFrame]:
     numeric_cols = X_train.select_dtypes(include=["int64", "float64"]).columns
     categorical_cols = X_train.select_dtypes(include=["object", "category"]).columns
@@ -50,7 +54,8 @@ def _impute_data(
 
 
 def _encode_data(
-    X_train: pd.DataFrame, X_test: pd.DataFrame
+    X_train: pd.DataFrame,
+    X_test: pd.DataFrame,
 ) -> tuple[pd.DataFrame, pd.DataFrame]:
     categorical_cols = X_train.select_dtypes(include=["object", "category"]).columns
     if len(categorical_cols) > 0:
@@ -62,10 +67,12 @@ def _encode_data(
         X_test = X_test.drop(columns=categorical_cols)
 
         X_train = pd.concat(
-            [X_train.reset_index(drop=True), pd.DataFrame(X_train_encoded)], axis=1
+            [X_train.reset_index(drop=True), pd.DataFrame(X_train_encoded)],
+            axis=1,
         )
         X_test = pd.concat(
-            [X_test.reset_index(drop=True), pd.DataFrame(X_test_encoded)], axis=1
+            [X_test.reset_index(drop=True), pd.DataFrame(X_test_encoded)],
+            axis=1,
         )
     else:
         X_train = X_train.reset_index(drop=True)
@@ -128,7 +135,10 @@ def compute_gower_train(i, X_train_np, gower):
 
 
 def _get_gower_matrix_train(
-    train_matrix: np.ndarray, gower: Gower, X_train: pd.DataFrame, backend: str = "loky"
+    train_matrix: np.ndarray,
+    gower: Gower,
+    X_train: pd.DataFrame,
+    backend: str = "loky",
 ) -> np.ndarray:
     X_train_np = X_train.to_numpy()
 
@@ -206,9 +216,13 @@ def main() -> None:
                     gower_features = _get_gower_features(X_train)
 
                     if type(gower_features) is not dict:
-                        raise ValueError("gower_features must be a dictionary")
+                        msg = "gower_features must be a dictionary"
+                        raise ValueError(msg)
 
-                    gower = Gower(feature_types=gower_features).fit(X_train)
+                    cfg = Config(
+                        feature_types=gower_features,
+                    )
+                    gower = Gower(cfg).fit(X_train)
 
                 if strategy == "onehotencoding":
                     X_train, X_test = _encode_data(X_train, X_test)
@@ -218,17 +232,26 @@ def main() -> None:
 
                 if strategy == "gower":
                     train_matrix = np.zeros(
-                        (X_train.shape[0], X_train.shape[0]), dtype=np.float32
+                        (X_train.shape[0], X_train.shape[0]),
+                        dtype=np.float32,
                     )
                     test_matrix = np.zeros(
-                        (X_test.shape[0], X_train.shape[0]), dtype=np.float32
+                        (X_test.shape[0], X_train.shape[0]),
+                        dtype=np.float32,
                     )
 
                     train_matrix = _get_gower_matrix_train(
-                        train_matrix, gower, X_train, joblib_backend
+                        train_matrix,
+                        gower,
+                        X_train,
+                        joblib_backend,
                     )
                     test_matrix = _get_gower_matrix_test(
-                        test_matrix, gower, X_train, X_test, joblib_backend
+                        test_matrix,
+                        gower,
+                        X_train,
+                        X_test,
+                        joblib_backend,
                     )
 
                     knn = _grid_search_knn(
@@ -246,7 +269,7 @@ def main() -> None:
                     results_f1_gower.append(f1)
 
                     classification_report_gower.append(
-                        classification_report(y_test, prefictions, output_dict=True)
+                        classification_report(y_test, prefictions, output_dict=True),
                     )
 
                     results_df = pd.concat(
@@ -261,15 +284,17 @@ def main() -> None:
                                         "f1": f1,
                                         "dataset_id": task.dataset_id,
                                         "n_rows": n_rows_used,
-                                    }
-                                ]
+                                    },
+                                ],
                             ),
                         ],
                         ignore_index=True,
                     )
                 else:
                     knn = _grid_search_knn(
-                        y_train=y_train, X_train=X_train, backend=joblib_backend
+                        y_train=y_train,
+                        X_train=X_train,
+                        backend=joblib_backend,
                     )
 
                     prefictions = knn.predict(X_test)
@@ -280,7 +305,7 @@ def main() -> None:
                     results_f1_enc.append(f1)
 
                     classification_report_enc.append(
-                        classification_report(y_test, prefictions, output_dict=True)
+                        classification_report(y_test, prefictions, output_dict=True),
                     )
 
                     results_df = pd.concat(
@@ -295,8 +320,8 @@ def main() -> None:
                                         "f1": f1,
                                         "dataset_id": task.dataset_id,
                                         "n_rows": n_rows_used,
-                                    }
-                                ]
+                                    },
+                                ],
                             ),
                         ],
                         ignore_index=True,

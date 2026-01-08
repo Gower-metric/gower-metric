@@ -15,6 +15,5 @@ Utils
    utils/missing
    utils/ranges
    utils/to_array
-   utils/validators
    utils/kde_types
    utils/matrix

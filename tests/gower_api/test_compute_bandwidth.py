@@ -2,6 +2,7 @@ import numpy as np
 import pytest
 
 from gower_metric import Gower
+from gower_metric.core.config import Config
 from gower_metric.utils.kde_types.silverman import silverman_bandwidth
 from gower_metric.utils.knn_bandwidth import knn_bandwidth
 
@@ -10,11 +11,12 @@ def test_ratio_scale_knn_window_no_error() -> None:
     rng = np.random.default_rng(seed=42)
     data = rng.normal(size=(60, 2))
 
-    gs_knn = Gower(
-        {0: "ratio_scale_interval", 1: "numeric"},
+    cfg = Config(
+        feature_types={0: "ratio_scale_interval", 1: "numeric"},
         scale_window="kNN",
-        scale="range",
-    ).fit(data)
+        scale_method="range",
+    )
+    gs_knn = Gower(cfg).fit(data)
 
     assert isinstance(gs_knn._h_ratio, np.ndarray)
     assert (np.asarray(gs_knn._h_ratio) > 0).all()
@@ -25,12 +27,13 @@ def test_ratio_scale_kde_window_h_multi() -> None:
     rng = np.random.default_rng(seed=123)
     data = rng.normal(size=(80, 2))
 
-    gs_kde = Gower(
-        {0: "ratio_scale_interval", 1: "numeric"},
+    cfg = Config(
+        feature_types={0: "ratio_scale_interval", 1: "numeric"},
         scale_window="kde",
         scale_window_type="silverman",
-        scale="range",
-    ).fit(data)
+        scale_method="range",
+    )
+    gs_kde = Gower(cfg).fit(data)
 
     assert isinstance(gs_kde._h_ratio, np.ndarray)
     assert gs_kde._h_ratio.shape == (1,)
@@ -55,12 +58,13 @@ def test_knn_bandwidth_values_and_effect() -> None:
     )
 
     k = 1
-    gower = Gower(
-        {0: "ratio_scale_interval", 1: "numeric"},
+    cfg = Config(
+        feature_types={0: "ratio_scale_interval", 1: "numeric"},
         scale_window="kNN",
         k_neighbours=k,
-        scale="range",
-    ).fit(data)
+        scale_method="range",
+    )
+    gower = Gower(cfg).fit(data)
 
     expected_h_ratio = knn_bandwidth(data[:, 0], k=k)
     expected_h_numeric = knn_bandwidth(data[:, 1], k=k)

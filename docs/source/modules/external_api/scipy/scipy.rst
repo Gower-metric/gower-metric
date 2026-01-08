@@ -12,9 +12,13 @@ Spatial distance
 
     from scipy.spatial.distance import pdist, squareform
     from gower_metric import Gower
+    from gower_metric.core.config import Config
 
     # fit Gower model first
-    gower = Gower(feature_types=feature_types).fit(df)
+    cfg = Config(
+        feature_types=feature_types,
+    )
+    gower = Gower(cfg).fit(df)
 
     # calculate the numerical representation of original data
     df_num = gower.transform(df)
@@ -37,8 +41,12 @@ Cophenet cluster hierarchy
     from scipy.cluster.hierarchy import cophenet, single
     from scipy.spatial.distance import pdist, squareform
     from gower_metric import Gower
+    from gower_metric.core.config import Config
 
-    gower = Gower(feature_types=feature_types).fit(df)
+    cfg = Config(
+        feature_types=feature_types,
+    )
+    gower = Gower(cfg).fit(df)
     df_num = gower.transform(df)
 
     Z = single(pdist(df_num, metric=gower))

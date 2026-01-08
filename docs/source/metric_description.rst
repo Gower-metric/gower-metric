@@ -1,3 +1,5 @@
+.. _metric_description:
+
 ===================
 Metric Description
 ===================

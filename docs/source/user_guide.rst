@@ -10,6 +10,6 @@ We provide simple scripts to demonstrate the basic functionality of the package.
 
    modules/user_guide/quick_start
    modules/user_guide/basic_examples
+   modules/user_guide/transform
    modules/user_guide/advanced_examples
    modules/user_guide/matrix
-   modules/user_guide/transform

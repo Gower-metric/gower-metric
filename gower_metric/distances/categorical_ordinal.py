@@ -14,8 +14,7 @@ def categorical_ordinal_component(
     calculation_type: str = "kaufman",
     weights: np.ndarray | None = None,
 ) -> tuple[np.ndarray, np.ndarray]:
-    """
-    Compute the ordinal categorical component of Gower metric between rows of X and Y.
+    """Compute the ordinal categorical component of Gower metric between rows of X and Y.
 
     Args:
         X (np.ndarray): First dataset, shape (n_x, n_features).
@@ -32,6 +31,7 @@ def categorical_ordinal_component(
         tuple[np.ndarray, np.ndarray]:
             - sum_diff: matrix (n_x, n_y) of weighted, normalized ordinal distances
             - count_present: matrix (n_x, n_y) of counts of present (non-missing) features
+
     """
     n_x, n_y = X.shape[0], Y.shape[0]
     sum_diff = np.zeros((n_x, n_y), dtype=float)
@@ -55,7 +55,8 @@ def categorical_ordinal_component(
             max_rank = info["max"]
             counts_arr = info["counts"]
         else:
-            raise ValueError(f"Missing metadata for ordinal feature at index {j}.")
+            msg = f"Missing metadata for ordinal feature at index {j}."
+            raise ValueError(msg)
 
         if min_rank is None:
             continue
@@ -66,10 +67,11 @@ def categorical_ordinal_component(
         if calculation_type == "kaufman":
             denom = max_rank - min_rank
 
-            if denom == 0:
-                dist = np.zeros((n_x, n_y), dtype=float)
-            else:
-                dist = np.abs(r_x[:, None] - r_y[None, :]) / denom
+            dist = (
+                np.zeros((n_x, n_y), dtype=float)
+                if denom == 0
+                else np.abs(r_x[:, None] - r_y[None, :]) / denom
+            )
 
         else:
             diff = np.abs(r_x[:, None] - r_y[None, :])
@@ -81,10 +83,11 @@ def categorical_ordinal_component(
             if podani_denom <= 0:
                 # fallback to kaufman if podani denominator is not valid
                 base_denom = max_rank - min_rank
-                if base_denom == 0:
-                    dist = np.zeros((n_x, n_y), dtype=float)
-                else:
-                    dist = diff / base_denom
+                dist = (
+                    np.zeros((n_x, n_y), dtype=float)
+                    if base_denom == 0
+                    else diff / base_denom
+                )
             else:
                 dist = (diff - mid_x - mid_y) / podani_denom
                 dist = np.clip(dist, 0.0, 1.0)

@@ -7,6 +7,7 @@ from rpy2.robjects import pandas2ri
 from rpy2.robjects.packages import importr
 
 from gower_metric import Gower
+from gower_metric.core.config import Config
 
 warnings.filterwarnings("ignore", category=UserWarning, module="rpy2")
 
@@ -26,16 +27,17 @@ def test_big_matrix() -> None:
         "Education": "categorical_ordinal",
     }
     ord_order: dict[int | str, list[str]] = {
-        "Education": ["Low", "Medium", "High", "PhD", "Prof"]
+        "Education": ["Low", "Medium", "High", "PhD", "Prof"],
     }
 
     weights = {0: 1.0, 1: 2.0, 2: 1.5, 3: 1.2, 4: 3.75, 5: 2.72}
 
-    gower = Gower(
-        features,
-        weights,
+    cfg = Config(
+        feature_types=features,
+        feature_weights=weights,
         categorical_ordinal_values_order=ord_order,
-    ).fit(df)
+    )
+    gower = Gower(cfg).fit(df)
 
     gower_matrix = gower.matrix(df)
 
@@ -47,7 +49,7 @@ def test_big_matrix() -> None:
     colnames = list(r_df.colnames)
 
     robjects.r(
-        "ordered_f <- function(x, levels) { factor(x, levels=levels, ordered=TRUE) }"
+        "ordered_f <- function(x, levels) { factor(x, levels=levels, ordered=TRUE) }",
     )
     robjects.r("factor_f <- function(x) { factor(x) }")
     robjects.r("logical_f <- function(x) { as.logical(x) }")
@@ -60,17 +62,17 @@ def test_big_matrix() -> None:
 
     # Have_children -> Factor (Binary Symmetric)
     r_df[colnames.index("Have_children")] = robjects.r["factor_f"](
-        r_df[colnames.index("Have_children")]
+        r_df[colnames.index("Have_children")],
     )
 
     # Is_smoking -> Logical (Binary Asymmetric)
     r_df[colnames.index("Is_smoking")] = robjects.r["logical_f"](
-        r_df[colnames.index("Is_smoking")]
+        r_df[colnames.index("Is_smoking")],
     )
 
     # Birth -> Factor (Nominal)
     r_df[colnames.index("Birth")] = robjects.r["factor_f"](
-        r_df[colnames.index("Birth")]
+        r_df[colnames.index("Birth")],
     )
 
     importr("cluster")
@@ -80,7 +82,7 @@ def test_big_matrix() -> None:
         {
             "asymm": robjects.StrVector(["Is_smoking"]),
             "symm": robjects.StrVector(["Have_children"]),
-        }
+        },
     )
 
     weights = robjects.FloatVector([1.0, 2.0, 1.5, 1.2, 3.75, 2.72])
@@ -92,16 +94,11 @@ def test_big_matrix() -> None:
 
     diff = np.abs(gower_matrix - np_matrix)
     max_diff = np.max(diff)
-    print(f"Maximum difference between matrices: {max_diff:.8f}")
 
     if max_diff > 1e-6:
-        rows, cols = np.where(diff > 1e-6)
-        print(f"Number of differing elements: {len(rows)}")
+        rows, _cols = np.where(diff > 1e-6)
         if len(rows) > 0:
-            print(f"Example difference at position [{rows[0]}, {cols[0]}]:")
-            print(f"Python: {gower_matrix[rows[0], cols[0]]}")
-            print(f"R: {np_matrix[rows[0], cols[0]]}")
+            pass
 
     assert np_matrix.shape == (len(df), len(df))
     assert np.allclose(np_matrix, gower_matrix, atol=1e-6), "Matrices are not equal!"
-    print("Test passed! Matrices are identical.")

@@ -32,6 +32,7 @@ def __compute_row_upper(
 
     Returns:
         tuple[i, row]: tuple of row index and computed row array.
+
     """
     n = X_arr.shape[0] if n == 0 else n
     xi = X_arr[i]
@@ -76,9 +77,12 @@ def _get_results_from_joblib(
 
     Returns:
         list[tuple[int, np.ndarray]]: List of tuples (row index, computed row array).
+
     """
     results: list[tuple[int, np.ndarray]] = Parallel(
-        n_jobs=n_jobs, backend=backend, verbose=verbose
+        n_jobs=n_jobs,
+        backend=backend,
+        verbose=verbose,
     )(
         delayed(__compute_row_upper)(i, arr, n, model, data_type, matrix_type)
         for i in tqdm(
@@ -127,11 +131,13 @@ def get_full_matrix(
     Returns:
         np.ndarray | scipy.sparse.csr_matrix | scipy.sparse.csc_matrix | scipy.sparse.coo_matrix:
             Pairwise Gower distance or similarity matrix of shape (n_samples, n_samples) or sparse matrix.
+
     """
-    if isinstance(X, pd.DataFrame):
-        arr = X.to_numpy(dtype=object)
-    else:
-        arr = np.array(X, dtype=object)
+    arr = (
+        X.to_numpy(dtype=object)
+        if isinstance(X, pd.DataFrame)
+        else np.array(X, dtype=object)
+    )
 
     n: int = arr.shape[0]
 
@@ -160,7 +166,9 @@ def get_full_matrix(
 
     if convert_to_sparse:
         MATRIX = get_scipy_sparse_matrix(
-            MATRIX, matrix_format=sparse_type, data_type=data_type
+            MATRIX,
+            matrix_format=sparse_type,
+            data_type=data_type,
         )
 
     return MATRIX

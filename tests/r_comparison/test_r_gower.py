@@ -7,6 +7,7 @@ from rpy2.robjects import pandas2ri
 from rpy2.robjects.packages import importr
 
 from gower_metric import Gower
+from gower_metric.core.config import Config
 
 warnings.filterwarnings("ignore", category=UserWarning, module="rpy2")
 
@@ -29,7 +30,12 @@ def test_r_gower() -> None:
     }
 
     union = pd.concat([dat1, dat2], axis=0, ignore_index=True)
-    gower = Gower(feature_types=f_types, scale="range").fit(union)
+
+    cfg = Config(
+        feature_types=f_types,
+        scale_method="range",
+    )
+    gower = Gower(cfg).fit(union)
 
     dist_py = np.array([gower(dat1.iloc[i], dat2.iloc[i]) for i in range(10)])
 

@@ -13,9 +13,9 @@ def numeric_component(
     weights: np.ndarray | None = None,
     scale_window: str | None = None,
 ) -> tuple[np.ndarray, np.ndarray]:
-    """
-    Compute range-scaled Gower component for interval-scale (numeric) features. The same logic as
-    in ratio scale.
+    """Compute range-scaled Gower component for interval-scale (numeric) features.
+
+    The same logic as in ratio scale.
 
     Args:
         X (np.ndarray): array of shape (n_x, n_features)
@@ -31,6 +31,7 @@ def numeric_component(
         tuple[np.ndarray, np.ndarray]:
             - sum_diff: matrix (n_x, n_y) weighted sum of per-feature distances
             - count_present: matrix (n_x, n_y) number of non-missing pairs per feature
+
     """
     n_x, n_y = X.shape[0], Y.shape[0]
     if not numeric_indices:

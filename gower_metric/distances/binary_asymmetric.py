@@ -10,8 +10,7 @@ def binary_asymmetric_component(
     missing_strategy: str = "ignore",
     weights: np.ndarray | None = None,
 ) -> tuple[np.ndarray, np.ndarray]:
-    """
-    Compute the asymmetric binary component of Gower metric between rows of X and Y.
+    """Compute the asymmetric binary component of Gower metric between rows of X and Y.
 
     Description:
         - Similarity s_ijt = 1 if x_it = x_jt = 1, else 0.
@@ -29,6 +28,7 @@ def binary_asymmetric_component(
         tuple[np.ndarray, np.ndarray]:
             - sum_diff: matrix (n_x, n_y); weighted sum of d_ijt
             - count_present: matrix (n_x, n_y); δ_ijt counts
+
     """
     n_x, n_y = X.shape[0], Y.shape[0]
     sum_diff = np.zeros((n_x, n_y), dtype=float)

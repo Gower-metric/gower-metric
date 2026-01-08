@@ -3,6 +3,7 @@ import pytest
 from sklearn.metrics import pairwise_distances
 
 from gower_metric import Gower
+from gower_metric.core.config import Config
 from gower_metric.utils.aux import all_ones_off_diagonal
 
 
@@ -18,10 +19,12 @@ def test_conditional_distances() -> None:
     )
     f_types: dict[int | str, str] = {0: "categorical_nominal", 1: "numeric"}
 
-    gower = Gower(
+    cfg = Config(
         feature_types=f_types,
         conditional_distances=True,
-    ).fit(raw)
+    )
+
+    gower = Gower(cfg).fit(raw)
 
     # max - min
     r_max_min = 7 - 0
@@ -68,11 +71,13 @@ def test_conditional_distances_clip() -> None:
         1: ["X", "Y"],
     }
 
-    gower = Gower(
+    cfg = Config(
         feature_types=f_types,
         conditional_distances=True,
         categorical_ordinal_values_order=categorical_ordinal_values_order,
-    ).fit(raw)
+    )
+
+    gower = Gower(cfg).fit(raw)
 
     assert gower(raw[0], raw[3]) == 1.0
     assert gower(raw[1], raw[2]) == 1.0
@@ -103,13 +108,6 @@ def test_conditional_distances_clip() -> None:
 
 
 def test_value_error_on_no_numerical_features() -> None:
-    raw = np.array(
-        [
-            [True, "A", "X"],
-            [False, "B", "X"],
-        ],
-        dtype=object,
-    )
     f_types: dict[int | str, str] = {
         0: "binary_asymmetric",
         1: "categorical_nominal",
@@ -121,31 +119,27 @@ def test_value_error_on_no_numerical_features() -> None:
     }
 
     with pytest.raises(ValueError):
-        Gower(
+        Config(
             feature_types=f_types,
             conditional_distances=True,
             categorical_ordinal_values_order=categorical_ordinal_values_order,
-        ).fit(raw)
+        )
+
+
+test_value_error_on_no_numerical_features()
 
 
 def test_value_error_on_no_categorical_features() -> None:
-    raw = np.array(
-        [
-            [12, 100.0],
-            [15, 150.0],
-        ],
-        dtype=object,
-    )
     f_types: dict[int | str, str] = {
         0: "numeric",
         1: "ratio_scale_interval",
     }
 
     with pytest.raises(ValueError):
-        Gower(
+        Config(
             feature_types=f_types,
             conditional_distances=True,
-        ).fit(raw)
+        )
 
 
 def test_value_error_on_too_small_threshold_coeff() -> None:
@@ -154,7 +148,7 @@ def test_value_error_on_too_small_threshold_coeff() -> None:
     }
 
     with pytest.raises(ValueError):
-        Gower(
+        Config(
             feature_types=f_types,
             conditional_distances=True,
             conditional_distances_threshold_coeff=0,
@@ -180,23 +174,27 @@ def test_conditional_distances_threshold_coeff() -> None:
         1: ["X", "Y", "Z"],
     }
 
-    gower = Gower(
+    cfg = Config(
         feature_types=f_types,
         conditional_distances=True,
         categorical_ordinal_values_order=categorical_ordinal_values_order,
-    ).fit(raw)
+    )
+
+    gower = Gower(cfg).fit(raw)
     transformed_data = gower.transform(raw)
 
     pairwise_dist_result = pairwise_distances(transformed_data, metric=gower)
 
     assert all_ones_off_diagonal(pairwise_dist_result)
 
-    gower = Gower(
+    cfg2 = Config(
         feature_types=f_types,
         categorical_ordinal_values_order=categorical_ordinal_values_order,
         conditional_distances=True,
         conditional_distances_threshold_coeff=2,
-    ).fit(raw)
+    )
+
+    gower = Gower(cfg2).fit(raw)
     transformed_data = gower.transform(raw)
 
     pairwise_dist_result = pairwise_distances(transformed_data, metric=gower)

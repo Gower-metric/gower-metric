@@ -1,20 +1,22 @@
 import numpy as np
 
+MIN_SAMPLES = 2
+
 
 def silverman_bandwidth(x: np.ndarray) -> float:
-    """
-    Calculate Silverman's rule of thumb bandwidth for kernel density estimation.
+    """Calculate Silverman's rule of thumb bandwidth for kernel density estimation.
 
     Args:
         x (np.ndarray): Input data array.
 
     Returns:
         float: Calculated bandwidth, ensuring it is non-negative.
+
     """
     x = x[~np.isnan(x)]
     n = x.size
 
-    if n < 2:
+    if n < MIN_SAMPLES:
         return 0.0
 
     s = x.std(ddof=1, axis=0)

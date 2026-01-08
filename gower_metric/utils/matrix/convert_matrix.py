@@ -3,7 +3,8 @@ from scipy.sparse import coo_matrix, csc_matrix, csr_matrix
 
 
 def __get_csr_matrix(
-    data: np.ndarray, data_type: type[np.floating | np.integer]
+    data: np.ndarray,
+    data_type: type[np.floating | np.integer],
 ) -> csr_matrix:
     """Convert a dense array to a CSR sparse matrix.
 
@@ -13,12 +14,14 @@ def __get_csr_matrix(
 
     Returns:
         csr_matrix: CSR sparse matrix.
+
     """
     return csr_matrix(data, dtype=data_type)
 
 
 def __get_csc_matrix(
-    data: np.ndarray, data_type: type[np.floating | np.integer]
+    data: np.ndarray,
+    data_type: type[np.floating | np.integer],
 ) -> csc_matrix:
     """Convert a dense array to a CSC sparse matrix.
 
@@ -28,12 +31,14 @@ def __get_csc_matrix(
 
     Returns:
         csc_matrix: CSC sparse matrix.
+
     """
     return csc_matrix(data, dtype=data_type)
 
 
 def __get_coo_matrix(
-    data: np.ndarray, data_type: type[np.floating | np.integer]
+    data: np.ndarray,
+    data_type: type[np.floating | np.integer],
 ) -> coo_matrix:
     """Convert a dense array to a COO sparse matrix.
 
@@ -43,6 +48,7 @@ def __get_coo_matrix(
 
     Returns:
         coo_matrix: COO sparse matrix.
+
     """
     return coo_matrix(data, dtype=data_type)
 
@@ -64,15 +70,18 @@ def get_scipy_sparse_matrix(
 
     Raises:
         ValueError: If an unsupported matrix format is provided.
+
     """
     if matrix_format == "csr":
         return __get_csr_matrix(data, data_type)
-    elif matrix_format == "csc":
+    if matrix_format == "csc":
         return __get_csc_matrix(data, data_type)
-    elif matrix_format == "coo":
+    if matrix_format == "coo":
         return __get_coo_matrix(data, data_type)
-    else:
-        raise ValueError(
-            f"Unsupported matrix format: {matrix_format}. "
-            "Supported formats are 'csr', 'csc', 'coo'."
-        )
+    msg = (
+        f"Unsupported matrix format: {matrix_format}. "
+        "Supported formats are 'csr', 'csc', 'coo'."
+    )
+    raise ValueError(
+        msg,
+    )

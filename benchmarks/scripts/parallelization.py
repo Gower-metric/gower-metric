@@ -13,21 +13,20 @@ from sklearn.metrics import pairwise_distances
 from tqdm import tqdm
 
 from gower_metric import Gower
+from gower_metric.core.config import Config
 
 
 def _load_data(dataset_id: int) -> pd.DataFrame:
     dataset = openml.datasets.get_dataset(dataset_id)
     X, _, _, _ = dataset.get_data(
-        target=dataset.default_target_attribute, dataset_format="dataframe"
+        target=dataset.default_target_attribute,
+        dataset_format="dataframe",
     )
-    X = X.drop(columns=["workclass", "occupation", "native-country"])
-    return X
+    return X.drop(columns=["workclass", "occupation", "native-country"])
 
 
 def row_upper(i: int, df: np.ndarray, gower) -> np.ndarray:
-    """
-    Calculate distances for a single row against all other rows, but only for the upper triangle of the matrix.
-    """
+    """Calculate distances for a single row against all other rows, but only for the upper triangle of the matrix."""
     xi = df[i]
     return np.fromiter(
         (gower(xi, df[j]) if j > i else 0.0 for j in range(len(df))),
@@ -37,12 +36,17 @@ def row_upper(i: int, df: np.ndarray, gower) -> np.ndarray:
 
 
 def gower_joblib_upper(
-    DATASET_ID: int, n_rows: int, feature_types: dict
+    DATASET_ID: int,
+    n_rows: int,
+    feature_types: dict,
 ) -> tuple[np.ndarray, float]:
     gc.collect()
     data: pd.DataFrame = _load_data(DATASET_ID)
     data = data.head(n_rows)
-    gower = Gower(feature_types=feature_types).fit(data)
+    cfg = Config(
+        feature_types=feature_types,
+    )
+    gower = Gower(cfg).fit(data)
     data = data.to_numpy()
 
     matrix = np.zeros((len(data), len(data)), dtype=np.float32)
@@ -65,12 +69,17 @@ def gower_joblib_upper(
 
 
 def gower_scipy(
-    DATASET_ID: int, n_rows: int, feature_types: dict
+    DATASET_ID: int,
+    n_rows: int,
+    feature_types: dict,
 ) -> tuple[np.ndarray, float]:
     gc.collect()
     data: pd.DataFrame = _load_data(DATASET_ID)
     data = data.head(n_rows)
-    gower = Gower(feature_types=feature_types).fit(data)
+    cfg = Config(
+        feature_types=feature_types,
+    )
+    gower = Gower(cfg).fit(data)
 
     start_time = time.perf_counter()
     dist_array = pdist(data, metric=gower)
@@ -85,16 +94,24 @@ def gower_scipy(
 
 
 def gower_sklearn(
-    DATASET_ID: int, n_rows: int, feature_types: dict
+    DATASET_ID: int,
+    n_rows: int,
+    feature_types: dict,
 ) -> tuple[np.ndarray, float]:
     gc.collect()
     data: pd.DataFrame = _load_data(DATASET_ID)
     data = data.head(n_rows)
-    gower = Gower(feature_types=feature_types).fit(data)
+    cfg = Config(
+        feature_types=feature_types,
+    )
+    gower = Gower(cfg).fit(data)
 
     start_time = time.perf_counter()
     matrix_sklearn = pairwise_distances(
-        data, metric=gower, n_jobs=cpu_count(), ensure_all_finite=False
+        data,
+        metric=gower,
+        n_jobs=cpu_count(),
+        ensure_all_finite=False,
     )
     end_time = time.perf_counter()
 
@@ -106,7 +123,10 @@ def gower_sklearn(
 
 
 def _compare_matrices(
-    mat1: np.ndarray, mat2: np.ndarray, mat3: np.ndarray, tolerance: float = 1e-5
+    mat1: np.ndarray,
+    mat2: np.ndarray,
+    mat3: np.ndarray,
+    tolerance: float = 1e-5,
 ) -> bool:
     if not np.allclose(mat1, mat2, atol=tolerance):
         sys.exit(1)
@@ -139,7 +159,7 @@ def plot_results(
                     "Number of Rows": n,
                     "Mean Time (s)": mean_time,
                     "Std Time (s)": std_time,
-                }
+                },
             )
 
     time_df = pd.DataFrame(time_data)
@@ -171,7 +191,7 @@ def plot_results(
     plt.xlabel("Number of Rows")
     plt.ylabel("Execution Time (s)")
     plt.title(
-        "Execution Time vs Number of Rows within Dataset (Number of Rows x 12 Features)"
+        "Execution Time vs Number of Rows within Dataset (Number of Rows x 12 Features)",
     )
     plt.grid(True)
     plt.tight_layout()
@@ -215,28 +235,37 @@ def main() -> None:
                 pbar.update(1)
 
                 gower_joblib_upper_matrix, joblib_time = gower_joblib_upper(
-                    DATASET_ID, n_rows, feature_types
+                    DATASET_ID,
+                    n_rows,
+                    feature_types,
                 )
                 all_times.setdefault("joblib (multiprocessing)", {}).setdefault(
-                    n_rows, []
+                    n_rows,
+                    [],
                 ).append(joblib_time)
 
                 gower_scipy_matrix, scipy_time = gower_scipy(
-                    DATASET_ID, n_rows, feature_types
+                    DATASET_ID,
+                    n_rows,
+                    feature_types,
                 )
                 all_times.setdefault("scipy", {}).setdefault(n_rows, []).append(
-                    scipy_time
+                    scipy_time,
                 )
 
                 gower_sklearn_matrix, sklearn_time = gower_sklearn(
-                    DATASET_ID, n_rows, feature_types
+                    DATASET_ID,
+                    n_rows,
+                    feature_types,
                 )
                 all_times.setdefault("sklearn", {}).setdefault(n_rows, []).append(
-                    sklearn_time
+                    sklearn_time,
                 )
 
                 _compare_matrices(
-                    gower_joblib_upper_matrix, gower_scipy_matrix, gower_sklearn_matrix
+                    gower_joblib_upper_matrix,
+                    gower_scipy_matrix,
+                    gower_sklearn_matrix,
                 )
 
                 del (
