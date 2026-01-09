@@ -52,11 +52,11 @@ uv add gower-metric
 
 ## Quick start
 
-Gower metric, by definition, is being designed to work with mixed, non-changed data types. We provide simple, two methods to how user can use algorithm. First, on original data. Second, on transformed ones (numericly encoded).
+Gower metric, by definition, is being designed to work with mixed, non-changed data types. We provide simple, two methods to how user can use algorithm. First, on original data. Second, on transformed ones (numerically encoded).
 
 ### Original data
 
-In this scenarion, user operates on imported, original and unchanged data.
+In this scenario, user operates on imported, original and unchanged data.
 ```python
 import numpy as np
 

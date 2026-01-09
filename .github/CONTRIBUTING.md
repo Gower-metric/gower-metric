@@ -71,7 +71,7 @@ tox -e py310
 Where `py310` is the python version you want to use. You can also run tests for other python versions by replacing `py310` with `py311`, `py312`, etc. You can also run tests for all python versions using following command:
 
 ```bash
-tox -e py310,py311,py312,py313,py314
+tox -r -e py310,py311,py312,py313,py314
 ```
 
 > [!NOTE]
