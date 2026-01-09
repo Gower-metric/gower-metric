@@ -61,9 +61,9 @@ KNeighborsClassifier
     print("Classification Report:")
     print(classification_report(y_test, y_pred))
 
---------
-HDBSCAN
---------
+--------------
+HDBSCAN Usage
+--------------
 
 .. code-block:: python
 

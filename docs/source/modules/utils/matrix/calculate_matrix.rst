@@ -6,3 +6,4 @@ Calculate matrix
     :members:
     :undoc-members:
     :show-inheritance:
+    :noindex:

@@ -275,9 +275,9 @@ Diabetes Dataset
      - NaN
 
 
---------
-HDBSCAN
---------
+-------------------
+HDBSCAN Comparison
+-------------------
 
 
 Adult Dataset

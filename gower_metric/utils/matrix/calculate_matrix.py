@@ -26,7 +26,7 @@ def __compute_row_upper(
         i (int): row index.
         X_arr (np.ndarray): data array of shape (n_samples, n_features).
         n (int): number of samples.
-        model (Gower): fitted Gower instance.
+        model (gower_metric.Gower): fitted Gower instance.
         data_type (type[np.integer | np.floating]): data type for the output row array.
         row_type (str): type of row to compute, distance or similarity. Defaults to "distance".
 
@@ -70,7 +70,7 @@ def _get_results_from_joblib(
         n_jobs (int): number of parallel jobs.
         verbose (int): whether to show progress bar.
         data_type (type[np.floating | np.integer]): data type for the output rows.
-        model (Gower): fitted Gower instance.
+        model (gower_metric.Gower): fitted Gower instance.
         matrix_type (str): type of matrix to compute, distance or similarity. Defaults to "distance".
         backend (str): joblib backend to use. Defaults to "loky".
         n (int): number of samples (if 0, will be set to arr.shape[0]).
@@ -115,7 +115,7 @@ def get_full_matrix(
     """Compute symmetric pairwise Gower distance matrix using joblib (parallel).
 
     Args:
-        self (Gower): Fitted Gower instance.
+        self (gower_metric.Gower): Fitted Gower instance.
         X (pd.DataFrame | np.ndarray): shape of (n_samples, n_features).
         data_type (type[np.floating | np.integer]): data type for the output distance matrix, default np.float32.
         n_jobs (int): number of parallel jobs to run, -1 means using all processors. Default is -1.

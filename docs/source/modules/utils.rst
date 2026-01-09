@@ -10,6 +10,7 @@ Utils
 .. toctree::
    :maxdepth: 1
 
+   utils/aux
    utils/cat_ord_ut
    utils/knn_bandwidth
    utils/missing
