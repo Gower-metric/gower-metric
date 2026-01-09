@@ -29,19 +29,27 @@ classifiers = [
     "Typing :: Typed",
 ]
 
+[tool.setuptools.packages.find]
+include = ["gower_metric*"]
 
 [tool.setuptools]
-packages = ["gower_metric", "gower_metric.core", "gower_metric.distances", "gower_metric.utils", "gower_metric.utils.kde_types", "gower_metric.utils.matrix", "gower_metric.weights"]
 include-package-data = true
 
 [tool.uv.workspace]
 members = [
     ".",
-    ".",
 ]
 
 [tool.uv.sources]
 gower-metric = { workspace = true }
+
+[tool.uv]
+override-dependencies = [
+    "urllib3>=2.6.3",
+    "filelock>=3.20.1",
+    "pip>=25.3",
+    "setuptools>=78.1.1",
+]
 
 [dependency-groups]
 dev = [
@@ -70,6 +78,7 @@ tests = [
     "numpy>=2.2.6",
     "pandas>=2.3.1",
     "tqdm>=4.67.1",
+    "pydantic>=2.12.5",
 ]
 
 r_env_tests = [
@@ -77,6 +86,7 @@ r_env_tests = [
     "numpy>=2.2.6",
     "openpyxl>=3.1.5",
     "pandas>=2.3.1",
+    "pydantic>=2.12.5",
     "pytest>=8.4.1",
     "rpy2>=3.6.1",
     "scikit-learn>=1.7.1",
@@ -103,6 +113,7 @@ benchmark = [
     "openml>=0.15.1",
     "openpyxl>=3.1.5",
     "pandas>=2.3.3",
+    "pydantic>=2.12.5",
     "scikit-learn>=1.7.2",
     "seaborn>=0.13.2",
     "tqdm>=4.67.1",

@@ -84,8 +84,3 @@ HDBSCAN
     labels = clusterer.labels_
     silhouette_avg = silhouette_score(df_transformed, labels)
     print(f"Silhouette Score: {silhouette_avg:.2f}")
-
-.. automodule::
-    :members:
-    :undoc-members:
-    :show-inheritance:

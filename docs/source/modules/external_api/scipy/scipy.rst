@@ -54,8 +54,3 @@ Cophenet cluster hierarchy
 
     # print the results if needed
     print(f"{squareform(cophenet(Z))}")
-
-.. automodule::
-    :members:
-    :undoc-members:
-    :show-inheritance:

@@ -2,34 +2,7 @@
 Advanced examples
 ==================
 
-In this section we will show how to use weighting of features, calculating similarities instead of distances, Podani's optimization and more.
-
--------------------------
-Calculating similarities
--------------------------
-
-Package provides an option to calculate similarities instead of distances.
-
-.. code-block:: python
-
-    import numpy as np
-
-    from gower_metric import Gower
-    from gower_metric.core.config import Config
-
-    data = np.array([[1, 'a'], [2, 'b'], [3, 'a'], [4, 'c']], dtype=object)
-
-    feature_types = {
-        0: "ratio_scale_interval",
-        1: "categorical_nominal",
-    }
-
-    cfg = Config(
-        feature_types=feature_types,
-    )
-    gower = Gower(cfg).fit(data)
-    
-    similarity = gower.similarity(data[0], data[1])
+In this section we will show how to use weighting of features, categorical ordinal data type and Podani's optimization.
 
 ----------------
 Passing weights
@@ -142,8 +115,3 @@ On top of the examples before, we can also play with other class functionalities
     )
     gower = Gower(cfg)
     gower.fit(data)
-
-.. automodule:: 
-    :members:
-    :undoc-members:
-    :show-inheritance:

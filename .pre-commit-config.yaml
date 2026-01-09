@@ -14,11 +14,7 @@ repos:
         args: [
           --vulnerability-service, "pypi",
           --cache-dir, ".pip_audit_cache",
-          --ignore-vuln, "GHSA-5rjg-fvgr-3xxf",
-          --ignore-vuln, "GHSA-4xh5-x5gv-qwph",
-          --ignore-vuln, "GHSA-gm62-xv2j-4w53",
-          --ignore-vuln, "GHSA-2xpw-w6gg-jr37",
-          --ignore-vuln, "GHSA-w853-jp5j-5j7f",
+          --ignore-vuln, "GHSA-38jv-5279-wg99", # Decompression-bomb safeguards bypassed when following HTTP redirects (streaming API)
         ]
 
   - repo: https://github.com/astral-sh/ruff-pre-commit
