@@ -43,9 +43,3 @@ More information
 -----------------
 
 For more detailed description, please refer to `this <https://github.com/mwardynski/gower-metric/blob/refactor_newapi/comparison/README.md>`_ file.
-
-
-.. automodule::
-    :members:
-    :undoc-members:
-    :show-inheritance:

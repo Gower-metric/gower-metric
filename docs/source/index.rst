@@ -8,18 +8,16 @@ derived as the complement of the Gower's similarity coefficient.
 Main features include:
 
 - Support for mixed data types (categorical, numerical, binary)
-- Podani's support
-- Efficient computation using NumPy framework
-- Numerical friendly thanks to transform call and joblib support
-- SciPy sparse matrix support
-- Easy integration with pandas DataFrames
+- Easy integration with pandas DataFrames and NumPy arrays
 - Customizable weighting for different variable types
+- SciPy sparse matrix support
+- Podani's support
 - Friendly MIT License
 
 .. note::
 
    This project is under active development. If you would like to contribute,
-   or if you find any issues, please visit the main [repository]() and 
+   or if you find any issues, please visit the main `repository <https://github.com/mwardynski/gower-metric>`_ and 
    submit a pull request or open an issue.
 
 Installation, user guide, and API reference can be found in the respective sections. We also provide separate section 
@@ -48,8 +46,8 @@ We understand that there are still some features missing in the current version 
 - GPU parallelization support. 
    Leveraging GPU capabilities can significantly speed up computations, especially for large datasets. We plan to explore libraries like CuPy or RAPIDS for this purpose.
 - Conditional distances support. 
-   Here is the problem. For now, conditional distances optimization is not being done iteratively. It compares calculated results with set, by user, threshold only once.
-   It is possible to make it iterative, so the algorithm will keep changing the threshold until it reaches desired state. However,
+   Here is the problem. For now, conditional distances optimization is not being done iteratively. It compares calculated results with set, by user, threshold.
+   That's it. It is possible to make it iterative, so the algorithm will keep changing the threshold until it reaches desired state. However,
    this will require more numerical speed optimizations. More on that `here <https://arxiv.org/abs/2101.02481>`_ (chapter 3).
 - Advanced weights optimization techniques. 
    Currently, the package supports basic weight handling methodology. We plan to implement more advanced handling, saving and loading weights to/from files.
@@ -63,27 +61,7 @@ If you have any suggestions or would like to contribute to these improvements, p
    :hidden:
 
    installation
-
-.. toctree::
-   :maxdepth: 1
-   :hidden:
-
    user_guide
-
-.. toctree::
-   :maxdepth: 1
-   :hidden:
-
    api_reference
-
-.. toctree::
-   :maxdepth: 1
-   :hidden:
-
    compatibility
-
-.. toctree::
-   :maxdepth: 1
-   :hidden:
-
    metric_description

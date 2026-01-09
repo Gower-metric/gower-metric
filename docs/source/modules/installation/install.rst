@@ -13,8 +13,3 @@ or add package to your project dependencies using uv:
 .. code-block:: console
 
    uv add gower-metric
-
-.. automodule::
-    :members:
-    :undoc-members:
-    :show-inheritance:

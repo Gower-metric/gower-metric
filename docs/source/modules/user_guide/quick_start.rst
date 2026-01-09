@@ -83,8 +83,3 @@ regarding Gower's metric, you can check the :ref:`metric description <metric_des
    :hidden:
 
    config
-
-.. automodule:: 
-    :members:
-    :undoc-members:
-    :show-inheritance:

@@ -29,19 +29,27 @@ classifiers = [
     "Typing :: Typed",
 ]
 
+[tool.setuptools.packages.find]
+include = ["gower_metric*"]
 
 [tool.setuptools]
-packages = ["gower_metric", "gower_metric.core", "gower_metric.distances", "gower_metric.utils", "gower_metric.utils.kde_types", "gower_metric.utils.matrix", "gower_metric.weights"]
 include-package-data = true
 
 [tool.uv.workspace]
 members = [
     ".",
-    ".",
 ]
 
 [tool.uv.sources]
 gower-metric = { workspace = true }
+
+[tool.uv]
+override-dependencies = [
+    "urllib3>=2.6.3",
+    "filelock>=3.20.1",
+    "pip>=25.3",
+    "setuptools>=78.1.1",
+]
 
 [dependency-groups]
 dev = [
