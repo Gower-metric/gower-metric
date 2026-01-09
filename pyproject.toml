@@ -49,6 +49,7 @@ override-dependencies = [
     "filelock>=3.20.1",
     "pip>=25.3",
     "setuptools>=78.1.1",
+    "fonttools>=4.60.2",
 ]
 
 [dependency-groups]
