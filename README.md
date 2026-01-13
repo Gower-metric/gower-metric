@@ -91,6 +91,7 @@ such as scikit-learn and scipy. More about how to use them with gower-metric can
 import numpy as np
 
 from gower_metric import Gower
+from gower_metric.core.config import Config
 
 data = np.array([[1, 'a', 3.5], [2, 'b', 4.0], [3, 'a', 2.5], [4, 'c', 5.0]], dtype=object)
 
