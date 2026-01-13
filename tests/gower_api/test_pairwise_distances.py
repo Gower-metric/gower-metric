@@ -44,10 +44,6 @@ def test_scikit_learn_paiwise_distances() -> None:
     gower = Gower(cfg).fit(df)
     transformed_df = gower.transform(df)
 
-    df = df.to_numpy()
-    if isinstance(transformed_df, pd.DataFrame):
-        transformed_df = transformed_df.to_numpy()
-
     matrix_scikit = pairwise_distances(
         transformed_df,
         metric=gower,
@@ -55,7 +51,7 @@ def test_scikit_learn_paiwise_distances() -> None:
         ensure_all_finite=False,
     )
 
-    matrix_gower = gower.matrix(df, backend="loky")
+    matrix_gower = gower.matrix(transformed_df, backend="loky")
 
     assert matrix_scikit.shape == (n_rows, n_rows), (
         "The shape of the pairwise distance matrix is incorrect."

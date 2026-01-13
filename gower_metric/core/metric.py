@@ -24,6 +24,7 @@ from gower_metric.utils.knn_bandwidth import knn_bandwidth
 from gower_metric.utils.matrix.calculate_matrix import get_full_matrix
 from gower_metric.utils.ranges import get_numeric_ranges
 from gower_metric.utils.to_array import to_array
+from gower_metric.utils.transformation import validate_if_transformed
 from gower_metric.weights.weights import get_weights
 
 
@@ -101,6 +102,7 @@ class Gower:
         )
 
         self._is_fitted = False
+        self._is_transformed = False
 
     def fit(self, X: pd.DataFrame | np.ndarray) -> "Gower":
         """Fit the Gower model by computing numeric feature ranges.
@@ -114,6 +116,7 @@ class Gower:
 
         Raises:
             ValueError: For incorrect input data and configuration parameters.
+            ValueError: If input data is already transformed.
 
         Example:
             >>> import pandas as pd
@@ -399,16 +402,19 @@ class Gower:
                 v: v for v in self.cat_ord_metadata[col_idx]["ranks"].values()
             }
 
-        return (
-            pd.DataFrame(
+        self._is_transformed = True
+        if is_df:
+            df_transformed = pd.DataFrame(
                 transformed_data,
                 columns=df.columns,
                 index=df.index,
                 dtype=np.float64,
             )
-            if is_df
-            else transformed_data.astype(np.float64)
-        )
+            df_transformed.attrs["transformed"] = True
+            return df_transformed
+        dtype = np.dtype(np.float32, metadata={"transformed": True})
+
+        return transformed_data.astype(dtype)
 
     def fit_transform(self, X: pd.DataFrame | np.ndarray) -> pd.DataFrame | np.ndarray:
         """Fit to data, then transform it.
@@ -457,6 +463,10 @@ class Gower:
         if not self._is_fitted:
             msg = "Must call .fit(X) before computing distances."
             raise IllegalStateError(msg)
+
+        if self._is_transformed:
+            validate_if_transformed(a)
+            validate_if_transformed(b)
 
         x = to_array(a)
         y = to_array(b)
@@ -703,6 +713,9 @@ class Gower:
             self.fit(X)
             msg = "Calling .fit(X) inside .matrix(X)."
             raise Warning(msg)
+
+        if self._is_transformed:
+            validate_if_transformed(X)
 
         return get_full_matrix(
             self,
