@@ -24,7 +24,10 @@ from gower_metric.utils.knn_bandwidth import knn_bandwidth
 from gower_metric.utils.matrix.calculate_matrix import get_full_matrix
 from gower_metric.utils.ranges import get_numeric_ranges
 from gower_metric.utils.to_array import to_array
-from gower_metric.utils.transformation import validate_if_transformed
+from gower_metric.utils.transformation import (
+    validate_if_double_transformed,
+    validate_if_transformed,
+)
 from gower_metric.weights.weights import get_weights
 
 
@@ -340,6 +343,8 @@ class Gower:
         if not self._is_fitted:
             msg = "Operation not allowed: model is not fitted"
             raise IllegalStateError(msg)
+
+        validate_if_double_transformed(self._is_transformed)
 
         is_df = isinstance(X, pd.DataFrame)
         if isinstance(X, pd.DataFrame):

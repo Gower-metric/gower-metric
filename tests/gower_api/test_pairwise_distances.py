@@ -5,6 +5,8 @@ from sklearn.metrics import pairwise_distances
 from gower_metric import Gower
 from gower_metric.core.config import Config
 
+DTYPE = np.float64
+
 
 def test_scikit_learn_paiwise_distances() -> None:
     n_rows = 500
@@ -40,6 +42,7 @@ def test_scikit_learn_paiwise_distances() -> None:
 
     cfg = Config(
         feature_types=feature_types,
+        data_type=DTYPE,
     )
     gower = Gower(cfg).fit(df)
     transformed_df = gower.transform(df)

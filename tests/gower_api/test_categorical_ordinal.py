@@ -5,6 +5,8 @@ import pytest
 from gower_metric import Gower
 from gower_metric.core.config import Config
 
+DTYPE = np.float32
+
 
 def test_categorical_ordinal_kaufman_uniform_ndarray() -> None:
     data = np.array([["low"], ["medium"], ["high"], ["low"]], dtype=object)
@@ -14,6 +16,7 @@ def test_categorical_ordinal_kaufman_uniform_ndarray() -> None:
 
     cfg = Config(
         feature_types={0: "categorical_ordinal"},
+        data_type=DTYPE,
         categorical_ordinal_values_order=categorical_ordinal_values_order,
     )
     gower = Gower(cfg)
@@ -26,7 +29,7 @@ def test_categorical_ordinal_kaufman_uniform_ndarray() -> None:
             [1.0, 0.5, 0.0, 1.0],
             [0.0, 0.5, 1.0, 0.0],
         ],
-        dtype=float,
+        dtype=DTYPE,
     )
 
     for i in range(transformed_data.shape[0]):
@@ -44,7 +47,7 @@ PODANI_EXPECTED_RESULTS = np.array(
         [1.0, 2 / 3, 0.0, 1.0],
         [0.0, 1 / 3, 1.0, 0.0],
     ],
-    dtype=float,
+    dtype=DTYPE,
 )
 
 
@@ -56,6 +59,7 @@ def test_categorical_ordinal_podani_uniform_ndarray() -> None:
 
     cfg = Config(
         feature_types={0: "categorical_ordinal"},
+        data_type=DTYPE,
         categorical_ordinal_values_order=categorical_ordinal_values_order,
         categorical_ordinal_calculation_type="podani",
     )
@@ -81,6 +85,7 @@ def test_categorical_ordinal_podani_uniform_df() -> None:
 
     cfg = Config(
         feature_types={"level": "categorical_ordinal"},
+        data_type=DTYPE,
         categorical_ordinal_values_order=categorical_ordinal_values_order,
         categorical_ordinal_calculation_type="podani",
     )
@@ -88,7 +93,7 @@ def test_categorical_ordinal_podani_uniform_df() -> None:
     transformed_data = gower.fit_transform(data)
 
     if isinstance(transformed_data, pd.DataFrame):
-        assert (transformed_data.dtypes == "float").all()
+        assert (transformed_data.dtypes == "float32").all()
 
         for i in range(transformed_data.shape[0]):
             for j in range(transformed_data.shape[0]):

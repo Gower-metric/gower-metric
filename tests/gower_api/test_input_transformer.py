@@ -6,6 +6,8 @@ from gower_metric import Gower
 from gower_metric.core.config import Config
 from gower_metric.core.exceptions import IllegalStateError
 
+DTYPE = np.float16
+
 
 def test_transform_before_fit() -> None:
     data = np.array([[0], [1], [0]], dtype=object)
@@ -44,6 +46,7 @@ def test_transform_with_np_array() -> None:
             3: "categorical_nominal",
             4: "ratio_scale_interval",
         },
+        data_type=DTYPE,
         categorical_ordinal_values_order=categorical_ordinal_values_order,
     )
     gower = Gower(cfg).fit(data)
@@ -56,7 +59,7 @@ def test_transform_with_np_array() -> None:
             [2.0, 0.0, 1.0, 0.0, 0.95],
             [0.0, 1.0, 0.0, 2.0, 1.11],
         ],
-        dtype=float,
+        dtype=DTYPE,
     )
 
     np.testing.assert_array_equal(transformed_data, expected_data)
@@ -85,6 +88,7 @@ def test_transform_with_df() -> None:
             "type": "categorical_nominal",
             "price": "ratio_scale_interval",
         },
+        data_type=DTYPE,
         categorical_ordinal_values_order=categorical_ordinal_values_order,
     )
     gower = Gower(cfg).fit(data)
@@ -98,6 +102,7 @@ def test_transform_with_df() -> None:
             "type": [0.0, 1.0, 0.0, 2.0],
             "price": [4.5, 1.8, 0.95, 1.11],
         },
+        dtype=DTYPE,
     )
 
     pd.testing.assert_frame_equal(transformed_data, expected_data)
