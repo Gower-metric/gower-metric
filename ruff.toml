@@ -36,6 +36,7 @@ ignore = [
 "examples/**" = [
     "D101",
     "D103",
+    "ERA001", # commented code sections
 ]
 
 "tests/**" = [

@@ -426,6 +426,7 @@ class Gower:
         # Note: NumPy dtype metadata is not reliably preserved across operations,
         # so we avoid using it to track transformation state.
         return transformed_data.astype(self.data_type)
+
     def fit_transform(self, X: pd.DataFrame | np.ndarray) -> pd.DataFrame | np.ndarray:
         """Fit to data, then transform it.
 
