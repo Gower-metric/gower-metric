@@ -86,6 +86,8 @@ On top of the examples before, we can also play with other class functionalities
 
     from gower_metric import Gower
 
+    DTYPE = np.float64
+
     data = np.array([
         [1, 'low', 3.5],
         [2, 'medium', 4.0],
@@ -105,6 +107,7 @@ On top of the examples before, we can also play with other class functionalities
 
     cfg = Config(
         feature_types=feature_types,
+        data_type=DTYPE,
         categorical_ordinal_values_order=ordinal_mappings,
         categorical_ordinal_calculation_type="podani",
         scale_method="iqr",

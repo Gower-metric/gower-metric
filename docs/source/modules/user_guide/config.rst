@@ -31,6 +31,7 @@ All parameters listed below are optional. If not provided, default values will b
 some of these configuration flags depend on one another. It will be clearly indicated in the description of each parameter.
 
 - ``feature_weights (dict[int, float] | str | None)`` - Optional mapping of column indices (or names) to a float weight. If None or "uniform", all features will have equal weight of 1. Otherwise, the weights must be a dictionary mapping feature indices to weights, i.e. {0: 1.0, 1: 2.0}.
+- ``data_type (type[np.integer | np.floating])`` - Optional flag to determine the data type that would be used during all calculation (and returned). If omitted, default to np.float32.
 - ``scale_method (str)`` - Method used for scaling numerical features. Possible values are `range` and `iqr`. Defaults to `range`. If `range` is selected, numerical features will be scaled to the [0, 1] range. If `iqr` is selected, numerical features will be scaled using the interquartile range (IQR) method.
 - ``scale_window (str | None)`` - Scaling window implementation flag for numeric or ratio features. Can be `None`, `kde` or `kNN`. Default is `None` if omitted.
 - ``scale_window_type (str | None)`` - Type of scaling window to be used. Possible values are `None` or `silverman`. Default is `None`. This parameter is only relevant if `scale_window` is set to `kde`. In the future, more `kde` types might be added.

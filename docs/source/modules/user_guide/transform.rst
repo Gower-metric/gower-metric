@@ -62,9 +62,12 @@ For convenience, Gower also implements ``fit_transform`` method, which combines 
 
    transformed_data = gower.fit_transform(data)
 
-.. warning::
+---------------------------------------
+Do we validate if data is transformed?
+---------------------------------------
 
-    Under the hood, the ``fit`` method learns the mapping of categorical ordinal values to their numerical representation.
-    Therefore, calling ``transform`` on the same data before and after re-fitting the instance may result in different numerical representations
-    or even NaN values. The same applies to the ``fit_transform`` method. If your data does not contain any categorical ordinal features,
-    this warning may not apply (we have not yet implemented tests for this scenario).
+Yes, and no. Here is the catch, we validate if data is transformed only when dealing with pandas DataFrames. Why? Because they support
+metadata field within the DataFrame object, unlike numpy arrays (well, there has been such feature but is no longer supported).
+
+In order to maintain compatibility with external libraries API, there are no more advanced checks of non-dataframe data. Please be aware of that.
+``Thus user should not call Gower instance on original data after transformation!``
