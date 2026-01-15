@@ -1,5 +1,6 @@
 from typing import Literal, get_args
 
+import numpy as np
 from pydantic import BaseModel, ValidationInfo, field_validator
 
 FeatureType = Literal[
@@ -11,6 +12,7 @@ FeatureType = Literal[
     "ratio_scale_interval",
 ]
 WeightsType = Literal["uniform"] | dict[int, float]
+DataType = type[np.integer] | type[np.floating]
 ScaleMethod = Literal["range", "iqr"]
 ScaleWindow = Literal["kde", "kNN"]
 ScaleWindowType = Literal["silverman"]
@@ -31,6 +33,8 @@ class Config(BaseModel):
             If None or "uniform", all features will have equal weight of 1. Otherwise,
             the weights must be a dictionary mapping feature indices to weights, i.e.
             {0: 1.0, 1: 2.0}.
+        data_type (DataType): Optional data type required for __call__, transformation and matrix method.
+            If omitted, np.float32 will be used.
         scale_method (str): Optional scaling method for numeric features. Can be 'range' or 'iqr'.
             Default is 'range' if omitted.
         scale_window (str | None): Optional scaling window for numeric or ratio features. Can be None, 'kde'
@@ -58,6 +62,7 @@ class Config(BaseModel):
 
     feature_types: dict[int | str, str]
     feature_weights: WeightsType | None = {}
+    data_type: DataType | None = None
     scale_method: ScaleMethod = "range"
     scale_window: ScaleWindow | None = None
     scale_window_type: ScaleWindowType | None = None
@@ -118,6 +123,31 @@ class Config(BaseModel):
             if not isinstance(v, (str, dict)):
                 msg = f"weights must be str, dict, or None, got {type(v).__name__}"
                 raise ValueError(msg)
+        return v
+
+    @field_validator("data_type")
+    @classmethod
+    def check_data_type(cls, v: DataType) -> DataType:
+        """Validate the data type for numeric features.
+
+        Args:
+            v (DataType): The data type to check.
+
+        Returns:
+            v (DataType): The validated data type.
+
+        Raises:
+            ValueError: If the data type is not supported.
+
+        """
+        if v is None:
+            return np.float32
+
+        if not (issubclass(v, np.integer) or issubclass(v, np.floating)):
+            msg = (
+                f"data_type must be a subclass of np.integer or np.floating, got {v!r}"
+            )
+            raise TypeError(msg)
         return v
 
     @field_validator("scale_method")

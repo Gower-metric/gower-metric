@@ -72,6 +72,10 @@ class Gower:
 
         self.feature_weights = config.feature_weights
 
+        self.data_type: type[np.integer | np.floating] = (
+            config.data_type if config.data_type is not None else np.float32
+        )
+
         self.numeric_indices: list[int] = []
         self.categorical_nominal_indices: list[int] = []
         self.categorical_ordinal_indices: list[int] = []
@@ -101,8 +105,8 @@ class Gower:
             config.conditional_distances_threshold_coeff
         )
 
-        self._is_fitted = False
-        self._is_transformed = False
+        self._is_fitted: bool = False
+        self._is_transformed: bool = False
 
     def fit(self, X: pd.DataFrame | np.ndarray) -> "Gower":
         """Fit the Gower model by computing numeric feature ranges.
@@ -368,28 +372,30 @@ class Gower:
                     categories=[
                         self.categorical_ordinal_values_order[col_idx],
                     ],
-                    dtype=float,
+                    dtype=self.data_type,
                     handle_unknown="use_encoded_value",
                     unknown_value=np.nan,
                 )
                 transformed_col = (
                     enc.fit_transform(np.array(col).reshape(-1, 1))
-                    .astype(float)
+                    .astype(self.data_type)
                     .ravel()
                 )
 
             elif ftype == "categorical_nominal":
                 enc = OrdinalEncoder(
-                    dtype=float,
+                    dtype=self.data_type,
                     handle_unknown="use_encoded_value",
                     unknown_value=np.nan,
                 )
                 enc.fit(np.array(col).reshape(-1, 1))
                 transformed_col = (
-                    enc.transform(np.array(col).reshape(-1, 1)).astype(float).ravel()
+                    enc.transform(np.array(col).reshape(-1, 1))
+                    .astype(self.data_type)
+                    .ravel()
                 )
             else:
-                transformed_col = col.astype(float)
+                transformed_col = col.astype(self.data_type)
 
             transformed_columns.append(transformed_col)
 
@@ -408,11 +414,11 @@ class Gower:
                 transformed_data,
                 columns=df.columns,
                 index=df.index,
-                dtype=np.float64,
+                dtype=self.data_type,
             )
             df_transformed.attrs["transformed"] = True
             return df_transformed
-        dtype = np.dtype(np.float32, metadata={"transformed": True})
+        dtype = np.dtype(self.data_type, metadata={"transformed": True})
 
         return transformed_data.astype(dtype)
 
@@ -430,7 +436,7 @@ class Gower:
         self.fit(X)
         return self.transform(X)
 
-    def __call__(self, a: Any, b: Any) -> float:
+    def __call__(self, a: Any, b: Any) -> np.floating | np.integer:
         """Compute the Gower distance between two records.
 
         Args:
@@ -438,7 +444,7 @@ class Gower:
             b (Any): Second record of data.
 
         Returns:
-            float: Gower distance in [0,1], or np.nan if no features are comparable.
+            np.floating | np.integer: Gower distance in [0,1], or np.nan if no features are comparable.
 
         Raises:
             IllegalStateError: If fit(X) was not called before computing distance.
@@ -535,13 +541,13 @@ class Gower:
                 cat_cnt += cat_ord_count[0, 0]
 
             if cat_cnt == 0:
-                return float("nan")
+                return self.data_type(np.nan)
 
             cat_dist = cat_sum / cat_cnt
             threshold = self.conditional_distances_threshold_coeff / self.p_cat
 
             if cat_dist > threshold:
-                return 1.0
+                return self.data_type(1.0)
 
         num_sum, num_count = numeric_component(
             Xn,
@@ -587,11 +593,11 @@ class Gower:
             )
 
         if total_count[0, 0] == 0:
-            return float("nan")
+            return self.data_type(np.nan)
 
-        return float(total_sum[0, 0] / total_count[0, 0])
+        return self.data_type(total_sum[0, 0] / total_count[0, 0])
 
-    def similarity(self, a: Any, b: Any) -> float:
+    def similarity(self, a: Any, b: Any) -> np.floating | np.integer:
         """Compute the Gower similarity between two records.
 
         Args:
@@ -623,7 +629,7 @@ class Gower:
     def matrix(
         self,
         X: pd.DataFrame | np.ndarray,
-        data_type: type[np.floating | np.integer] = np.float32,
+        data_type: type[np.floating | np.integer] | None = None,
         n_jobs: int = -1,
         verbose: int = 0,
         matrix_type: str = "distance",
@@ -640,7 +646,8 @@ class Gower:
 
         Args:
             X (pd.DataFrame | np.ndarray): shape of (n_samples, n_features).
-            data_type (type[np.floating | np.integer]): data type for the output distance matrix, default np.float32.
+            data_type (type[np.floating | np.integer] | None): data type used for the output distance matrix.
+                If None, uses the data_type from the Gower instance configuration.
             n_jobs (int): number of parallel jobs to run, -1 means using all processors. Default is -1.
             verbose (int): whether to show tqdm progress bar. Default is 0 (no progress bar).
             matrix_type (str): Type of matrix to compute, either 'distance' or 'similarity'.
@@ -716,6 +723,9 @@ class Gower:
 
         if self._is_transformed:
             validate_if_transformed(X)
+
+        if data_type is None:
+            data_type = self.data_type
 
         return get_full_matrix(
             self,
