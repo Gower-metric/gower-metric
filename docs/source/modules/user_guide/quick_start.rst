@@ -82,7 +82,7 @@ regarding Gower's metric, you can check the :ref:`metric description <metric_des
 Should I do data preprocessing?
 --------------------------------
 
-Yes, you should. For instance, missing values should be enything detectable by python's ``math.isnan`` function, panda's ``pd.isna`` or numpy's ``np.isnan``.
+Yes, you should. For instance, missing values should be anything detectable by python's ``math.isnan`` function, panda's ``pd.isna`` or numpy's ``np.isnan``.
 For example, if you have some ``?`` values in your dataset, you should replace them with ``np.nan``.
 
 In terms of binary data, it should be either ``0`` (``0.0``), ``1`` (``1.0``), ``True`` - ``False``, ``Yes`` - ``No``. Why? To ensure
