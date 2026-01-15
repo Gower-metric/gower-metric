@@ -26,8 +26,6 @@ def validate_if_transformed(X: pd.DataFrame | pd.Series) -> None:
         except AttributeError:
             msg = "Input data must be transformed."
             raise IllegalStateError(msg) from None
-    else:
-        pass
 
 
 def validate_if_double_transformed(is_transformed: bool) -> None:
