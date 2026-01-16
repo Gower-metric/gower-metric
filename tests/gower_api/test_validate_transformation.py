@@ -1,8 +1,7 @@
 import pandas as pd
 import pytest
 
-from gower_metric import Gower
-from gower_metric.core.config import Config
+from gower_metric import Config, Gower
 from gower_metric.core.exceptions import IllegalStateError
 
 

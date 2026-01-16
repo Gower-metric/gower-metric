@@ -48,8 +48,7 @@ class Gower:
 
         Example:
             >>> import pandas as pd
-            >>> from gower_metric import Gower
-            >>> from gower_metric.core.config import Config
+            >>> from gower_metric import Config, Gower
             >>> data = pd.DataFrame({
             ...     'feature1': [[1.0], [2.0], [3.0], [4.0]],
             ...     'feature2': ['A', 'B', 'A', 'C'],
@@ -127,8 +126,7 @@ class Gower:
 
         Example:
             >>> import pandas as pd
-            >>> from gower_metric import Gower
-            >>> from gower_metric.core.config import Config
+            >>> from gower_metric import Config, Gower
             >>> data = pd.DataFrame({
             ...     'feature1': [[1.0], [2.0], [3.0], [4.0]],
             ...     'feature2': ['A', 'B', 'A', 'C'],
@@ -320,8 +318,7 @@ class Gower:
 
         Example:
             >>> import pandas as pd
-            >>> from gower_metric import Gower
-            >>> from gower_metric.core.config import Config
+            >>> from gower_metric import Config, Gower
             >>> data = pd.DataFrame({
             ...     'feature1': [[1.0], [2.0], [3.0], [4.0]],
             ...     'feature2': ['A', 'B', 'A', 'C'],
@@ -454,9 +451,9 @@ class Gower:
         Raises:
             IllegalStateError: If fit(X) was not called before computing distance.
 
-        Example:            >>> import pandas as pd
-            >>> from gower_metric import Gower
-            >>> from gower_metric.core.config import Config
+        Example:
+            >>> import pandas as pd
+            >>> from gower_metric import Config, Gower
             >>> data = pd.DataFrame({
             ...     'feature1': [[1.0], [2.0], [3.0], [4.0]],
             ...     'feature2': ['A', 'B', 'A', 'C'],
@@ -613,8 +610,7 @@ class Gower:
             float: Gower similarity in [0,1], defined as 1 - distance(a, b).
 
         Example:
-            >>> from gower_metric import Gower
-            >>> from gower_metric.core.config import Config
+            >>> from gower_metric import Config, Gower
             >>> data = pd.DataFrame({
             ...     'feature1': [[1.0], [2.0], [3.0], [4.0]],
             ...     'feature2': ['A', 'B', 'A', 'C'],
@@ -673,8 +669,7 @@ class Gower:
 
         Examples:
             Basic usage:
-                >>> from gower_metric import Gower
-                >>> from gower_metric.core.config import Config
+                >>> from gower_metric import Config, Gower
                 >>> data = pd.DataFrame({
                 ...     'feature1': [[1.0], [2.0], [3.0], [4.0]],
                 ...     'feature2': ['A', 'B', 'A', 'C'],
@@ -697,8 +692,7 @@ class Gower:
 
             Using similarity matrix and sparse output:
                 >>> import pandas as pd
-                >>> from gower_metric import Gower
-                >>> from gower_metric.core.config import Config
+                >>> from gower_metric import Config, Gower
                 >>> data = pd.DataFrame({
                 ...     'feature1': [[1.0], [2.0], [3.0], [4.0]],
                 ...     'feature2': ['A', 'B', 'A', 'C'],

@@ -2,8 +2,7 @@ import numpy as np
 import pandas as pd
 from sklearn.metrics import pairwise_distances
 
-from gower_metric import Gower
-from gower_metric.core.config import Config
+from gower_metric import Config, Gower
 
 DTYPE = np.float64
 

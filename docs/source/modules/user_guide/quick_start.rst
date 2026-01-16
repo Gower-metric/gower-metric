@@ -26,7 +26,7 @@ In order to import class module, you might import it as follows:
 
 .. code-block:: python
 
-   from gower_metric import Gower
+   from gower_metric import Config, Gower
 
 ---------------------
 Using ``fit`` method
@@ -40,8 +40,7 @@ Let's assume we imported the class as shown above and we have the following data
 
    import numpy as np
    
-   from gower_metric import Gower
-   from gower_metric.core.config import Config
+   from gower_metric import Config, Gower
    
    data = np.array([[1], [4], [7]], dtype=float)
    f_types = {0: "ratio_scale_interval"}

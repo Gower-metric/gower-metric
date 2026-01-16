@@ -12,8 +12,7 @@ Pairwise distances
 .. code-block:: python
 
     from sklearn.metrics import pairwise_distances
-    from gower_metric import Gower
-    from gower_metric.core.config import Config
+    from gower_metric import Config, Gower
 
 
     cfg = Config(
@@ -37,8 +36,7 @@ KNeighborsClassifier
     from sklearn.metrics import accuracy_score, classification_report
     from sklearn.model_selection import train_test_split
     from sklearn.neighbors import KNeighborsClassifier
-    from gower_metric import Gower
-    from gower_metric.core.config import Config
+    from gower_metric import Config, Gower
 
     X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42, stratify=y)
 
@@ -69,8 +67,7 @@ HDBSCAN Usage
 
     from sklearn.cluster import HDBSCAN
     from sklearn.metrics import silhouette_score
-    from gower_metric import Gower
-    from gower_metric.core.config import Config
+    from gower_metric import Config, Gower
 
     cfg = Config(
         feature_types=feature_types,

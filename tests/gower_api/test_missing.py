@@ -2,8 +2,7 @@ import numpy as np
 import pandas as pd
 import pytest
 
-from gower_metric import Gower
-from gower_metric.core.config import Config
+from gower_metric import Config, Gower
 
 
 def test_missing_values_skip_nan() -> None:

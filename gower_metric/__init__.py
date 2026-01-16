@@ -1,6 +1,7 @@
+from .core.config import Config
 from .core.metric import Gower
 
-__all__ = ["Gower"]
+__all__ = ["Config", "Gower"]
 
 __doc__ = """
 Gower metric for mixed data types.
