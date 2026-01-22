@@ -457,6 +457,7 @@ class Gower:
             >>> data = pd.DataFrame({
             ...     'feature1': [[1.0], [2.0], [3.0], [4.0]],
             ...     'feature2': ['A', 'B', 'A', 'C'],
+            ...     })
             >>> feature_types = {
             ...     'feature1': 'numeric_interval',
             ...     'feature2': 'categorical_nominal',
