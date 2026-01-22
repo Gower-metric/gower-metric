@@ -6,8 +6,7 @@ from rpy2 import rinterface, robjects
 from rpy2.robjects import pandas2ri
 from rpy2.robjects.packages import importr
 
-from gower_metric import Gower
-from gower_metric.core.config import Config
+from gower_metric import Config, Gower
 
 warnings.filterwarnings("ignore", category=UserWarning, module="rpy2")
 

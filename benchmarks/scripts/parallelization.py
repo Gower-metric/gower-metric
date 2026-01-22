@@ -12,8 +12,7 @@ from scipy.spatial.distance import pdist, squareform
 from sklearn.metrics import pairwise_distances
 from tqdm import tqdm
 
-from gower_metric import Gower
-from gower_metric.core.config import Config
+from gower_metric import Config, Gower
 
 
 def _load_data(dataset_id: int) -> pd.DataFrame:

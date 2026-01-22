@@ -15,8 +15,7 @@ It is done by calling the ``transform`` method on a fitted Gower instance.
 
    import numpy as np
 
-   from gower_metric import Gower
-   from gower_metric.core.config import Config
+   from gower_metric import Config, Gower
 
    data = np.array([[1, 'a'], [2, 'b'], [3, 'a'], [4, 'c']], dtype=object)
 
@@ -45,8 +44,7 @@ For convenience, Gower also implements ``fit_transform`` method, which combines 
 
    import numpy as np
 
-   from gower_metric import Gower
-   from gower_metric.core.config import Config
+   from gower_metric import Config, Gower
 
    data = np.array([[1, 'a'], [2, 'b'], [3, 'a'], [4, 'c']], dtype=object)
 

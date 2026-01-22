@@ -11,8 +11,7 @@ from sklearn.neighbors import KNeighborsClassifier
 from sklearn.preprocessing import OneHotEncoder
 from tqdm import tqdm
 
-from gower_metric import Gower
-from gower_metric.core.config import Config
+from gower_metric import Config, Gower
 
 warnings.simplefilter(action="ignore", category=FutureWarning)
 
