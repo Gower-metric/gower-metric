@@ -1,4 +1,4 @@
-from typing import Any
+from typing import Any, cast
 
 import numpy as np
 import pandas as pd
@@ -354,8 +354,14 @@ class Gower:
 
         transformed_columns: list[np.ndarray] = []
 
-        for col_idx, ftype in self.feature_types.items():
-            col = df.iloc[:, col_idx].to_numpy() if is_df else X_arr[:, col_idx]
+        for col_idx_raw, ftype in self.feature_types.items():
+            col_idx = int(col_idx_raw)
+
+            if is_df and isinstance(X, pd.DataFrame):
+                col_series = cast("pd.Series", X.iloc[:, col_idx])
+                col = col_series.to_numpy()
+            else:
+                col = X_arr[:, col_idx]
 
             if ftype in ("binary_asymmetric", "binary_symmetric"):
                 transformed_col = np.zeros(col.shape[0], dtype=float)
@@ -404,11 +410,11 @@ class Gower:
 
         transformed_data: np.ndarray = np.column_stack(transformed_columns)
 
-        for col_idx, _ in (
+        for co_col_idx, _ in (
             (i, t) for i, t in self.feature_types.items() if t == "categorical_ordinal"
         ):
-            self.cat_ord_metadata[col_idx]["ranks"] = {
-                v: v for v in self.cat_ord_metadata[col_idx]["ranks"].values()
+            self.cat_ord_metadata[co_col_idx]["ranks"] = {
+                v: v for v in self.cat_ord_metadata[co_col_idx]["ranks"].values()
             }
 
         self._is_transformed = True
