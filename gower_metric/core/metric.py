@@ -340,7 +340,7 @@ class Gower:
             msg = "Operation not allowed: model is not fitted"
             raise IllegalStateError(msg)
 
-        if self._is_fitted:
+        if self._is_transformed:
             msg = "Operation not allowed: data has already been transformed"
             raise IllegalStateError(msg)
 
