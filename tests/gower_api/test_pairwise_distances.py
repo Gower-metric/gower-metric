@@ -1,3 +1,5 @@
+from typing import cast
+
 import numpy as np
 import pandas as pd
 from sklearn.metrics import pairwise_distances
@@ -61,6 +63,9 @@ def test_scikit_learn_paiwise_distances() -> None:
     assert matrix_gower.shape == (n_rows, n_rows), (
         "The shape of the custom pairwise distance matrix is incorrect."
     )
-    assert np.allclose(matrix_scikit, matrix_gower, rtol=1e-5, atol=1e-8), (
-        "The pairwise distance matrices do not match."
-    )
+    assert np.allclose(
+        cast("np.ndarray", matrix_scikit),
+        cast("np.ndarray", matrix_gower),
+        rtol=1e-5,
+        atol=1e-8,
+    ), "The pairwise distance matrices do not match."

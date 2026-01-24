@@ -1,3 +1,5 @@
+from typing import cast
+
 import numpy as np
 import pandas as pd
 from scipy.spatial.distance import pdist, squareform
@@ -42,16 +44,16 @@ def test_scikit_learn_paiwise_distances() -> None:
     )
     gower = Gower(cfg).fit(df)
 
-    df = df.to_numpy()
+    X = df.to_numpy()
 
     def _gower_distance(x, y):
         """Compute Gower distance between two vectors."""
         return gower(x, y)
 
-    array_scipy = pdist(df, metric=_gower_distance)
+    array_scipy = pdist(X, metric=_gower_distance)
     matrix_scipy = squareform(array_scipy)
 
-    matrix_gower = gower.matrix(df, backend="loky")
+    matrix_gower = gower.matrix(X, backend="loky")
 
     assert matrix_scipy.shape == (n_rows, n_rows), (
         "The shape of the pairwise distance matrix is incorrect."
@@ -59,6 +61,9 @@ def test_scikit_learn_paiwise_distances() -> None:
     assert matrix_gower.shape == (n_rows, n_rows), (
         "The shape of the custom pairwise distance matrix is incorrect."
     )
-    assert np.allclose(matrix_scipy, matrix_gower, rtol=1e-5, atol=1e-8), (
-        "The pairwise distance matrices do not match."
-    )
+    assert np.allclose(
+        cast("np.ndarray", matrix_scipy),
+        cast("np.ndarray", matrix_gower),
+        rtol=1e-5,
+        atol=1e-8,
+    ), "The pairwise distance matrices do not match."

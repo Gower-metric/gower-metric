@@ -165,7 +165,7 @@ def get_full_matrix(
         np.fill_diagonal(MATRIX, 1.0)
 
     if convert_to_sparse:
-        MATRIX = get_scipy_sparse_matrix(
+        return get_scipy_sparse_matrix(
             MATRIX,
             matrix_format=sparse_type,
             data_type=data_type,

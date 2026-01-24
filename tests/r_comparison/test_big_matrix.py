@@ -1,4 +1,5 @@
 import warnings
+from typing import cast
 
 import numpy as np
 import pandas as pd
@@ -100,4 +101,8 @@ def test_big_matrix() -> None:
             pass
 
     assert np_matrix.shape == (len(df), len(df))
-    assert np.allclose(np_matrix, gower_matrix, atol=1e-6), "Matrices are not equal!"
+    assert np.allclose(
+        cast("np.ndarray", np_matrix),
+        cast("np.ndarray", gower_matrix),
+        atol=1e-6,
+    ), "Matrices are not equal!"

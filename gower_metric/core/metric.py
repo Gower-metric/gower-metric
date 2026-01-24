@@ -25,7 +25,6 @@ from gower_metric.utils.matrix.calculate_matrix import get_full_matrix
 from gower_metric.utils.ranges import get_numeric_ranges
 from gower_metric.utils.to_array import to_array
 from gower_metric.utils.transformation import (
-    validate_if_double_transformed,
     validate_if_transformed,
 )
 from gower_metric.weights.weights import get_weights
@@ -341,7 +340,9 @@ class Gower:
             msg = "Operation not allowed: model is not fitted"
             raise IllegalStateError(msg)
 
-        validate_if_double_transformed(self._is_transformed)
+        if self._is_fitted:
+            msg = "Operation not allowed: data has already been transformed"
+            raise IllegalStateError(msg)
 
         is_df = isinstance(X, pd.DataFrame)
         if isinstance(X, pd.DataFrame):
@@ -618,7 +619,7 @@ class Gower:
             >>> feature_types = {
             ...     'feature1': 'numeric_interval',
             ...     'feature2': 'categorical_nominal',
-            ... }
+            ... })
             >>> cfg = Config(
             ...     feature_types=feature_types,
             ... )
@@ -675,6 +676,7 @@ class Gower:
                 ...     'feature1': [[1.0], [2.0], [3.0], [4.0]],
                 ...     'feature2': ['A', 'B', 'A', 'C'],
                 ...     'feature3': [0, 1, 0, 1],
+                ...})
                 >>> feature_types = {
                 ...     'feature1': 'numeric_interval',
                 ...     'feature2': 'categorical_nominal',
@@ -720,9 +722,6 @@ class Gower:
             self.fit(X)
             msg = "Calling .fit(X) inside .matrix(X)."
             raise Warning(msg)
-
-        if self._is_transformed:
-            validate_if_transformed(X)
 
         if data_type is None:
             data_type = self.data_type
