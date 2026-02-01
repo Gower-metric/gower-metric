@@ -1,8 +1,7 @@
 import numpy as np
 import pytest
 
-from gower_metric import Gower
-from gower_metric.core.config import Config
+from gower_metric import Config, Gower
 from gower_metric.utils.kde_types.silverman import silverman_bandwidth
 from gower_metric.utils.knn_bandwidth import knn_bandwidth
 
@@ -61,7 +60,7 @@ def test_knn_bandwidth_values_and_effect() -> None:
     cfg = Config(
         feature_types={0: "ratio_scale_interval", 1: "numeric"},
         scale_window="kNN",
-        k_neighbours=k,
+        k_neighbors=k,
         scale_method="range",
     )
     gower = Gower(cfg).fit(data)

@@ -1,9 +1,12 @@
+from typing import cast
+
 import numpy as np
 import pandas as pd
 from sklearn.metrics import pairwise_distances
 
-from gower_metric import Gower
-from gower_metric.core.config import Config
+from gower_metric import Config, Gower
+
+DTYPE = np.float64
 
 
 def test_scikit_learn_paiwise_distances() -> None:
@@ -40,13 +43,10 @@ def test_scikit_learn_paiwise_distances() -> None:
 
     cfg = Config(
         feature_types=feature_types,
+        data_type=DTYPE,
     )
     gower = Gower(cfg).fit(df)
     transformed_df = gower.transform(df)
-
-    df = df.to_numpy()
-    if isinstance(transformed_df, pd.DataFrame):
-        transformed_df = transformed_df.to_numpy()
 
     matrix_scikit = pairwise_distances(
         transformed_df,
@@ -55,7 +55,7 @@ def test_scikit_learn_paiwise_distances() -> None:
         ensure_all_finite=False,
     )
 
-    matrix_gower = gower.matrix(df, backend="loky")
+    matrix_gower = gower.matrix(transformed_df, backend="loky")
 
     assert matrix_scikit.shape == (n_rows, n_rows), (
         "The shape of the pairwise distance matrix is incorrect."
@@ -63,6 +63,9 @@ def test_scikit_learn_paiwise_distances() -> None:
     assert matrix_gower.shape == (n_rows, n_rows), (
         "The shape of the custom pairwise distance matrix is incorrect."
     )
-    assert np.allclose(matrix_scikit, matrix_gower, rtol=1e-5, atol=1e-8), (
-        "The pairwise distance matrices do not match."
-    )
+    assert np.allclose(
+        cast("np.ndarray", matrix_scikit),
+        cast("np.ndarray", matrix_gower),
+        rtol=1e-5,
+        atol=1e-8,
+    ), "The pairwise distance matrices do not match."

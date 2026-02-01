@@ -4,7 +4,7 @@ requires = ["tox>=4"]
 deps = ["pytest", "check-manifest", "rpy2", "setuptools", "scipy", "scikit-learn", "numpy", "pandas", "mypy", "tqdm", "pydantic", "openpyxl"]
 allowlist_externals = ["pytest", "python", "check-manifest"]
 commands = [
-    ["pytest", "tests"],
+    ["pytest", "{posargs:tests}"],
     ["python", "-m", "build"],
     ["check-manifest"],
     ]

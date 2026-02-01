@@ -60,8 +60,7 @@ In this scenario, user operates on imported, original and unchanged data.
 ```python
 import numpy as np
 
-from gower_metric import Gower
-from gower_metric.core.config import Config
+from gower_metric import Config, Gower
 
 data = np.array([[1, 'a', 3.5], [2, 'b', 4.0], [3, 'a', 2.5], [4, 'c', 5.0]], dtype=object)
 
@@ -90,8 +89,7 @@ such as scikit-learn and scipy. More about how to use them with gower-metric can
 ```python
 import numpy as np
 
-from gower_metric import Gower
-from gower_metric.core.config import Config
+from gower_metric import Config, Gower
 
 data = np.array([[1, 'a', 3.5], [2, 'b', 4.0], [3, 'a', 2.5], [4, 'c', 5.0]], dtype=object)
 

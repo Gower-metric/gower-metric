@@ -1,4 +1,5 @@
 import warnings
+from typing import cast
 
 import numpy as np
 import pandas as pd
@@ -6,8 +7,7 @@ from rpy2 import rinterface, robjects
 from rpy2.robjects import pandas2ri
 from rpy2.robjects.packages import importr
 
-from gower_metric import Gower
-from gower_metric.core.config import Config
+from gower_metric import Config, Gower
 
 warnings.filterwarnings("ignore", category=UserWarning, module="rpy2")
 
@@ -51,10 +51,14 @@ def test_r_daisy_no_weights() -> None:
     )
     gower = Gower(cfg).fit(df)
 
-    df = df.to_numpy()
-    gower_matrix = gower.matrix(df)
+    X = df.to_numpy()
+    gower_matrix = gower.matrix(X)
 
-    assert np.allclose(np_matrix, gower_matrix, atol=1e-6)
+    assert np.allclose(
+        cast("np.ndarray", np_matrix),
+        cast("np.ndarray", gower_matrix),
+        atol=1e-6,
+    )
 
 
 def test_r_daisy_weights() -> None:
@@ -143,4 +147,8 @@ def test_r_daisy_weights() -> None:
     np_matrix = np.array(r_matrix)
 
     assert np_matrix.shape == (n, n)
-    assert np.allclose(np_matrix, matrix, atol=1e-6)
+    assert np.allclose(
+        cast("np.ndarray", np_matrix),
+        cast("np.ndarray", matrix),
+        atol=1e-6,
+    )

@@ -15,6 +15,7 @@ repos:
           --vulnerability-service, "pypi",
           --cache-dir, ".pip_audit_cache",
           --ignore-vuln, "GHSA-38jv-5279-wg99", # Decompression-bomb safeguards bypassed when following HTTP redirects (streaming API)
+          --ignore-vuln, "GHSA-qmgc-5h2g-mvrw", # Time-of-Check-Time-of-Use (TOCTOU) Symlink Vulnerability in SoftFileLock
         ]
 
   - repo: https://github.com/astral-sh/ruff-pre-commit

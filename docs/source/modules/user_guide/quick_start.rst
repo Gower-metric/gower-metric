@@ -26,7 +26,7 @@ In order to import class module, you might import it as follows:
 
 .. code-block:: python
 
-   from gower_metric import Gower
+   from gower_metric import Config, Gower
 
 ---------------------
 Using ``fit`` method
@@ -40,8 +40,7 @@ Let's assume we imported the class as shown above and we have the following data
 
    import numpy as np
    
-   from gower_metric import Gower
-   from gower_metric.core.config import Config
+   from gower_metric import Config, Gower
    
    data = np.array([[1], [4], [7]], dtype=float)
    f_types = {0: "ratio_scale_interval"}
@@ -77,6 +76,16 @@ incorrect specification will lead to error raise or calculation missmatch. Examp
 
 For more detailed specification of Config class, please refer to next subsection. If you would like to see mathematical explanation
 regarding Gower's metric, you can check the :ref:`metric description <metric_description>` page.
+
+--------------------------------
+Should I do data preprocessing?
+--------------------------------
+
+Yes, you should. For instance, missing values should be anything detectable by python's ``math.isnan`` function, panda's ``pd.isna`` or numpy's ``np.isnan``.
+For example, if you have some ``?`` values in your dataset, you should replace them with ``np.nan``.
+
+In terms of binary data, it should be either ``0`` (``0.0``), ``1`` (``1.0``), ``True`` - ``False``, ``Yes`` - ``No``. Why? To ensure
+proper transformation of the data, more on that in next sections. 
 
 .. toctree::
    :maxdepth: 1

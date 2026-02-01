@@ -31,6 +31,7 @@ All parameters listed below are optional. If not provided, default values will b
 some of these configuration flags depend on one another. It will be clearly indicated in the description of each parameter.
 
 - ``feature_weights (dict[int, float] | str | None)`` - Optional mapping of column indices (or names) to a float weight. If None or "uniform", all features will have equal weight of 1. Otherwise, the weights must be a dictionary mapping feature indices to weights, i.e. {0: 1.0, 1: 2.0}.
+- ``data_type (type[np.integer | np.floating])`` - Optional flag to determine the data type that would be used during all calculation (and returned). If omitted, default to np.float32.
 - ``scale_method (str)`` - Method used for scaling numerical features. Possible values are `range` and `iqr`. Defaults to `range`. If `range` is selected, numerical features will be scaled to the [0, 1] range. If `iqr` is selected, numerical features will be scaled using the interquartile range (IQR) method.
 - ``scale_window (str | None)`` - Scaling window implementation flag for numeric or ratio features. Can be `None`, `kde` or `kNN`. Default is `None` if omitted.
 - ``scale_window_type (str | None)`` - Type of scaling window to be used. Possible values are `None` or `silverman`. Default is `None`. This parameter is only relevant if `scale_window` is set to `kde`. In the future, more `kde` types might be added.
@@ -39,7 +40,7 @@ some of these configuration flags depend on one another. It will be clearly indi
   and values are lists of strings representing the ordered categories for that feature. For example, if you have an ordinal feature representing education levels with categories "low", "medium", and "high", you would specify it as follows: 
   ``{0: ['low', 'medium', 'high']}``. If not provided, an error will be raised when `categorical_ordinal` feature type is used.
 - ``categorical_ordinal_calculation_type (str)`` - Option to choose the calculation method for `categorical_ordinal` features. Possible values are `kaufman` and `podani`. Defaults to `kaufman`. More detailed description can be found `here <https://www.researchgate.net/publication/271789313_Extending_Gower%27s_General_Coefficient_of_Similarity_to_Ordinal_Characters>`_.
-- ``k_neighbours (int | None)`` - Number of neighbors to consider when using kNN scaling window. Default is `None`, in which case the number of neighbors will be set to the square root of the number of points. This parameter is only relevant if `scale_window` is set to `kNN`. Can be 1 or higher.
+- ``k_neighbors (int | None)`` - Number of neighbors to consider when using kNN scaling window. Default is `None`, in which case the number of neighbors will be set to the square root of the number of points. This parameter is only relevant if `scale_window` is set to `kNN`. Can be 1 or higher.
 - ``conditional_distances (bool)`` - If set to `True`, a two-step approach will be triggered. This acts as a blocking strategy inspired by Statistical Matching methods. First step involves calculating distances only for all binary and conditional categorical features.
   In the second step, ratio scale and numeric features are included in the calculation based on a threshold derived from the first step. Defaults to `False`.
   For more context, refer to `references year 2021 -> chapter 3 <https://arxiv.org/abs/2101.02481>`_.

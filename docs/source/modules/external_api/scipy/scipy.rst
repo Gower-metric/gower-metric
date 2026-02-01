@@ -11,8 +11,7 @@ Spatial distance
 .. code-block:: python
 
     from scipy.spatial.distance import pdist, squareform
-    from gower_metric import Gower
-    from gower_metric.core.config import Config
+    from gower_metric import Config, Gower
 
     # fit Gower model first
     cfg = Config(
@@ -40,8 +39,7 @@ Cophenet cluster hierarchy
 
     from scipy.cluster.hierarchy import cophenet, single
     from scipy.spatial.distance import pdist, squareform
-    from gower_metric import Gower
-    from gower_metric.core.config import Config
+    from gower_metric import Config, Gower
 
     cfg = Config(
         feature_types=feature_types,

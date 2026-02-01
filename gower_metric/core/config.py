@@ -1,5 +1,6 @@
 from typing import Literal, get_args
 
+import numpy as np
 from pydantic import BaseModel, ValidationInfo, field_validator
 
 FeatureType = Literal[
@@ -11,12 +12,13 @@ FeatureType = Literal[
     "ratio_scale_interval",
 ]
 WeightsType = Literal["uniform"] | dict[int, float]
+DataType = type[np.integer] | type[np.floating]
 ScaleMethod = Literal["range", "iqr"]
 ScaleWindow = Literal["kde", "kNN"]
 ScaleWindowType = Literal["silverman"]
 MissingStrategy = Literal["ignore", "max_dist", "raise_error"]
 CategoricalOrdinalCalcType = Literal["kaufman", "podani"]
-K_NeighboursType = int | None
+K_NeighborsType = int | None
 ConditionalDistancesFlag = Literal[True, False]
 ConditionalDistancesThresholdCoeffType = int
 
@@ -31,6 +33,8 @@ class Config(BaseModel):
             If None or "uniform", all features will have equal weight of 1. Otherwise,
             the weights must be a dictionary mapping feature indices to weights, i.e.
             {0: 1.0, 1: 2.0}.
+        data_type (DataType): Optional data type required for __call__, transformation and matrix method.
+            If omitted, np.float32 will be used.
         scale_method (str): Optional scaling method for numeric features. Can be 'range' or 'iqr'.
             Default is 'range' if omitted.
         scale_window (str | None): Optional scaling window for numeric or ratio features. Can be None, 'kde'
@@ -43,8 +47,8 @@ class Config(BaseModel):
             the columns of type 'categorical_ordinal'. Must contain values for all such columns.
         categorical_ordinal_calculation_type (str): Optional calculation type for categorical
             ordinal features. Can be 'kaufman' or 'podani'. Default is 'kaufman' if omitted.
-        k_neighbours (int | None): Optional number of nearest neighbors for 'kNN' scaling window.
-            Default is None if omitted. If k_neighbours is None, it will be set to the square root of the number of points.
+        k_neighbors (int | None): Optional number of nearest neighbors for 'kNN' scaling window.
+            Default is None if omitted. If k_neighbors is None, it will be set to the square root of the number of points.
         conditional_distances (bool): Default to False. If set to True, two-step approach will be
             triggered to calculate formula. More information in `references year 2021 -> chapter 3 <https://arxiv.org/abs/2101.02481>`_.
         conditional_distances_threshold_coeff (int): Value to be used as the numerator in the fraction (with p_cat as the denominator)
@@ -58,13 +62,14 @@ class Config(BaseModel):
 
     feature_types: dict[int | str, str]
     feature_weights: WeightsType | None = {}
+    data_type: DataType | None = np.float32
     scale_method: ScaleMethod = "range"
     scale_window: ScaleWindow | None = None
     scale_window_type: ScaleWindowType | None = None
     missing_strategy: MissingStrategy = "ignore"
     categorical_ordinal_values_order: dict[int | str, list[str]] | None = {}
     categorical_ordinal_calculation_type: CategoricalOrdinalCalcType = "kaufman"
-    k_neighbours: int | None = None
+    k_neighbors: int | None = None
     conditional_distances: ConditionalDistancesFlag = False
     conditional_distances_threshold_coeff: int = 1
 
@@ -91,77 +96,6 @@ class Config(BaseModel):
                     f"Must be one of {valid_types}"
                 )
                 raise ValueError(msg)
-        return v
-
-    @field_validator("feature_weights")
-    @classmethod
-    def check_weights(
-        cls,
-        v: WeightsType | None,
-    ) -> WeightsType | None:
-        """Validate the feature weights configuration.
-
-        Args:
-            v (WeightsType | None): The weights configuration to check.
-
-        Returns:
-            v (WeightsType | None): The validated weights.
-
-        Raises:
-            ValueError: If weights are not 'uniform', a dictionary, or None.
-
-        """
-        if v is not None:
-            if isinstance(v, str) and v != "uniform":
-                msg = f"weights must be 'uniform' or a dict, got {v!r}"
-                raise ValueError(msg)
-            if not isinstance(v, (str, dict)):
-                msg = f"weights must be str, dict, or None, got {type(v).__name__}"
-                raise ValueError(msg)
-        return v
-
-    @field_validator("scale_method")
-    @classmethod
-    def check_scale_method(cls, v: ScaleMethod) -> ScaleMethod:
-        """Validate the scaling method for numeric features.
-
-        Args:
-            v (ScaleMethod): The scaling method to check.
-
-        Returns:
-            v (ScaleMethod): The validated scaling method.
-
-        Raises:
-            ValueError: If the scaling method is not supported.
-
-        """
-        valid_methods = set(get_args(ScaleMethod))
-        if v not in valid_methods:
-            msg = f"scale_method must be one of {valid_methods}, got {v!r}"
-            raise ValueError(msg)
-        return v
-
-    @field_validator("scale_window")
-    @classmethod
-    def check_scale_window(cls, v: ScaleWindow | None) -> ScaleWindow | None:
-        """Validate the scaling window method.
-
-        Args:
-            v (ScaleWindow | None): The scaling window to check.
-
-        Returns:
-            v (ScaleWindow | None): The validated scaling window.
-
-        Raises:
-            ValueError: If the scaling window is not supported.
-
-        """
-        if v is None:
-            return v
-        valid_methods = set(get_args(ScaleWindow))
-        if v not in valid_methods:
-            msg = f"scale_window must be one of {valid_methods}, got {v!r}"
-            raise ValueError(msg)
         return v
 
     @field_validator("scale_window_type")
@@ -197,51 +131,26 @@ class Config(BaseModel):
             raise ValueError(msg)
         return v
 
-    @field_validator("missing_strategy")
+    @field_validator("k_neighbors")
     @classmethod
-    def check_missing_strategy(
+    def check_k_neighbors(
         cls,
-        v: MissingStrategy,
-    ) -> MissingStrategy:
-        """Validate the strategy for handling missing values.
-
-        Args:
-            v (MissingStrategy): The strategy to check.
-
-        Returns:
-            v (MissingStrategy): The validated strategy.
-
-        Raises:
-            ValueError: If the strategy is not supported.
-
-        """
-        valid_strategies = set(get_args(MissingStrategy))
-
-        if v not in valid_strategies:
-            msg = f"missing_strategy must be one of {valid_strategies}, got {v!r}"
-            raise ValueError(msg)
-        return v
-
-    @field_validator("k_neighbours")
-    @classmethod
-    def check_k_neighbours(
-        cls,
-        v: K_NeighboursType,
-    ) -> K_NeighboursType:
+        v: K_NeighborsType,
+    ) -> K_NeighborsType:
         """Validate the number of nearest neighbors (k).
 
         Args:
-            v (K_NeighboursType): The value of k to check.
+            v (K_NeighborsType): The value of k to check.
 
         Returns:
-            v (K_NeighboursType): The validated value.
+            v (K_NeighborsType): The validated value.
 
         Raises:
             ValueError: If k is not a positive integer or None.
 
         """
         if v is not None and (not isinstance(v, int) or v < 1):
-            msg = f"k_neighbours must be None or a positive integer, got {v!r}"
+            msg = f"k_neighbors must be None or a positive integer, got {v!r}"
             raise ValueError(msg)
         return v
 
@@ -281,30 +190,6 @@ class Config(BaseModel):
             if missing:
                 msg = f"Missing order definitions for columns: {missing}"
                 raise ValueError(msg)
-        return v
-
-    @field_validator("categorical_ordinal_calculation_type")
-    @classmethod
-    def check_ordinal_calc_type(
-        cls,
-        v: CategoricalOrdinalCalcType,
-    ) -> CategoricalOrdinalCalcType:
-        """Validate the calculation method for categorical ordinal features.
-
-        Args:
-            v (CategoricalOrdinalCalcType): The calculation method to check.
-
-        Returns:
-            v (CategoricalOrdinalCalcType): The validated method.
-
-        Raises:
-            ValueError: If the calculation method is not supported.
-
-        """
-        valid_types = set(get_args(CategoricalOrdinalCalcType))
-        if v not in valid_types:
-            msg = f"categorical_ordinal_calculation_type must be one of {valid_types}, got {v!r}"
-            raise ValueError(msg)
         return v
 
     @field_validator("conditional_distances")

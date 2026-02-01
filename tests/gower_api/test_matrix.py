@@ -1,9 +1,10 @@
+from typing import cast
+
 import numpy as np
 import pandas as pd
 import scipy.sparse as sp
 
-from gower_metric import Gower
-from gower_metric.core.config import Config
+from gower_metric import Config, Gower
 
 
 def test_gower_matrix_endpoint_with_custom_created_matrix() -> None:
@@ -43,22 +44,25 @@ def test_gower_matrix_endpoint_with_custom_created_matrix() -> None:
     )
     gower = Gower(cfg).fit(df)
 
-    df = df.to_numpy()
+    X = df.to_numpy()
 
-    dist_matrix: np.ndarray = gower.matrix(df, backend="loky")
+    dist_matrix = gower.matrix(cast("np.ndarray", X), backend="loky")
 
     assert dist_matrix.shape == (n_rows, n_rows), (
         f"Unexpected shape: {dist_matrix.shape}"
     )
 
-    matrix_custom: np.ndarray = np.zeros((n_rows, n_rows), dtype=np.float32)
+    matrix_custom = np.zeros((n_rows, n_rows), dtype=np.float32)
     for i in range(n_rows):
         for j in range(n_rows):
-            matrix_custom[i, j] = gower(df[i], df[j])
+            matrix_custom[i, j] = gower(X[i], X[j])
 
-    assert np.allclose(dist_matrix, matrix_custom, rtol=1e-5, atol=1e-5), (
-        "Matrices are not equal"
-    )
+    assert np.allclose(
+        cast("np.ndarray", dist_matrix),
+        cast("np.ndarray", matrix_custom),
+        rtol=1e-5,
+        atol=1e-5,
+    ), "Matrices are not equal"
 
 
 def test_gower_matrix_endpoint_similarity() -> None:
@@ -97,26 +101,32 @@ def test_gower_matrix_endpoint_similarity() -> None:
     )
     gower = Gower(cfg).fit(df)
 
-    df = df.to_numpy()
+    X = df.to_numpy()
 
-    similarity_matrix: np.ndarray = gower.matrix(
-        df,
+    similarity_matrix = gower.matrix(
+        X,
         matrix_type="similarity",
         backend="loky",
     )
 
-    matrix_custom: np.ndarray = np.zeros((n_rows, n_rows), dtype=np.float32)
+    matrix_custom = np.zeros((n_rows, n_rows), dtype=np.float32)
     for i in range(n_rows):
         for j in range(n_rows):
-            matrix_custom[i, j] = gower.similarity(df[i], df[j])
+            matrix_custom[i, j] = gower.similarity(X[i], X[j])
 
-    assert np.allclose(similarity_matrix, matrix_custom, rtol=1e-5, atol=1e-5), (
-        "Matrices are not equal"
-    )
+    assert np.allclose(
+        cast("np.ndarray", similarity_matrix),
+        matrix_custom,
+        rtol=1e-5,
+        atol=1e-5,
+    ), "Matrices are not equal"
 
-    assert np.allclose(similarity_matrix, similarity_matrix.T, rtol=1e-5, atol=1e-5), (
-        "Matrix is symmetrical"
-    )
+    assert np.allclose(
+        cast("np.ndarray", similarity_matrix),
+        cast("np.ndarray", similarity_matrix.T),
+        rtol=1e-5,
+        atol=1e-5,
+    ), "Matrix is symmetrical"
 
 
 def test_gower_matrix_endpoint_if_it_symmetrical() -> None:
@@ -171,9 +181,9 @@ def test_gower_matrix_endpoint_if_it_symmetrical() -> None:
     )
     gower = Gower(cfg).fit(df)
 
-    df = df.to_numpy()
+    X = df.to_numpy()
 
-    dist_matrix: np.ndarray = gower.matrix(df, backend="loky")
+    dist_matrix = gower.matrix(df, backend="loky")
 
     assert dist_matrix.shape == (n_rows, n_rows), (
         f"Unexpected shape: {dist_matrix.shape}"
@@ -182,15 +192,21 @@ def test_gower_matrix_endpoint_if_it_symmetrical() -> None:
     custom_matrix = np.zeros((n_rows, n_rows), dtype=np.float32)
     for i in range(n_rows):
         for j in range(n_rows):
-            custom_matrix[i, j] = gower(df[i], df[j])
+            custom_matrix[i, j] = gower(X[i], X[j])
 
-    assert np.allclose(dist_matrix, custom_matrix, rtol=1e-5, atol=1e-5), (
-        "Matrices are not equal"
-    )
+    assert np.allclose(
+        cast("np.ndarray", dist_matrix),
+        custom_matrix,
+        rtol=1e-5,
+        atol=1e-5,
+    ), "Matrices are not equal"
 
-    assert np.allclose(dist_matrix, dist_matrix.T, rtol=1e-5, atol=1e-5), (
-        "Matrix is not symmetrical"
-    )
+    assert np.allclose(
+        cast("np.ndarray", dist_matrix),
+        cast("np.ndarray", dist_matrix.T),
+        rtol=1e-5,
+        atol=1e-5,
+    ), "Matrix is not symmetrical"
 
 
 def test_matrix_endpoint_podani_if_symmetrical_distance() -> None:
@@ -209,7 +225,7 @@ def test_matrix_endpoint_podani_if_symmetrical_distance() -> None:
     )
     gower = Gower(cfg).fit(data)
 
-    dist_matrix: np.ndarray = gower.matrix(data, backend="loky")
+    dist_matrix = gower.matrix(data, backend="loky")
 
     n = data.shape[0]
     custom_matrix = np.zeros((n, n), dtype=np.float32)
@@ -218,13 +234,19 @@ def test_matrix_endpoint_podani_if_symmetrical_distance() -> None:
         for j in range(data.shape[0]):
             custom_matrix[i, j] = gower(data[i], data[j])
 
-    assert np.allclose(dist_matrix, custom_matrix, rtol=1e-5, atol=1e-5), (
-        "Matrices are not equal"
-    )
+    assert np.allclose(
+        cast("np.ndarray", dist_matrix),
+        custom_matrix,
+        rtol=1e-5,
+        atol=1e-5,
+    ), "Matrices are not equal"
 
-    assert np.allclose(dist_matrix, dist_matrix.T, rtol=1e-5, atol=1e-5), (
-        "Matrix is not symmetrical"
-    )
+    assert np.allclose(
+        cast("np.ndarray", dist_matrix),
+        cast("np.ndarray", dist_matrix.T),
+        rtol=1e-5,
+        atol=1e-5,
+    ), "Matrix is not symmetrical"
 
 
 def test_matrix_endpoint_podani_if_symmetrical_similarity() -> None:
@@ -243,7 +265,7 @@ def test_matrix_endpoint_podani_if_symmetrical_similarity() -> None:
     )
     gower = Gower(cfg).fit(data)
 
-    dist_matrix: np.ndarray = gower.matrix(
+    dist_matrix = gower.matrix(
         data,
         matrix_type="similarity",
         backend="loky",
@@ -256,13 +278,19 @@ def test_matrix_endpoint_podani_if_symmetrical_similarity() -> None:
         for j in range(n):
             custom_matrix[i, j] = gower.similarity(data[i], data[j])
 
-    assert np.allclose(dist_matrix, custom_matrix, rtol=1e-5, atol=1e-5), (
-        "Matrices are not equal"
-    )
+    assert np.allclose(
+        cast("np.ndarray", dist_matrix),
+        cast("np.ndarray", custom_matrix),
+        rtol=1e-5,
+        atol=1e-5,
+    ), "Matrices are not equal"
 
-    assert np.allclose(dist_matrix, dist_matrix.T, rtol=1e-5, atol=1e-5), (
-        "Matrix is not symmetrical"
-    )
+    assert np.allclose(
+        cast("np.ndarray", dist_matrix),
+        cast("np.ndarray", dist_matrix.T),
+        rtol=1e-5,
+        atol=1e-5,
+    ), "Matrix is not symmetrical"
 
 
 def test_sparse_matrix_convertion_csr() -> None:
@@ -281,7 +309,7 @@ def test_sparse_matrix_convertion_csr() -> None:
     )
     gower = Gower(cfg).fit(data)
 
-    dist_matrix: np.ndarray = gower.matrix(
+    dist_matrix = gower.matrix(
         data,
         convert_to_sparse=True,
         sparse_type="csr",
@@ -308,7 +336,7 @@ def test_sparse_matrix_convertion_csc() -> None:
     )
     gower = Gower(cfg).fit(data)
 
-    dist_matrix: np.ndarray = gower.matrix(
+    dist_matrix = gower.matrix(
         data,
         convert_to_sparse=True,
         sparse_type="csc",
@@ -335,7 +363,7 @@ def test_sparse_matrix_convertion_c00() -> None:
     )
     gower = Gower(cfg).fit(data)
 
-    dist_matrix: np.ndarray = gower.matrix(
+    dist_matrix = gower.matrix(
         data,
         convert_to_sparse=True,
         sparse_type="coo",

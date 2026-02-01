@@ -1,4 +1,4 @@
-from typing import Any
+from typing import Any, cast
 
 import numpy as np
 import pandas as pd
@@ -24,6 +24,9 @@ from gower_metric.utils.knn_bandwidth import knn_bandwidth
 from gower_metric.utils.matrix.calculate_matrix import get_full_matrix
 from gower_metric.utils.ranges import get_numeric_ranges
 from gower_metric.utils.to_array import to_array
+from gower_metric.utils.transformation import (
+    validate_if_transformed,
+)
 from gower_metric.weights.weights import get_weights
 
 
@@ -44,8 +47,7 @@ class Gower:
 
         Example:
             >>> import pandas as pd
-            >>> from gower_metric import Gower
-            >>> from gower_metric.core.config import Config
+            >>> from gower_metric import Config, Gower
             >>> data = pd.DataFrame({
             ...     'feature1': [[1.0], [2.0], [3.0], [4.0]],
             ...     'feature2': ['A', 'B', 'A', 'C'],
@@ -71,6 +73,10 @@ class Gower:
 
         self.feature_weights = config.feature_weights
 
+        self.data_type: type[np.integer | np.floating] = (
+            config.data_type if config.data_type is not None else np.float32
+        )
+
         self.numeric_indices: list[int] = []
         self.categorical_nominal_indices: list[int] = []
         self.categorical_ordinal_indices: list[int] = []
@@ -92,7 +98,7 @@ class Gower:
         self.scale_window: str | None = config.scale_window
         self.scale_window_type: str | None = config.scale_window_type
 
-        self.k_neighbours = config.k_neighbours
+        self.k_neighbors = config.k_neighbors
 
         self.conditional_distances = config.conditional_distances
 
@@ -100,7 +106,8 @@ class Gower:
             config.conditional_distances_threshold_coeff
         )
 
-        self._is_fitted = False
+        self._is_fitted: bool = False
+        self._is_transformed: bool = False
 
     def fit(self, X: pd.DataFrame | np.ndarray) -> "Gower":
         """Fit the Gower model by computing numeric feature ranges.
@@ -114,11 +121,11 @@ class Gower:
 
         Raises:
             ValueError: For incorrect input data and configuration parameters.
+            ValueError: If input data is already transformed.
 
         Example:
             >>> import pandas as pd
-            >>> from gower_metric import Gower
-            >>> from gower_metric.core.config import Config
+            >>> from gower_metric import Config, Gower
             >>> data = pd.DataFrame({
             ...     'feature1': [[1.0], [2.0], [3.0], [4.0]],
             ...     'feature2': ['A', 'B', 'A', 'C'],
@@ -245,14 +252,14 @@ class Gower:
         elif self.scale_window == "kNN":
             self._h_ratio = np.array(
                 [
-                    knn_bandwidth(arr[:, j].astype(float), k=self.k_neighbours)
+                    knn_bandwidth(arr[:, j].astype(float), k=self.k_neighbors)
                     for j in self.ratio_scale_indices
                 ],
                 dtype=float,
             )
             self._h_numeric = np.array(
                 [
-                    knn_bandwidth(arr[:, j].astype(float), k=self.k_neighbours)
+                    knn_bandwidth(arr[:, j].astype(float), k=self.k_neighbors)
                     for j in self.numeric_indices
                 ],
                 dtype=float,
@@ -310,8 +317,7 @@ class Gower:
 
         Example:
             >>> import pandas as pd
-            >>> from gower_metric import Gower
-            >>> from gower_metric.core.config import Config
+            >>> from gower_metric import Config, Gower
             >>> data = pd.DataFrame({
             ...     'feature1': [[1.0], [2.0], [3.0], [4.0]],
             ...     'feature2': ['A', 'B', 'A', 'C'],
@@ -334,6 +340,10 @@ class Gower:
             msg = "Operation not allowed: model is not fitted"
             raise IllegalStateError(msg)
 
+        if self._is_transformed:
+            msg = "Operation not allowed: data has already been transformed"
+            raise IllegalStateError(msg)
+
         is_df = isinstance(X, pd.DataFrame)
         if isinstance(X, pd.DataFrame):
             df: pd.DataFrame = X
@@ -344,8 +354,14 @@ class Gower:
 
         transformed_columns: list[np.ndarray] = []
 
-        for col_idx, ftype in self.feature_types.items():
-            col = df.iloc[:, col_idx].to_numpy() if is_df else X_arr[:, col_idx]
+        for col_idx_raw, ftype in self.feature_types.items():
+            col_idx = int(col_idx_raw)
+
+            if is_df and isinstance(X, pd.DataFrame):
+                col_series = cast("pd.Series", X.iloc[:, col_idx])
+                col = col_series.to_numpy()
+            else:
+                col = X_arr[:, col_idx]
 
             if ftype in ("binary_asymmetric", "binary_symmetric"):
                 transformed_col = np.zeros(col.shape[0], dtype=float)
@@ -365,50 +381,55 @@ class Gower:
                     categories=[
                         self.categorical_ordinal_values_order[col_idx],
                     ],
-                    dtype=float,
+                    dtype=self.data_type,
                     handle_unknown="use_encoded_value",
                     unknown_value=np.nan,
                 )
                 transformed_col = (
                     enc.fit_transform(np.array(col).reshape(-1, 1))
-                    .astype(float)
+                    .astype(self.data_type)
                     .ravel()
                 )
 
             elif ftype == "categorical_nominal":
                 enc = OrdinalEncoder(
-                    dtype=float,
+                    dtype=self.data_type,
                     handle_unknown="use_encoded_value",
                     unknown_value=np.nan,
                 )
                 enc.fit(np.array(col).reshape(-1, 1))
                 transformed_col = (
-                    enc.transform(np.array(col).reshape(-1, 1)).astype(float).ravel()
+                    enc.transform(np.array(col).reshape(-1, 1))
+                    .astype(self.data_type)
+                    .ravel()
                 )
             else:
-                transformed_col = col.astype(float)
+                transformed_col = col.astype(self.data_type)
 
             transformed_columns.append(transformed_col)
 
         transformed_data: np.ndarray = np.column_stack(transformed_columns)
 
-        for col_idx, _ in (
+        for co_col_idx, _ in (
             (i, t) for i, t in self.feature_types.items() if t == "categorical_ordinal"
         ):
-            self.cat_ord_metadata[col_idx]["ranks"] = {
-                v: v for v in self.cat_ord_metadata[col_idx]["ranks"].values()
+            self.cat_ord_metadata[co_col_idx]["ranks"] = {
+                v: v for v in self.cat_ord_metadata[co_col_idx]["ranks"].values()
             }
 
-        return (
-            pd.DataFrame(
+        self._is_transformed = True
+        if is_df:
+            df_transformed = pd.DataFrame(
                 transformed_data,
                 columns=df.columns,
                 index=df.index,
-                dtype=np.float64,
+                dtype=self.data_type,
             )
-            if is_df
-            else transformed_data.astype(np.float64)
-        )
+            df_transformed.attrs["transformed"] = True
+            return df_transformed
+        # Note: NumPy dtype metadata is not reliably preserved across operations,
+        # so we avoid using it to track transformation state.
+        return transformed_data.astype(self.data_type)
 
     def fit_transform(self, X: pd.DataFrame | np.ndarray) -> pd.DataFrame | np.ndarray:
         """Fit to data, then transform it.
@@ -424,7 +445,7 @@ class Gower:
         self.fit(X)
         return self.transform(X)
 
-    def __call__(self, a: Any, b: Any) -> float:
+    def __call__(self, a: Any, b: Any) -> np.floating | np.integer:
         """Compute the Gower distance between two records.
 
         Args:
@@ -432,17 +453,18 @@ class Gower:
             b (Any): Second record of data.
 
         Returns:
-            float: Gower distance in [0,1], or np.nan if no features are comparable.
+            np.floating | np.integer: Gower distance in [0,1], or np.nan if no features are comparable.
 
         Raises:
             IllegalStateError: If fit(X) was not called before computing distance.
 
-        Example:            >>> import pandas as pd
-            >>> from gower_metric import Gower
-            >>> from gower_metric.core.config import Config
+        Example:
+            >>> import pandas as pd
+            >>> from gower_metric import Config, Gower
             >>> data = pd.DataFrame({
             ...     'feature1': [[1.0], [2.0], [3.0], [4.0]],
             ...     'feature2': ['A', 'B', 'A', 'C'],
+            ...     })
             >>> feature_types = {
             ...     'feature1': 'numeric_interval',
             ...     'feature2': 'categorical_nominal',
@@ -457,6 +479,10 @@ class Gower:
         if not self._is_fitted:
             msg = "Must call .fit(X) before computing distances."
             raise IllegalStateError(msg)
+
+        if self._is_transformed:
+            validate_if_transformed(a)
+            validate_if_transformed(b)
 
         x = to_array(a)
         y = to_array(b)
@@ -525,13 +551,13 @@ class Gower:
                 cat_cnt += cat_ord_count[0, 0]
 
             if cat_cnt == 0:
-                return float("nan")
+                return self.data_type(np.nan)
 
             cat_dist = cat_sum / cat_cnt
             threshold = self.conditional_distances_threshold_coeff / self.p_cat
 
             if cat_dist > threshold:
-                return 1.0
+                return self.data_type(1.0)
 
         num_sum, num_count = numeric_component(
             Xn,
@@ -577,11 +603,11 @@ class Gower:
             )
 
         if total_count[0, 0] == 0:
-            return float("nan")
+            return self.data_type(np.nan)
 
-        return float(total_sum[0, 0] / total_count[0, 0])
+        return self.data_type(total_sum[0, 0] / total_count[0, 0])
 
-    def similarity(self, a: Any, b: Any) -> float:
+    def similarity(self, a: Any, b: Any) -> np.floating | np.integer:
         """Compute the Gower similarity between two records.
 
         Args:
@@ -592,15 +618,14 @@ class Gower:
             float: Gower similarity in [0,1], defined as 1 - distance(a, b).
 
         Example:
-            >>> from gower_metric import Gower
-            >>> from gower_metric.core.config import Config
+            >>> from gower_metric import Config, Gower
             >>> data = pd.DataFrame({
             ...     'feature1': [[1.0], [2.0], [3.0], [4.0]],
             ...     'feature2': ['A', 'B', 'A', 'C'],
             >>> feature_types = {
             ...     'feature1': 'numeric_interval',
             ...     'feature2': 'categorical_nominal',
-            ... }
+            ... })
             >>> cfg = Config(
             ...     feature_types=feature_types,
             ... )
@@ -613,7 +638,7 @@ class Gower:
     def matrix(
         self,
         X: pd.DataFrame | np.ndarray,
-        data_type: type[np.floating | np.integer] = np.float32,
+        data_type: type[np.floating | np.integer] | None = None,
         n_jobs: int = -1,
         verbose: int = 0,
         matrix_type: str = "distance",
@@ -630,7 +655,8 @@ class Gower:
 
         Args:
             X (pd.DataFrame | np.ndarray): shape of (n_samples, n_features).
-            data_type (type[np.floating | np.integer]): data type for the output distance matrix, default np.float32.
+            data_type (type[np.floating | np.integer] | None): data type used for the output distance matrix.
+                If None, uses the data_type from the Gower instance configuration.
             n_jobs (int): number of parallel jobs to run, -1 means using all processors. Default is -1.
             verbose (int): whether to show tqdm progress bar. Default is 0 (no progress bar).
             matrix_type (str): Type of matrix to compute, either 'distance' or 'similarity'.
@@ -651,12 +677,12 @@ class Gower:
 
         Examples:
             Basic usage:
-                >>> from gower_metric import Gower
-                >>> from gower_metric.core.config import Config
+                >>> from gower_metric import Config, Gower
                 >>> data = pd.DataFrame({
                 ...     'feature1': [[1.0], [2.0], [3.0], [4.0]],
                 ...     'feature2': ['A', 'B', 'A', 'C'],
                 ...     'feature3': [0, 1, 0, 1],
+                ...})
                 >>> feature_types = {
                 ...     'feature1': 'numeric_interval',
                 ...     'feature2': 'categorical_nominal',
@@ -675,8 +701,7 @@ class Gower:
 
             Using similarity matrix and sparse output:
                 >>> import pandas as pd
-                >>> from gower_metric import Gower
-                >>> from gower_metric.core.config import Config
+                >>> from gower_metric import Config, Gower
                 >>> data = pd.DataFrame({
                 ...     'feature1': [[1.0], [2.0], [3.0], [4.0]],
                 ...     'feature2': ['A', 'B', 'A', 'C'],
@@ -703,6 +728,9 @@ class Gower:
             self.fit(X)
             msg = "Calling .fit(X) inside .matrix(X)."
             raise Warning(msg)
+
+        if data_type is None:
+            data_type = self.data_type
 
         return get_full_matrix(
             self,

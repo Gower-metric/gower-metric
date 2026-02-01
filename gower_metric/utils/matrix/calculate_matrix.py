@@ -99,7 +99,7 @@ def _get_results_from_joblib(
 def get_full_matrix(
     self: "Gower",
     X: pd.DataFrame | np.ndarray,
-    data_type: type[np.floating | np.integer] = np.float32,
+    data_type: type[np.floating | np.integer],
     n_jobs: int = -1,
     verbose: int = 0,
     matrix_type: str = "distance",
@@ -117,7 +117,7 @@ def get_full_matrix(
     Args:
         self (gower_metric.Gower): Fitted Gower instance.
         X (pd.DataFrame | np.ndarray): shape of (n_samples, n_features).
-        data_type (type[np.floating | np.integer]): data type for the output distance matrix, default np.float32.
+        data_type (type[np.floating | np.integer]): data type for the output distance matrix, default self.data_type.
         n_jobs (int): number of parallel jobs to run, -1 means using all processors. Default is -1.
         verbose (int): whether to show tqdm progress bar. Default is 0 (no progress bar).
         matrix_type (str): Type of matrix to compute, either 'distance' or 'similarity'.
@@ -165,7 +165,7 @@ def get_full_matrix(
         np.fill_diagonal(MATRIX, 1.0)
 
     if convert_to_sparse:
-        MATRIX = get_scipy_sparse_matrix(
+        return get_scipy_sparse_matrix(
             MATRIX,
             matrix_format=sparse_type,
             data_type=data_type,

@@ -14,8 +14,7 @@ You can pass weights to features when calculating distances or similarities. Thi
 
     import numpy as np
 
-    from gower_metric import Gower
-    from gower_metric.core.config import Config
+    from gower_metric import Config, Gower
 
     data = np.array([[1, 'a', 3.5], [2, 'b', 4.0], [3, 'a', 2.5], [4, 'c', 5.0]], dtype=object)
 
@@ -47,8 +46,7 @@ Here things get a bit more tricky. When dealing with categorical ordinal data, w
 
     import numpy as np
 
-    from gower_metric import Gower
-    from gower_metric.core.config import Config
+    from gower_metric import Config, Gower
 
     data = np.array([
         [1, 'low', 3.5],
@@ -86,6 +84,8 @@ On top of the examples before, we can also play with other class functionalities
 
     from gower_metric import Gower
 
+    DTYPE = np.float64
+
     data = np.array([
         [1, 'low', 3.5],
         [2, 'medium', 4.0],
@@ -105,6 +105,7 @@ On top of the examples before, we can also play with other class functionalities
 
     cfg = Config(
         feature_types=feature_types,
+        data_type=DTYPE,
         categorical_ordinal_values_order=ordinal_mappings,
         categorical_ordinal_calculation_type="podani",
         scale_method="iqr",
