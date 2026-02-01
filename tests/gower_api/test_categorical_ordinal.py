@@ -1,6 +1,7 @@
 import numpy as np
 import pandas as pd
 import pytest
+from pydantic import ValidationError
 
 from gower_metric import Config, Gower
 
@@ -103,7 +104,7 @@ def test_categorical_ordinal_podani_uniform_df() -> None:
 
 
 def test_categorical_ordinal_not_valid_uniform_ndarray_() -> None:
-    with pytest.raises(ValueError):
+    with pytest.raises(ValidationError):
         Config(
             feature_types={"level": "categorical_ordinal"},
             categorical_ordinal_calculation_type="not_valid",  # type: ignore[arg-type]
@@ -115,7 +116,7 @@ def test_categorical_ordinal_no_values_order_def_for_all_columns_() -> None:
         0: ["low", "medium", "high"],
     }
 
-    with pytest.raises(ValueError):
+    with pytest.raises(ValidationError):
         Config(
             feature_types={0: "categorical_ordinal", 1: "categorical_ordinal"},
             categorical_ordinal_values_order=categorical_ordinal_values_order,

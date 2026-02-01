@@ -60,7 +60,7 @@ def test_knn_bandwidth_values_and_effect() -> None:
     cfg = Config(
         feature_types={0: "ratio_scale_interval", 1: "numeric"},
         scale_window="kNN",
-        k_neighbours=k,
+        k_neighbors=k,
         scale_method="range",
     )
     gower = Gower(cfg).fit(data)
