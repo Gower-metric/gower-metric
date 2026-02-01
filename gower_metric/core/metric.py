@@ -98,7 +98,7 @@ class Gower:
         self.scale_window: str | None = config.scale_window
         self.scale_window_type: str | None = config.scale_window_type
 
-        self.k_neighbours = config.k_neighbours
+        self.k_neighbors = config.k_neighbors
 
         self.conditional_distances = config.conditional_distances
 
@@ -252,14 +252,14 @@ class Gower:
         elif self.scale_window == "kNN":
             self._h_ratio = np.array(
                 [
-                    knn_bandwidth(arr[:, j].astype(float), k=self.k_neighbours)
+                    knn_bandwidth(arr[:, j].astype(float), k=self.k_neighbors)
                     for j in self.ratio_scale_indices
                 ],
                 dtype=float,
             )
             self._h_numeric = np.array(
                 [
-                    knn_bandwidth(arr[:, j].astype(float), k=self.k_neighbours)
+                    knn_bandwidth(arr[:, j].astype(float), k=self.k_neighbors)
                     for j in self.numeric_indices
                 ],
                 dtype=float,

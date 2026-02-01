@@ -18,7 +18,7 @@ ScaleWindow = Literal["kde", "kNN"]
 ScaleWindowType = Literal["silverman"]
 MissingStrategy = Literal["ignore", "max_dist", "raise_error"]
 CategoricalOrdinalCalcType = Literal["kaufman", "podani"]
-K_NeighboursType = int | None
+K_NeighborsType = int | None
 ConditionalDistancesFlag = Literal[True, False]
 ConditionalDistancesThresholdCoeffType = int
 
@@ -47,8 +47,8 @@ class Config(BaseModel):
             the columns of type 'categorical_ordinal'. Must contain values for all such columns.
         categorical_ordinal_calculation_type (str): Optional calculation type for categorical
             ordinal features. Can be 'kaufman' or 'podani'. Default is 'kaufman' if omitted.
-        k_neighbours (int | None): Optional number of nearest neighbours for 'kNN' scaling window.
-            Default is None if omitted. If k_neighbours is None, it will be set to the square root of the number of points.
+        k_neighbors (int | None): Optional number of nearest neighbors for 'kNN' scaling window.
+            Default is None if omitted. If k_neighbors is None, it will be set to the square root of the number of points.
         conditional_distances (bool): Default to False. If set to True, two-step approach will be
             triggered to calculate formula. More information in `references year 2021 -> chapter 3 <https://arxiv.org/abs/2101.02481>`_.
         conditional_distances_threshold_coeff (int): Value to be used as the numerator in the fraction (with p_cat as the denominator)
@@ -69,7 +69,7 @@ class Config(BaseModel):
     missing_strategy: MissingStrategy = "ignore"
     categorical_ordinal_values_order: dict[int | str, list[str]] | None = {}
     categorical_ordinal_calculation_type: CategoricalOrdinalCalcType = "kaufman"
-    k_neighbours: int | None = None
+    k_neighbors: int | None = None
     conditional_distances: ConditionalDistancesFlag = False
     conditional_distances_threshold_coeff: int = 1
 
@@ -131,26 +131,26 @@ class Config(BaseModel):
             raise ValueError(msg)
         return v
 
-    @field_validator("k_neighbours")
+    @field_validator("k_neighbors")
     @classmethod
-    def check_k_neighbours(
+    def check_k_neighbors(
         cls,
-        v: K_NeighboursType,
-    ) -> K_NeighboursType:
-        """Validate the number of nearest neighbours (k).
+        v: K_NeighborsType,
+    ) -> K_NeighborsType:
+        """Validate the number of nearest neighbors (k).
 
         Args:
-            v (K_NeighboursType): The value of k to check.
+            v (K_NeighborsType): The value of k to check.
 
         Returns:
-            v (K_NeighboursType): The validated value.
+            v (K_NeighborsType): The validated value.
 
         Raises:
             ValueError: If k is not a positive integer or None.
 
         """
         if v is not None and (not isinstance(v, int) or v < 1):
-            msg = f"k_neighbours must be None or a positive integer, got {v!r}"
+            msg = f"k_neighbors must be None or a positive integer, got {v!r}"
             raise ValueError(msg)
         return v
 
