@@ -11,6 +11,7 @@ Utils
    :maxdepth: 1
 
    utils/aux
+   utils/binary_ut
    utils/cat_ord_ut
    utils/knn_bandwidth
    utils/missing

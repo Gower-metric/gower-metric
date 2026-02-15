@@ -49,7 +49,7 @@ gower-metric = { workspace = true }
 override-dependencies = [
     "urllib3>=2.6.3",
     "filelock>=3.20.3",
-    "pip>=25.3",
+    "pip>=26.0",
     "setuptools>=78.1.1",
     "fonttools>=4.60.2",
 ]

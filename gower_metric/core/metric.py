@@ -15,6 +15,7 @@ from gower_metric.distances.categorical_nominal import categorical_nominal_compo
 from gower_metric.distances.categorical_ordinal import categorical_ordinal_component
 from gower_metric.distances.numeric_interval import numeric_component
 from gower_metric.distances.ratio_scale_interval import ratio_scale_component
+from gower_metric.utils.binary_ut import fit_binary_features
 from gower_metric.utils.cat_ord_ut import (
     get_cardinalities_mapping,
     map_ordered_values,
@@ -108,6 +109,7 @@ class Gower:
 
         self._is_fitted: bool = False
         self._is_transformed: bool = False
+        self.binary_metadata: dict[int, dict[str, Any]] = {}
 
     def fit(self, X: pd.DataFrame | np.ndarray) -> "Gower":
         """Fit the Gower model by computing numeric feature ranges.
@@ -293,6 +295,11 @@ class Gower:
             config=self.feature_weights,
         )
 
+        self.binary_metadata = fit_binary_features(
+            arr,
+            self.binary_asymmetric_indices + self.binary_symmetric_indices,
+        )
+
         self._is_fitted = True
         return self
 
@@ -365,13 +372,19 @@ class Gower:
 
             if ftype in ("binary_asymmetric", "binary_symmetric"):
                 transformed_col = np.zeros(col.shape[0], dtype=float)
+                mapping = self.binary_metadata[col_idx]["mapping"]
+
                 for i, v in enumerate(col):
                     if pd.isna(v):
                         transformed_col[i] = np.nan
-                    elif str(v).lower() in ("true", "1", "yes", "1.0"):
-                        transformed_col[i] = 1.0
                     else:
-                        transformed_col[i] = 0.0
+                        if v not in mapping:
+                            msg = (
+                                f"Value '{v}' in column {col_idx} not found in fitted binary mapping "
+                                f"{list(mapping.keys())}."
+                            )
+                            raise ValueError(msg)
+                        transformed_col[i] = mapping[v]
 
             elif ftype == "categorical_ordinal":
                 if self.categorical_ordinal_values_order is None:
