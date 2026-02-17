@@ -1,5 +1,3 @@
-from typing import cast
-
 import numpy as np
 import pandas as pd
 import pytest
@@ -106,7 +104,7 @@ def test_transform_with_df() -> None:
         dtype=DTYPE,
     )
 
-    pd.testing.assert_frame_equal(cast("pd.DataFrame", transformed_data), expected_data)
+    pd.testing.assert_frame_equal(transformed_data, expected_data)
 
 
 def test_validate_transformation_pandas() -> None:
@@ -125,29 +123,9 @@ def test_validate_transformation_pandas() -> None:
     cfg = Config(feature_types=ft)
     gower = Gower(cfg)
     gower.fit(data)
-    _ = gower.transform(data)
+    d_t = gower.transform(data)
 
-    with pytest.raises(IllegalStateError):
-        gower(data.iloc[0], data.iloc[1])
-
-
-def test_validate_double_transformed() -> None:
-    data = pd.DataFrame(
-        {
-            "age": [25, 30, 35, 40, 45],
-            "gender": ["male", "female", "male", "female", "male"],
-            "income": [50000, 60000, 70000, 80000, 90000],
-        },
-    )
-    ft: dict[str | int, str] = {
-        "age": "ratio_scale_interval",
-        "gender": "categorical_nominal",
-        "income": "ratio_scale_interval",
-    }
-    cfg = Config(feature_types=ft)
-    gower = Gower(cfg)
-    gower.fit(data)
-    _ = gower.transform(data)
-
-    with pytest.raises(IllegalStateError):
-        gower.transform(data)
+    for i in range(data.shape[0] - 1):
+        assert gower(data.iloc[i], data.iloc[i + 1]) == pytest.approx(
+            gower(d_t.iloc[i], d_t.iloc[i + 1]),
+        )

@@ -1,6 +1,6 @@
 # Gower-metric
 
-Welcome to the Gower-metric library! This library provides an implementation of Gower's distance metric, which is particularly useful for calculating distances between samples with mixed data types 😁
+Welcome to the Gower-metric library! This library provides an implementation of Gower's distance metric, which is particularly useful for calculating distances between samples with mixed data types.
 
 ## Table of Contents
 
@@ -113,9 +113,6 @@ transformed_data = gower.transform(data)
 ```
 
 Under the hood, we map and convert all non-numerical values into numerical representation. With that in mind, all components calculated during fitting stage are being adjusted to transformed data and later used during distance calculation.
-
-> [!IMPORTANT]
-> Note that after calling `transform` method, user should NOT calculate components on original data anymore! This may lead to incorrect results.
 
 Calculating distance between two samples is the same:
 
