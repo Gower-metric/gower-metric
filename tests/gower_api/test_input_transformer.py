@@ -125,7 +125,7 @@ def test_validate_transformation_pandas() -> None:
     gower.fit(data)
     d_t = gower.transform(data)
 
-    for i in range(data.shape[1]):
+    for i in range(data.shape[0] - 1):
         assert gower(data.iloc[i], data.iloc[i + 1]) == pytest.approx(
             gower(d_t.iloc[i], d_t.iloc[i + 1]),
         )
