@@ -59,13 +59,3 @@ For convenience, Gower also implements ``fit_transform`` method, which combines 
    gower = Gower(cfg)
 
    transformed_data = gower.fit_transform(data)
-
----------------------------------------
-Do we validate if data is transformed?
----------------------------------------
-
-Yes, and no. Here is the catch, we validate if data is transformed only when dealing with pandas DataFrames. Why? Because they support
-metadata field within the DataFrame object, unlike numpy arrays (well, there has been such feature but is no longer supported).
-
-In order to maintain compatibility with external libraries API, there are no more advanced checks of non-dataframe data. Please be aware of that.
-``Thus user should not call Gower instance on original data after transformation!``

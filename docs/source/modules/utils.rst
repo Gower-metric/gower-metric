@@ -1,21 +1,15 @@
-=====
-Utils
-=====
-
-.. automodule:: gower_metric.utils
-   :members:
-   :undoc-members:
-   :show-inheritance:
+================
+Utils submodule
+================
 
 .. toctree::
-   :maxdepth: 1
+   :maxdepth: 4
 
-   utils/aux
    utils/binary_ut
    utils/cat_ord_ut
+   utils/categorical_ut
+   utils/kde_types
    utils/knn_bandwidth
-   utils/missing
+   utils/matrix
    utils/ranges
    utils/to_array
-   utils/kde_types
-   utils/matrix

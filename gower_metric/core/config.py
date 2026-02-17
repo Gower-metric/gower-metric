@@ -53,7 +53,7 @@ class Config(BaseModel):
             triggered to calculate formula. More information in `references year 2021 -> chapter 3 <https://arxiv.org/abs/2101.02481>`_.
         conditional_distances_threshold_coeff (int): Value to be used as the numerator in the fraction (with p_cat as the denominator)
             that defines the threshold above which the distance will be set to 1. More information in reference from year 2021 -> chapter 3.
-
+        #TODO<Bartłomiej> add nominal and ordinal values indicates how to treat first seen values
 
     Raises:
             ValueError: If custom validation rule fail.

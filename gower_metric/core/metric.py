@@ -1,9 +1,8 @@
-from typing import Any, cast
+from typing import TYPE_CHECKING, Any, cast
 
 import numpy as np
 import pandas as pd
 import scipy.sparse
-from sklearn.preprocessing import OrdinalEncoder
 
 from gower_metric.core.config import Config
 from gower_metric.core.exceptions import IllegalStateError
@@ -20,15 +19,19 @@ from gower_metric.utils.cat_ord_ut import (
     get_cardinalities_mapping,
     map_ordered_values,
 )
+from gower_metric.utils.categorical_ut import (
+    fit_nominal_features,
+    fit_ordinal_features,
+)
 from gower_metric.utils.kde_types.silverman import silverman_bandwidth
 from gower_metric.utils.knn_bandwidth import knn_bandwidth
 from gower_metric.utils.matrix.calculate_matrix import get_full_matrix
 from gower_metric.utils.ranges import get_numeric_ranges
 from gower_metric.utils.to_array import to_array
-from gower_metric.utils.transformation import (
-    validate_if_transformed,
-)
 from gower_metric.weights.weights import get_weights
+
+if TYPE_CHECKING:
+    from sklearn.preprocessing import OrdinalEncoder
 
 
 class Gower:
@@ -63,6 +66,7 @@ class Gower:
             ...     0: 1.0,
             ...     1: 2.0,
             ...     2: 1.0,
+            ... }
             >>> cfg = Config(
             ...     feature_types=feature_types,
             ...     feature_weights=feature_weights,
@@ -108,8 +112,10 @@ class Gower:
         )
 
         self._is_fitted: bool = False
-        self._is_transformed: bool = False
-        self.binary_metadata: dict[int, dict[str, Any]] = {}
+        self.binary_symmetric_metadata: dict[int, dict[str, Any]] = {}
+        self.binary_asymmetric_metadata: dict[int, dict[str, Any]] = {}
+        self.nominal_metadata: dict[int, OrdinalEncoder] = {}
+        self.ordinal_metadata: dict[int, OrdinalEncoder] = {}
 
     def fit(self, X: pd.DataFrame | np.ndarray) -> "Gower":
         """Fit the Gower model by computing numeric feature ranges.
@@ -117,6 +123,7 @@ class Gower:
         Args:
             X (np.ndarray | pd.DataFrame): shape of (n_samples, n_features).
                 For DataFrame inputs, column names in feature_types are converted to indices.
+                Sparse matrices are not supported and will be converted to dense arrays (may cause OOM).
 
         Returns:
             Gower: The fitted instance.
@@ -142,6 +149,7 @@ class Gower:
             ...     0: 1.0,
             ...     1: 2.0,
             ...     2: 1.0,
+            ... }
             >>> cfg = Config(
             ...     feature_types=feature_types,
             ...     feature_weights=feature_weights,
@@ -295,9 +303,27 @@ class Gower:
             config=self.feature_weights,
         )
 
-        self.binary_metadata = fit_binary_features(
+        self.binary_symmetric_metadata = fit_binary_features(
             arr,
-            self.binary_asymmetric_indices + self.binary_symmetric_indices,
+            self.binary_symmetric_indices,
+        )
+
+        self.binary_asymmetric_metadata = fit_binary_features(
+            arr,
+            self.binary_asymmetric_indices,
+        )
+
+        self.nominal_metadata = fit_nominal_features(
+            arr,
+            self.categorical_nominal_indices,
+            self.data_type,
+        )
+
+        self.ordinal_metadata = fit_ordinal_features(
+            arr,
+            self.categorical_ordinal_indices,
+            self.categorical_ordinal_values_order,
+            self.data_type,
         )
 
         self._is_fitted = True
@@ -306,10 +332,12 @@ class Gower:
     def transform(self, X: pd.DataFrame | np.ndarray) -> pd.DataFrame | np.ndarray:
         """Transform the input DataFrame or ndarray to contain only floats.
 
-        Updates the Gower model feature ranges calculated by the fitting.
-
         Useful when applying 'gower' distance metrics in scikit-learn methods
         (e.g., KNN) requiring numeric input exclusively.
+
+        Note:
+            - Sparse matrices are not supported and will be converted to dense arrays.
+            - Model ranges and parameters are NOT updated by this method (it is stateless).
 
         Args:
             X (np.ndarray | pd.DataFrame): shape of (n_samples, n_features).
@@ -337,7 +365,6 @@ class Gower:
             ... }
             >>> cfg = Config(
             ...     feature_types=feature_types,
-            ...     feature_weights=feature_weights,
             ... )
             >>> gower = Gower(cfg).fit(data)
             >>> data_transformed = gower.transform(data)
@@ -345,10 +372,6 @@ class Gower:
         """
         if not self._is_fitted:
             msg = "Operation not allowed: model is not fitted"
-            raise IllegalStateError(msg)
-
-        if self._is_transformed:
-            msg = "Operation not allowed: data has already been transformed"
             raise IllegalStateError(msg)
 
         is_df = isinstance(X, pd.DataFrame)
@@ -370,15 +393,40 @@ class Gower:
             else:
                 col = X_arr[:, col_idx]
 
-            if ftype in ("binary_asymmetric", "binary_symmetric"):
+            max_unique_binary_elements: int = 2
+            if ftype == "binary_asymmetric":
                 transformed_col = np.zeros(col.shape[0], dtype=float)
-                mapping = self.binary_metadata[col_idx]["mapping"]
+                mapping = self.binary_asymmetric_metadata[col_idx]["mapping"]
 
                 for i, v in enumerate(col):
                     if pd.isna(v):
                         transformed_col[i] = np.nan
                     else:
                         if v not in mapping:
+                            if len(mapping) < max_unique_binary_elements:
+                                transformed_col[i] = np.nan
+                                continue
+
+                            msg = (
+                                f"Value '{v}' in column {col_idx} not found in fitted binary mapping "
+                                f"{list(mapping.keys())}."
+                            )
+                            raise ValueError(msg)
+                        transformed_col[i] = mapping[v]
+
+            elif ftype == "binary_symmetric":
+                transformed_col = np.zeros(col.shape[0], dtype=float)
+                mapping = self.binary_symmetric_metadata[col_idx]["mapping"]
+
+                for i, v in enumerate(col):
+                    if pd.isna(v):
+                        transformed_col[i] = np.nan
+                    else:
+                        if v not in mapping:
+                            if len(mapping) < max_unique_binary_elements:
+                                transformed_col[i] = np.nan
+                                continue
+
                             msg = (
                                 f"Value '{v}' in column {col_idx} not found in fitted binary mapping "
                                 f"{list(mapping.keys())}."
@@ -387,30 +435,23 @@ class Gower:
                         transformed_col[i] = mapping[v]
 
             elif ftype == "categorical_ordinal":
-                if self.categorical_ordinal_values_order is None:
-                    msg = "Categorical ordinal values order is missing"
+                if col_idx not in self.ordinal_metadata:
+                    msg = f"Ordinal metadata missing for column {col_idx}"
                     raise ValueError(msg)
-                enc = OrdinalEncoder(
-                    categories=[
-                        self.categorical_ordinal_values_order[col_idx],
-                    ],
-                    dtype=self.data_type,
-                    handle_unknown="use_encoded_value",
-                    unknown_value=np.nan,
-                )
+
+                enc = self.ordinal_metadata[col_idx]
                 transformed_col = (
-                    enc.fit_transform(np.array(col).reshape(-1, 1))
+                    enc.transform(np.array(col).reshape(-1, 1))
                     .astype(self.data_type)
                     .ravel()
                 )
 
             elif ftype == "categorical_nominal":
-                enc = OrdinalEncoder(
-                    dtype=self.data_type,
-                    handle_unknown="use_encoded_value",
-                    unknown_value=np.nan,
-                )
-                enc.fit(np.array(col).reshape(-1, 1))
+                if col_idx not in self.nominal_metadata:
+                    msg = f"Nominal metadata missing for column {col_idx}"
+                    raise ValueError(msg)
+
+                enc = self.nominal_metadata[col_idx]
                 transformed_col = (
                     enc.transform(np.array(col).reshape(-1, 1))
                     .astype(self.data_type)
@@ -430,18 +471,14 @@ class Gower:
                 v: v for v in self.cat_ord_metadata[co_col_idx]["ranks"].values()
             }
 
-        self._is_transformed = True
         if is_df:
-            df_transformed = pd.DataFrame(
+            return pd.DataFrame(
                 transformed_data,
                 columns=df.columns,
                 index=df.index,
                 dtype=self.data_type,
             )
-            df_transformed.attrs["transformed"] = True
-            return df_transformed
-        # Note: NumPy dtype metadata is not reliably preserved across operations,
-        # so we avoid using it to track transformation state.
+
         return transformed_data.astype(self.data_type)
 
     def fit_transform(self, X: pd.DataFrame | np.ndarray) -> pd.DataFrame | np.ndarray:
@@ -492,10 +529,6 @@ class Gower:
         if not self._is_fitted:
             msg = "Must call .fit(X) before computing distances."
             raise IllegalStateError(msg)
-
-        if self._is_transformed:
-            validate_if_transformed(a)
-            validate_if_transformed(b)
 
         x = to_array(a)
         y = to_array(b)
@@ -635,6 +668,7 @@ class Gower:
             >>> data = pd.DataFrame({
             ...     'feature1': [[1.0], [2.0], [3.0], [4.0]],
             ...     'feature2': ['A', 'B', 'A', 'C'],
+            ... })
             >>> feature_types = {
             ...     'feature1': 'numeric_interval',
             ...     'feature2': 'categorical_nominal',

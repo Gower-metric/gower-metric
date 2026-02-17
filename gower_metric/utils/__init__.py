@@ -1,21 +1,23 @@
 from gower_metric.utils import (
     aux,
+    binary_ut,
     cat_ord_ut,
+    categorical_ut,
     knn_bandwidth,
     missing,
     ranges,
     to_array,
-    transformation,
 )
 
 __all__ = [
     "aux",
+    "binary_ut",
     "cat_ord_ut",
+    "categorical_ut",
     "knn_bandwidth",
     "missing",
     "ranges",
     "to_array",
-    "transformation",
 ]
 
 __doc__ = """
