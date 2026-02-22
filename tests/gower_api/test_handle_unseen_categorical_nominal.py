@@ -84,7 +84,7 @@ class TestHandleUnseenCategoricalNominal:
         ):
             Config(
                 feature_types={0: "categorical_nominal"},
-                handle_unseen_categorical_nominal="invalid",
+                handle_unseen_categorical_nominal="invalid",  # type: ignore[arg-type]
             )
 
     def test_strategy_with_pandas_dataframe(self) -> None:
@@ -99,7 +99,7 @@ class TestHandleUnseenCategoricalNominal:
         gower = Gower(cfg).fit(X_train)
 
         result = gower.transform(X_test)
-        assert np.isnan(result.iloc[0, 0])
+        assert np.isnan(result.iloc[0, 0])  # type: ignore[union-attr]
 
     def test_all_seen_values_work_fine(self) -> None:
         """Test that seen values work correctly with error strategy (default)."""

@@ -83,7 +83,7 @@ class TestBinaryAsymmetricValueOrder:
             cfg = Config(
                 feature_types={0: "binary_asymmetric"},
                 binary_asymmetric_value_order={0: ["A", "B"]},
-                handle_unseen_binary_asymmetric=strategy,
+                handle_unseen_binary_asymmetric=strategy,  # type: ignore[arg-type]
             )
             gower = Gower(cfg).fit(X_train)
 
@@ -153,7 +153,7 @@ class TestBinaryAsymmetricValueOrder:
         gower = Gower(cfg).fit(X_train)
         result = gower.transform(X_test)
 
-        assert result.iloc[0, 0] == 1.0
+        assert result.iloc[0, 0] == 1.0  # type: ignore[union-attr]
 
     def test_auto_detect_without_explicit_order(self) -> None:
         """Test that auto-detection still works when no explicit order provided.
@@ -261,7 +261,7 @@ class TestBinaryAsymmetricValueOrderValidation:
         with pytest.raises(ValidationError, match=r"Input should be a valid list"):
             Config(
                 feature_types={0: "binary_asymmetric"},
-                binary_asymmetric_value_order={0: "NotAList"},
+                binary_asymmetric_value_order={0: "NotAList"},  # type: ignore[dict-item]
             )
 
     def test_validation_none_is_valid(self) -> None:
@@ -285,5 +285,5 @@ class TestBinaryAsymmetricValueOrderValidation:
                 1: [False, True],
             },
         )
-        assert cfg.binary_asymmetric_value_order[0] == ["No", "Yes"]
-        assert cfg.binary_asymmetric_value_order[1] == [False, True]
+        assert cfg.binary_asymmetric_value_order[0] == ["No", "Yes"]  # type: ignore[index]
+        assert cfg.binary_asymmetric_value_order[1] == [False, True]  # type: ignore[index]

@@ -127,5 +127,5 @@ def test_validate_transformation_pandas() -> None:
 
     for i in range(data.shape[0] - 1):
         assert gower(data.iloc[i], data.iloc[i + 1]) == pytest.approx(
-            gower(d_t.iloc[i], d_t.iloc[i + 1]),
+            gower(d_t.iloc[i], d_t.iloc[i + 1]),  # type: ignore[union-attr]
         )

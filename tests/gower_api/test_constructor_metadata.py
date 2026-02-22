@@ -26,14 +26,10 @@ def test_binary_ab_mapping(bin_type) -> None:
 
     # features are sorted alphabetically, so A -> 0.0 and B -> 1.0
 
-    np.testing.assert_array_equal(
-        transformed["feature1"].to_numpy(),
-        [0.0, 1.0, 0.0, 1.0],
-    )
-    np.testing.assert_array_equal(
-        transformed["feature2"].to_numpy(),
-        [0.0, 0.0, 1.0, 1.0],
-    )
+    res1 = transformed["feature1"].to_numpy()  # type: ignore[union-attr]
+    np.testing.assert_array_equal(res1, [0.0, 1.0, 0.0, 1.0])
+    res2 = transformed["feature2"].to_numpy()  # type: ignore[union-attr]
+    np.testing.assert_array_equal(res2, [0.0, 0.0, 1.0, 1.0])
 
 
 def test_ordinal_consistency() -> None:
@@ -56,13 +52,13 @@ def test_ordinal_consistency() -> None:
     gower.fit(X_train)
 
     t_train = gower.transform(X_train)
-    res_train = t_train["ord"].to_numpy()
+    res_train = t_train["ord"].to_numpy()  # type: ignore[union-attr]
 
     np.testing.assert_array_equal(res_train, [0.0, 1.0])
 
     # high->2, extra->NaN
     t_test = gower.transform(X_test)
-    res_test = t_test["ord"].to_numpy()
+    res_test = t_test["ord"].to_numpy()  # type: ignore[union-attr]
 
     np.testing.assert_array_equal(res_test, [2.0, np.nan])
 
@@ -110,7 +106,7 @@ def test_binary_unseen_value_degenerate_fit(bin_type) -> None:
     # 'A' -> {A: 0.0}. 'B' is unseen, maps to NaN
     expected = np.array([np.nan])
 
-    res = transformed["feature1"].to_numpy()
+    res = transformed["feature1"].to_numpy()  # type: ignore[union-attr]
 
     np.testing.assert_array_equal(res, expected)
 

@@ -138,7 +138,7 @@ class TestHandleUnseenBinarySymmetric:
         ):
             Config(
                 feature_types={0: "binary_symmetric"},
-                handle_unseen_binary_symmetric="invalid",
+                handle_unseen_binary_symmetric="invalid",  # type: ignore[arg-type]
             )
 
     def test_strategy_with_pandas_dataframe(self) -> None:
@@ -153,7 +153,7 @@ class TestHandleUnseenBinarySymmetric:
         gower = Gower(cfg).fit(X_train)
 
         result = gower.transform(X_test)
-        assert np.isnan(result.iloc[0, 0])
+        assert np.isnan(result.iloc[0, 0])  # type: ignore[union-attr]
 
     def test_strategy_with_multiple_unseen_values(self) -> None:
         """Test that multiple unseen values violate binary dtype.
