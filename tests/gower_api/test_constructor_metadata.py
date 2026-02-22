@@ -90,7 +90,15 @@ def test_binary_unseen_value_degenerate_fit(bin_type) -> None:
     data_fit = pd.DataFrame({"feature1": ["A"]})
     data_transform = pd.DataFrame({"feature1": ["B"]})
 
-    cfg = Config(feature_types={"feature1": bin_type})
+    cfg = (
+        Config(
+            feature_types={"feature1": bin_type},
+            handle_unseen_binary_asymmetric="missing",
+        )
+        if bin_type == "binary_asymmetric"
+        else Config(feature_types={"feature1": bin_type})
+    )
+
     gower = Gower(cfg)
     gower.fit(data_fit)
 
@@ -110,10 +118,20 @@ def test_binary_unseen_value_complete_fit(bin_type) -> None:
     data_fit = pd.DataFrame({"feature1": ["A", "B"]})
     data_transform = pd.DataFrame({"feature1": ["C"]})
 
-    cfg = Config(feature_types={"feature1": bin_type})
+    cfg = (
+        Config(
+            feature_types={"feature1": bin_type},
+            handle_unseen_binary_asymmetric="error",
+        )
+        if bin_type == "binary_asymmetric"
+        else Config(feature_types={"feature1": bin_type})
+    )
+
     gower = Gower(cfg)
     gower.fit(data_fit)
-
-    # 'A', 'B'. 'C' implies 3rd value -> Error.
-    with pytest.raises(ValueError, match="not found in fitted binary mapping"):
-        gower.transform(data_transform)
+    if bin_type == "binary_asymmetric":
+        with pytest.raises(ValueError, match=r"has 3 unique values total"):
+            gower.transform(data_transform)
+    else:
+        with pytest.raises(ValueError, match="not found in fitted binary mapping"):
+            gower.transform(data_transform)
