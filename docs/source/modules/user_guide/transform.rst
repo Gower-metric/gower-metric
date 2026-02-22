@@ -59,3 +59,57 @@ For convenience, Gower also implements ``fit_transform`` method, which combines 
    gower = Gower(cfg)
 
    transformed_data = gower.fit_transform(data)
+
+---------------------------
+Unseen values in transform
+---------------------------
+
+In a typical ML workflow, you'll fit on a training set and transform a separate test set. If the test set contains
+values that weren't present during training, Gower's ``transform`` will behave differently depending on the
+``handle_unseen_*`` flags you set in your ``Config``.
+
+By default, all feature types use ``"error"``, which raises a ``ValueError`` the moment it hits something unknown.
+This is intentional – it forces you to make a conscious decision about how to handle these cases.
+
+.. code-block:: python
+
+   import numpy as np
+   from gower_metric import Config, Gower
+
+   X_train = np.array([["A"], ["B"]], dtype=object)
+   X_test = np.array([["C"]], dtype=object)   # "C" was never in training
+
+   cfg = Config(
+      feature_types={0: "categorical_nominal"},
+      handle_unseen_categorical_nominal="error",  # default
+   )
+   gower = Gower(cfg).fit(X_train)
+   gower.transform(X_test)   # raises ValueError
+
+If you'd rather treat unseen values as missing data (``NaN``), switch to ``"missing"`` or ``"warning"``:
+
+.. code-block:: python
+
+   cfg = Config(
+      feature_types={0: "categorical_nominal"},
+      handle_unseen_categorical_nominal="missing",
+   )
+   gower = Gower(cfg).fit(X_train)
+   result = gower.transform(X_test)   # "C" -> NaN, no error
+
+The same applies to binary features. If you know the expected binary values up front, combining
+``binary_asymmetric_value_order`` with ``handle_unseen_binary_asymmetric="missing"`` gives you
+full control over how unseen values are mapped:
+
+.. code-block:: python
+
+   cfg = Config(
+      feature_types={0: "binary_asymmetric"},
+      binary_asymmetric_value_order={0: ["No", "Yes"]},
+      handle_unseen_binary_asymmetric="missing",
+   )
+   # Training set only has "No" – "Yes" is still recognized thanks to explicit order
+   gower = Gower(cfg).fit(np.array([["No"], ["No"]], dtype=object))
+   result = gower.transform(np.array([["Yes"]], dtype=object))   # -> 1.0
+
+For more details on available strategies, see the :ref:`Configuration Class <configuration_class>` section.

@@ -1,3 +1,5 @@
+.. _configuration_class:
+
 ====================
 Configuration Class
 ====================
@@ -47,3 +49,49 @@ some of these configuration flags depend on one another. It will be clearly indi
 - ``conditional_distances_threshold_coeff (int)`` - Threshold coefficient to be used when using conditional distances. Defaults to 1; it cannot be lower. Metric will be calculated as follows: if the distance calculated in the first step (using only binary and conditional categorical features)
   exceeds the threshold defined as ``conditional_distances_threshold_coeff * (p_cat / p)`` (where p_cat is the number of categorical and binary features, and p is the total number of features),
   then the final distance will be set to 1. Otherwise, the ratio scale and numeric features will be included in the distance calculation in the second step.
+
+----------------------------
+Handling unseen values
+----------------------------
+
+When working with a train/test split, it's common for the test set to contain values that were never seen during training.
+The ``handle_unseen_*`` parameters let you control what happens in that situation. All of them accept the same three strategies:
+
+- ``"error"`` (default) – raise a ``ValueError`` when an unseen value is encountered. This is the safest option and forces you to deal with the issue explicitly.
+- ``"warning"`` – silently map the unseen value to ``NaN`` (i.e. treat it as missing), but emit a ``UserWarning`` so you know it happened.
+- ``"missing"`` – silently map it to ``NaN`` without any warning. Handy when you already know unseen values are expected and acceptable.
+
+Each feature type has its own toggle:
+
+- ``handle_unseen_binary_asymmetric (str)`` - Strategy for handling unseen values in binary asymmetric features. Defaults to ``"error"``.
+- ``handle_unseen_binary_symmetric (str)`` - Strategy for handling unseen values in binary symmetric features. Defaults to ``"error"``.
+- ``handle_unseen_categorical_nominal (str)`` - Strategy for handling unseen values in categorical nominal features. Defaults to ``"error"``.
+- ``handle_unseen_categorical_ordinal (str)`` - Strategy for handling unseen values in categorical ordinal features. Defaults to ``"error"``.
+
+.. code-block:: python
+
+   from gower_metric import Config, Gower
+
+   cfg = Config(
+       feature_types={0: "binary_asymmetric", 1: "categorical_nominal"},
+       handle_unseen_binary_asymmetric="warning",
+       handle_unseen_categorical_nominal="missing",
+   )
+
+----------------------------
+Binary value ordering
+----------------------------
+
+By default, binary features auto-detect their two possible values from the training data and sort them alphabetically.
+If your domain requires precise control over which value maps to 0 and which maps to 1, you can specify an explicit ordering.
+This is especially useful when the training set only contains one of the two expected values (a *degenerate fit*).
+
+- ``binary_asymmetric_value_order (dict[int | str, list[Any]] | None)`` - Optional explicit ordering for binary asymmetric features. Each entry maps a column index (or name) to a list of exactly two values, where the first value becomes 0 and the second becomes 1. Defaults to ``None`` (auto-detect).
+- ``binary_symmetric_value_order (dict[int | str, list[Any]] | None)`` - Same as above, but for binary symmetric features. Defaults to ``None`` (auto-detect).
+
+.. code-block:: python
+
+   cfg = Config(
+       feature_types={0: "binary_asymmetric"},
+       binary_asymmetric_value_order={0: ["No", "Yes"]},
+   )
