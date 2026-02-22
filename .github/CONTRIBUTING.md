@@ -77,6 +77,29 @@ tox -r -e py310,py311,py312,py313,py314
 > [!NOTE]
 > The key difference between `tests` and `r_env_tests` is presence of [rpy2](https://rpy2.readthedocs.io/en/latest/) package, which requires [R](https://www.r-project.org) to be installed on your system. If you want to run tests that do not require R, feel free to use first group.
 
+### Test Coverage
+
+Coverage is collected automatically every time you run `uv run pytest` — no extra flags needed. The report shows which lines are missing coverage right in the terminal:
+
+```bash
+uv run pytest
+```
+
+At the end of the output you'll see a table like this:
+
+```
+Name                              Stmts   Miss  Cover   Missing
+---------------------------------------------------------------
+gower_metric/core/config.py          95      3    97%   122, 155, 180
+gower_metric/core/metric.py         210     12    94%   289-295, 400
+...
+```
+
+The `Missing` column tells you exactly which lines still need test coverage. This is powered by `pytest-cov` with the `--cov-report=term-missing` flag configured in `pyproject.toml`.
+
+> [!IMPORTANT]
+> When contributing, please make sure your changes **do not decrease** the overall test coverage. If you're adding new functionality, include tests that cover the new code paths. If you're modifying existing code, verify that the existing tests still pass and that the coverage for the affected files remains the same or improves.
+
 ### Creating documentation
 
 To create the documentation, you can use [sphinx-autobuild](https://github.com/sphinx-doc/sphinx-autobuild) tool. It will automatically create the documentation for you and host it locally. You can run the following command to create the environment first:
