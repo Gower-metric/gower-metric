@@ -25,6 +25,8 @@ HandleUnseenBinaryAsymmetric = Literal["warning", "error", "missing"]
 BinaryAsymmetricValueOrderType = dict[int | str, list[Any]] | None
 HandleUnseenBinarySymmetric = Literal["warning", "error", "missing"]
 BinarySymmetricValueOrderType = dict[int | str, list[Any]] | None
+HandleUnseenCategoricalNominal = Literal["warning", "error", "missing"]
+HandleUnseenCategoricalOrdinal = Literal["warning", "error", "missing"]
 
 
 class Config(BaseModel):
@@ -58,17 +60,21 @@ class Config(BaseModel):
         conditional_distances_threshold_coeff (int): Value to be used as the numerator in the fraction (with p_cat as the denominator)
             that defines the threshold above which the distance will be set to 1. More information in reference from year 2021 -> chapter 3.
         handle_unseen_binary_asymmetric (str): Strategy for handling unseen categories in binary asymmetric features. Can be 'warning', 'error' or 'missing'.
-            Default is 'warning' if omitted.
+            Default is 'error' if omitted.
         binary_asymmetric_value_order (dict[int | str, list[Any]] | None): Optional explicit ordering of binary values for binary_asymmetric features.
             Similar to categorical_ordinal_values_order. If None, values are auto-detected from training data.
             If provided, must contain exactly 2 values per binary column. Example: {0: [False, True], 1: ['No', 'Yes']}.
             Recommended for production to ensure reproducibility and handle expected-but-not-yet-seen values.
         handle_unseen_binary_symmetric (str): Strategy for handling unseen categories in binary symmetric features. Can be 'warning', 'error' or 'missing'.
-            Default is 'warning' if omitted.
+            Default is 'error' if omitted.
         binary_symmetric_value_order (dict[int | str, list[Any]] | None): Optional explicit ordering of binary values for binary_symmetric features.
             Similar to categorical_ordinal_values_order. If None, values are auto-detected from training data.
             If provided, must contain exactly 2 values per binary column. Example: {0: [False, True], 1: ['No', 'Yes']}.
             Recommended for production to ensure reproducibility and handle expected-but-not-yet-seen values.
+        handle_unseen_categorical_nominal (str): Strategy for handling unseen categories in categorical nominal features. Can be 'warning', 'error' or 'missing'.
+            Default is 'error' if omitted.
+        handle_unseen_categorical_ordinal (str): Strategy for handling unseen categories in categorical ordinal features. Can be 'warning', 'error' or 'missing'.
+            Default is 'error' if omitted.
 
     Raises:
             ValueError: If custom validation rule fail.
@@ -87,10 +93,12 @@ class Config(BaseModel):
     k_neighbors: int | None = None
     conditional_distances: ConditionalDistancesFlag = False
     conditional_distances_threshold_coeff: int = 1
-    handle_unseen_binary_asymmetric: HandleUnseenBinaryAsymmetric = "warning"
+    handle_unseen_binary_asymmetric: HandleUnseenBinaryAsymmetric = "error"
     binary_asymmetric_value_order: BinaryAsymmetricValueOrderType = None
-    handle_unseen_binary_symmetric: HandleUnseenBinarySymmetric = "warning"
+    handle_unseen_binary_symmetric: HandleUnseenBinarySymmetric = "error"
     binary_symmetric_value_order: BinarySymmetricValueOrderType = None
+    handle_unseen_categorical_nominal: HandleUnseenCategoricalNominal = "error"
+    handle_unseen_categorical_ordinal: HandleUnseenCategoricalOrdinal = "error"
 
     @field_validator("feature_types")
     @classmethod
@@ -447,6 +455,56 @@ class Config(BaseModel):
                 f"binary_symmetric_value_order contains non-binary_symmetric columns: {extra_cols}. "
                 f"Binary symmetric columns are: {binary_symmetric_cols or 'none'}"
             )
+            raise ValueError(msg)
+
+        return v
+
+    @field_validator("handle_unseen_categorical_nominal")
+    @classmethod
+    def check_handle_unseen_categorical_nominal(
+        cls,
+        v: HandleUnseenCategoricalNominal,
+    ) -> HandleUnseenCategoricalNominal:
+        """Validate the strategy for handling unseen categories in categorical nominal features.
+
+        Args:
+            v (HandleUnseenCategoricalNominal): The strategy to check.
+
+        Returns:
+            v (HandleUnseenCategoricalNominal): The validated strategy.
+
+        Raises:
+            ValueError: If the strategy is not one of 'warning', 'error', or 'missing'.
+
+        """
+        valid_strategies = get_args(HandleUnseenCategoricalNominal)
+        if v not in valid_strategies:
+            msg = f"handle_unseen_categorical_nominal must be one of {valid_strategies}, got {v}"
+            raise ValueError(msg)
+
+        return v
+
+    @field_validator("handle_unseen_categorical_ordinal")
+    @classmethod
+    def check_handle_unseen_categorical_ordinal(
+        cls,
+        v: HandleUnseenCategoricalOrdinal,
+    ) -> HandleUnseenCategoricalOrdinal:
+        """Validate the strategy for handling unseen categories in categorical ordinal features.
+
+        Args:
+            v (HandleUnseenCategoricalOrdinal): The strategy to check.
+
+        Returns:
+            v (HandleUnseenCategoricalOrdinal): The validated strategy.
+
+        Raises:
+            ValueError: If the strategy is not one of 'warning', 'error', or 'missing'.
+
+        """
+        valid_strategies = get_args(HandleUnseenCategoricalOrdinal)
+        if v not in valid_strategies:
+            msg = f"handle_unseen_categorical_ordinal must be one of {valid_strategies}, got {v}"
             raise ValueError(msg)
 
         return v

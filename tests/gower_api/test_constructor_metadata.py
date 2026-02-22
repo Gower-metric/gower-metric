@@ -50,6 +50,7 @@ def test_ordinal_consistency() -> None:
     cfg = Config(
         feature_types={"ord": "categorical_ordinal"},
         categorical_ordinal_values_order={"ord": ["low", "medium", "high"]},
+        handle_unseen_categorical_ordinal="missing",
     )
     gower = Gower(cfg)
     gower.fit(X_train)

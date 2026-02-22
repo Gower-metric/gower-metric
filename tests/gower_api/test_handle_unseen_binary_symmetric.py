@@ -76,11 +76,11 @@ class TestHandleUnseenBinarySymmetric:
         assert result[0, 0] == 0.0
         assert np.isnan(result[1, 0])
 
-    def test_default_strategy_is_warning(self) -> None:
-        """Test that default strategy is 'warning'.
+    def test_default_strategy_is_error(self) -> None:
+        """Test that default strategy is 'error'.
 
         Training data: only 'Yes'
-        Test data: has 'No' (unseen) -> warning, nan
+        Test data: has 'No' (unseen) -> ValueError
         """
         X_train = np.array([["Yes"], ["Yes"]], dtype=object)
         X_test = np.array([["No"]], dtype=object)
@@ -88,13 +88,11 @@ class TestHandleUnseenBinarySymmetric:
         cfg = Config(feature_types={0: "binary_symmetric"})
         gower = Gower(cfg).fit(X_train)
 
-        with pytest.warns(
-            UserWarning,
-            match=r"Treating as missing",
+        with pytest.raises(
+            ValueError,
+            match=r"Value 'No' in column 0 not found in fitted binary mapping",
         ):
-            result = gower.transform(X_test)
-
-        assert np.isnan(result[0, 0])
+            gower.transform(X_test)
 
     def test_complete_fit_with_strategy_error(self) -> None:
         """Test that with complete fit, third value violates binary dtype.

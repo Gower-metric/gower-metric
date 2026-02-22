@@ -16,8 +16,6 @@ from gower_metric.distances.numeric_interval import numeric_component
 from gower_metric.distances.ratio_scale_interval import ratio_scale_component
 from gower_metric.utils.binary_ut import (
     fit_binary_features,
-    transform_binary_asymmetric,
-    transform_binary_symmetric,
 )
 from gower_metric.utils.cat_ord_ut import (
     get_cardinalities_mapping,
@@ -32,6 +30,12 @@ from gower_metric.utils.knn_bandwidth import knn_bandwidth
 from gower_metric.utils.matrix.calculate_matrix import get_full_matrix
 from gower_metric.utils.ranges import get_numeric_ranges
 from gower_metric.utils.to_array import to_array
+from gower_metric.utils.transforms import (
+    transform_binary_asymmetric,
+    transform_binary_symmetric,
+    transform_categorical_nominal,
+    transform_categorical_ordinal,
+)
 from gower_metric.weights.weights import get_weights
 
 if TYPE_CHECKING:
@@ -120,6 +124,13 @@ class Gower:
 
         self.handle_unseen_binary_symmetric = config.handle_unseen_binary_symmetric
         self.binary_symmetric_value_order = config.binary_symmetric_value_order
+
+        self.handle_unseen_categorical_nominal = (
+            config.handle_unseen_categorical_nominal
+        )
+        self.handle_unseen_categorical_ordinal = (
+            config.handle_unseen_categorical_ordinal
+        )
 
         self._is_fitted: bool = False
         self.binary_symmetric_metadata: dict[int, dict[str, Any]] = {}
@@ -332,6 +343,7 @@ class Gower:
             arr,
             self.categorical_nominal_indices,
             self.data_type,
+            handle_unseen=self.handle_unseen_categorical_nominal,
         )
 
         self.ordinal_metadata = fit_ordinal_features(
@@ -339,6 +351,7 @@ class Gower:
             self.categorical_ordinal_indices,
             self.categorical_ordinal_values_order,
             self.data_type,
+            handle_unseen=self.handle_unseen_categorical_ordinal,
         )
 
         self._is_fitted = True
@@ -429,11 +442,12 @@ class Gower:
                     msg = f"Ordinal metadata missing for column {col_idx}"
                     raise ValueError(msg)
 
-                enc = self.ordinal_metadata[col_idx]
-                transformed_col = (
-                    enc.transform(np.array(col).reshape(-1, 1))
-                    .astype(self.data_type)
-                    .ravel()
+                transformed_col = transform_categorical_ordinal(
+                    col=col,
+                    col_idx=col_idx,
+                    enc=self.ordinal_metadata[col_idx],
+                    handle_unseen=self.handle_unseen_categorical_ordinal,
+                    data_type=self.data_type,
                 )
 
             elif ftype == "categorical_nominal":
@@ -441,11 +455,12 @@ class Gower:
                     msg = f"Nominal metadata missing for column {col_idx}"
                     raise ValueError(msg)
 
-                enc = self.nominal_metadata[col_idx]
-                transformed_col = (
-                    enc.transform(np.array(col).reshape(-1, 1))
-                    .astype(self.data_type)
-                    .ravel()
+                transformed_col = transform_categorical_nominal(
+                    col=col,
+                    col_idx=col_idx,
+                    enc=self.nominal_metadata[col_idx],
+                    handle_unseen=self.handle_unseen_categorical_nominal,
+                    data_type=self.data_type,
                 )
             else:
                 transformed_col = col.astype(self.data_type)
