@@ -23,6 +23,8 @@ ConditionalDistancesFlag = Literal[True, False]
 ConditionalDistancesThresholdCoeffType = int
 HandleUnseenBinaryAsymmetric = Literal["warning", "error", "missing"]
 BinaryAsymmetricValueOrderType = dict[int | str, list[Any]] | None
+HandleUnseenBinarySymmetric = Literal["warning", "error", "missing"]
+BinarySymmetricValueOrderType = dict[int | str, list[Any]] | None
 
 
 class Config(BaseModel):
@@ -61,6 +63,12 @@ class Config(BaseModel):
             Similar to categorical_ordinal_values_order. If None, values are auto-detected from training data.
             If provided, must contain exactly 2 values per binary column. Example: {0: [False, True], 1: ['No', 'Yes']}.
             Recommended for production to ensure reproducibility and handle expected-but-not-yet-seen values.
+        handle_unseen_binary_symmetric (str): Strategy for handling unseen categories in binary symmetric features. Can be 'warning', 'error' or 'missing'.
+            Default is 'warning' if omitted.
+        binary_symmetric_value_order (dict[int | str, list[Any]] | None): Optional explicit ordering of binary values for binary_symmetric features.
+            Similar to categorical_ordinal_values_order. If None, values are auto-detected from training data.
+            If provided, must contain exactly 2 values per binary column. Example: {0: [False, True], 1: ['No', 'Yes']}.
+            Recommended for production to ensure reproducibility and handle expected-but-not-yet-seen values.
 
     Raises:
             ValueError: If custom validation rule fail.
@@ -81,6 +89,8 @@ class Config(BaseModel):
     conditional_distances_threshold_coeff: int = 1
     handle_unseen_binary_asymmetric: HandleUnseenBinaryAsymmetric = "warning"
     binary_asymmetric_value_order: BinaryAsymmetricValueOrderType = None
+    handle_unseen_binary_symmetric: HandleUnseenBinarySymmetric = "warning"
+    binary_symmetric_value_order: BinarySymmetricValueOrderType = None
 
     @field_validator("feature_types")
     @classmethod
@@ -346,6 +356,96 @@ class Config(BaseModel):
             msg = (
                 f"binary_asymmetric_value_order contains non-binary_asymmetric columns: {extra_cols}. "
                 f"Binary asymmetric columns are: {binary_asymmetric_cols or 'none'}"
+            )
+            raise ValueError(msg)
+
+        return v
+
+    @field_validator("handle_unseen_binary_symmetric")
+    @classmethod
+    def check_handle_unseen_binary_symmetric(
+        cls,
+        v: HandleUnseenBinarySymmetric,
+    ) -> HandleUnseenBinarySymmetric:
+        """Validate the strategy for handling unseen categories in binary symmetric features.
+
+        Args:
+            v (HandleUnseenBinarySymmetric): The strategy to check.
+
+        Returns:
+            v (HandleUnseenBinarySymmetric): The validated strategy.
+
+        Raises:
+            ValueError: If the strategy is not one of 'warning', 'error', or 'missing'.
+
+        """
+        valid_strategies = get_args(HandleUnseenBinarySymmetric)
+        if v not in valid_strategies:
+            msg = f"handle_unseen_binary_symmetric must be one of {valid_strategies}, got {v}"
+            raise ValueError(msg)
+
+        return v
+
+    @field_validator("binary_symmetric_value_order")
+    @classmethod
+    def check_binary_symmetric_value_order(
+        cls,
+        v: BinarySymmetricValueOrderType,
+        info: ValidationInfo,
+    ) -> BinarySymmetricValueOrderType:
+        """Verify that binary symmetric value orders contain exactly 2 values per column.
+
+        Args:
+            v (BinarySymmetricValueOrderType): The binary value order definitions.
+            info (ValidationInfo): Validation context containing feature types.
+
+        Returns:
+            BinarySymmetricValueOrderType: The validated order definitions.
+
+        Raises:
+            ValueError: If any binary column order doesn't have exactly 2 values.
+            TypeError: If any binary column order is not a list.
+
+        """
+        if v is None:
+            return v
+
+        if not info.data:
+            return v
+
+        expected_binary_values = 2
+
+        binary_symmetric_cols = {
+            k
+            for k, t in info.data.get("feature_types", {}).items()
+            if t == "binary_symmetric"
+        }
+
+        for col_idx, values in v.items():
+            if not isinstance(values, list):
+                msg = f"Binary values for column {col_idx} must be a list, got {type(values)}"
+                raise TypeError(msg)
+
+            if len(values) != expected_binary_values:
+                msg = (
+                    f"Binary symmetric column {col_idx} must have exactly {expected_binary_values} values in order, "
+                    f"got {len(values)}: {values}"
+                )
+                raise ValueError(msg)
+
+            if len(set(values)) != expected_binary_values:
+                msg = f"Binary symmetric values for column {col_idx} must be unique, got {values}"
+                raise ValueError(msg)
+
+        extra_cols = (
+            set(v.keys()) - binary_symmetric_cols
+            if binary_symmetric_cols
+            else set(v.keys())
+        )
+        if extra_cols:
+            msg = (
+                f"binary_symmetric_value_order contains non-binary_symmetric columns: {extra_cols}. "
+                f"Binary symmetric columns are: {binary_symmetric_cols or 'none'}"
             )
             raise ValueError(msg)
 

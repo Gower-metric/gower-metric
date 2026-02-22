@@ -118,6 +118,9 @@ class Gower:
         self.handle_unseen_binary_asymmetric = config.handle_unseen_binary_asymmetric
         self.binary_asymmetric_value_order = config.binary_asymmetric_value_order
 
+        self.handle_unseen_binary_symmetric = config.handle_unseen_binary_symmetric
+        self.binary_symmetric_value_order = config.binary_symmetric_value_order
+
         self._is_fitted: bool = False
         self.binary_symmetric_metadata: dict[int, dict[str, Any]] = {}
         self.binary_asymmetric_metadata: dict[int, dict[str, Any]] = {}
@@ -178,15 +181,18 @@ class Gower:
                     ft[k] = t
             self.feature_types = ft  # type: ignore[assignment]
 
-            if self.categorical_ordinal_values_order:
-                for k in list(self.categorical_ordinal_values_order.keys()):
-                    if isinstance(k, str):
-                        if k not in cols:
-                            msg = f"Column name '{k}' specified for categorical ordinal values not found in DataFrame."
-                            raise ValueError(msg)
-                        self.categorical_ordinal_values_order[cols.index(k)] = (
-                            self.categorical_ordinal_values_order.pop(k)
-                        )
+            for order_dict, order_name in [
+                (self.categorical_ordinal_values_order, "categorical ordinal"),
+                (self.binary_asymmetric_value_order, "binary asymmetric"),
+                (self.binary_symmetric_value_order, "binary symmetric"),
+            ]:
+                if order_dict:
+                    for k in list(order_dict.keys()):
+                        if isinstance(k, str):
+                            if k not in cols:
+                                msg = f"Column name '{k}' specified for {order_name} values not found in DataFrame."
+                                raise ValueError(msg)
+                            order_dict[cols.index(k)] = order_dict.pop(k)
 
         self.numeric_indices = [
             i
@@ -313,12 +319,13 @@ class Gower:
         self.binary_symmetric_metadata = fit_binary_features(
             arr,
             self.binary_symmetric_indices,
+            binary_value_order=self.binary_symmetric_value_order,  # type: ignore[arg-type]
         )
 
         self.binary_asymmetric_metadata = fit_binary_features(
             arr,
             self.binary_asymmetric_indices,
-            binary_value_order=self.binary_asymmetric_value_order,
+            binary_value_order=self.binary_asymmetric_value_order,  # type: ignore[arg-type]
         )
 
         self.nominal_metadata = fit_nominal_features(
@@ -414,6 +421,7 @@ class Gower:
                     col=col,
                     col_idx=col_idx,
                     metadata=self.binary_symmetric_metadata[col_idx],
+                    handle_unseen=self.handle_unseen_binary_symmetric,
                 )
 
             elif ftype == "categorical_ordinal":
