@@ -14,7 +14,11 @@ from gower_metric.distances.categorical_nominal import categorical_nominal_compo
 from gower_metric.distances.categorical_ordinal import categorical_ordinal_component
 from gower_metric.distances.numeric_interval import numeric_component
 from gower_metric.distances.ratio_scale_interval import ratio_scale_component
-from gower_metric.utils.binary_ut import fit_binary_features
+from gower_metric.utils.binary_ut import (
+    fit_binary_features,
+    transform_binary_asymmetric,
+    transform_binary_symmetric,
+)
 from gower_metric.utils.cat_ord_ut import (
     get_cardinalities_mapping,
     map_ordered_values,
@@ -110,6 +114,9 @@ class Gower:
         self.conditional_distances_threshold_coeff = (
             config.conditional_distances_threshold_coeff
         )
+
+        self.handle_unseen_binary_asymmetric = config.handle_unseen_binary_asymmetric
+        self.binary_asymmetric_value_order = config.binary_asymmetric_value_order
 
         self._is_fitted: bool = False
         self.binary_symmetric_metadata: dict[int, dict[str, Any]] = {}
@@ -311,6 +318,7 @@ class Gower:
         self.binary_asymmetric_metadata = fit_binary_features(
             arr,
             self.binary_asymmetric_indices,
+            binary_value_order=self.binary_asymmetric_value_order,
         )
 
         self.nominal_metadata = fit_nominal_features(
@@ -393,46 +401,20 @@ class Gower:
             else:
                 col = X_arr[:, col_idx]
 
-            max_unique_binary_elements: int = 2
             if ftype == "binary_asymmetric":
-                transformed_col = np.zeros(col.shape[0], dtype=float)
-                mapping = self.binary_asymmetric_metadata[col_idx]["mapping"]
-
-                for i, v in enumerate(col):
-                    if pd.isna(v):
-                        transformed_col[i] = np.nan
-                    else:
-                        if v not in mapping:
-                            if len(mapping) < max_unique_binary_elements:
-                                transformed_col[i] = np.nan
-                                continue
-
-                            msg = (
-                                f"Value '{v}' in column {col_idx} not found in fitted binary mapping "
-                                f"{list(mapping.keys())}."
-                            )
-                            raise ValueError(msg)
-                        transformed_col[i] = mapping[v]
+                transformed_col = transform_binary_asymmetric(
+                    col=col,
+                    col_idx=col_idx,
+                    metadata=self.binary_asymmetric_metadata[col_idx],
+                    handle_unseen=self.handle_unseen_binary_asymmetric,
+                )
 
             elif ftype == "binary_symmetric":
-                transformed_col = np.zeros(col.shape[0], dtype=float)
-                mapping = self.binary_symmetric_metadata[col_idx]["mapping"]
-
-                for i, v in enumerate(col):
-                    if pd.isna(v):
-                        transformed_col[i] = np.nan
-                    else:
-                        if v not in mapping:
-                            if len(mapping) < max_unique_binary_elements:
-                                transformed_col[i] = np.nan
-                                continue
-
-                            msg = (
-                                f"Value '{v}' in column {col_idx} not found in fitted binary mapping "
-                                f"{list(mapping.keys())}."
-                            )
-                            raise ValueError(msg)
-                        transformed_col[i] = mapping[v]
+                transformed_col = transform_binary_symmetric(
+                    col=col,
+                    col_idx=col_idx,
+                    metadata=self.binary_symmetric_metadata[col_idx],
+                )
 
             elif ftype == "categorical_ordinal":
                 if col_idx not in self.ordinal_metadata:
