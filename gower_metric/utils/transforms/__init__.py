@@ -13,3 +13,11 @@ __all__ = [
     "transform_categorical_nominal",
     "transform_categorical_ordinal",
 ]
+
+__doc__ = """
+Transform helpers for converting raw feature columns into numeric representations.
+
+These functions are called internally by :meth:`Gower.transform` to encode
+binary and categorical columns. Each function respects the ``handle_unseen``
+strategy configured via :class:`Config`.
+"""

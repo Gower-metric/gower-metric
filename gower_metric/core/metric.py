@@ -666,7 +666,7 @@ class Gower:
             b (Any): Second record of data.
 
         Returns:
-            float: Gower similarity in [0,1], defined as 1 - distance(a, b).
+            np.floating | np.integer: Gower similarity in [0,1], defined as 1 - distance(a, b).
 
         Example:
             >>> from gower_metric import Config, Gower
@@ -677,7 +677,7 @@ class Gower:
             >>> feature_types = {
             ...     'feature1': 'numeric_interval',
             ...     'feature2': 'categorical_nominal',
-            ... })
+            ... }
             >>> cfg = Config(
             ...     feature_types=feature_types,
             ... )

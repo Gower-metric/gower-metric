@@ -13,7 +13,29 @@ def transform_binary_asymmetric(
     metadata: dict[str, Any],
     handle_unseen: str,
 ) -> np.ndarray:
-    """Transform a binary asymmetric feature column."""
+    """Transform a binary asymmetric feature column into its numeric representation.
+
+    Maps each value to 0.0 or 1.0 based on the fitted mapping, and handles
+    missing values (``NaN``) and unseen values according to ``handle_unseen``.
+
+    Args:
+        col (np.ndarray): 1-D array of raw values for a single column.
+        col_idx (int): Column index, used in error and warning messages.
+        metadata (dict[str, Any]): Fitted metadata produced by
+            :func:`~gower_metric.utils.binary_ut.fit_binary_features`, containing
+            ``"mapping"``, ``"values"``, and ``"is_explicit_order"`` keys.
+        handle_unseen (str): Strategy for unseen values — ``"error"``,
+            ``"warning"``, or ``"missing"``.
+
+    Returns:
+        np.ndarray: 1-D float array of the same length as *col*, with values
+        mapped to 0.0, 1.0, or ``np.nan``.
+
+    Raises:
+        ValueError: If an unseen value is encountered and *handle_unseen* is
+            ``"error"``, or if an explicit value order is violated.
+
+    """
     transformed_col = np.zeros(col.shape[0], dtype=float)
     mapping = metadata["mapping"]
     is_explicit = metadata.get("is_explicit_order", False)
@@ -75,7 +97,29 @@ def transform_binary_symmetric(
     metadata: dict[str, Any],
     handle_unseen: str,
 ) -> np.ndarray:
-    """Transform a binary symmetric feature column."""
+    """Transform a binary symmetric feature column into its numeric representation.
+
+    Maps each value to 0.0 or 1.0 based on the fitted mapping, and handles
+    missing values (``NaN``) and unseen values according to ``handle_unseen``.
+
+    Args:
+        col (np.ndarray): 1-D array of raw values for a single column.
+        col_idx (int): Column index, used in error and warning messages.
+        metadata (dict[str, Any]): Fitted metadata produced by
+            :func:`~gower_metric.utils.binary_ut.fit_binary_features`, containing
+            ``"mapping"``, ``"values"``, and ``"is_explicit_order"`` keys.
+        handle_unseen (str): Strategy for unseen values — ``"error"``,
+            ``"warning"``, or ``"missing"``.
+
+    Returns:
+        np.ndarray: 1-D float array of the same length as *col*, with values
+        mapped to 0.0, 1.0, or ``np.nan``.
+
+    Raises:
+        ValueError: If an unseen value is encountered and *handle_unseen* is
+            ``"error"``, or if an explicit value order is violated.
+
+    """
     transformed_col = np.zeros(col.shape[0], dtype=float)
     mapping = metadata["mapping"]
     is_explicit = metadata.get("is_explicit_order", False)
