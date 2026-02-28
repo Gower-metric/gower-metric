@@ -21,7 +21,10 @@ class TestFitErrors:
         data = scipy.sparse.csr_matrix([[1.0, 0], [0, 1.0]])
         cfg = Config(feature_types={0: "numeric", 1: "numeric"})
         gower = Gower(cfg)
-        with pytest.raises(ValueError, match="Sparse matrices are currently not supported"):
+        with pytest.raises(
+            ValueError,
+            match="Sparse matrices are currently not supported",
+        ):
             gower.fit(data)
 
 
@@ -99,13 +102,20 @@ class TestMatrixWithDataType:
 
 class TestConditionalDistancesEdgeCases:
     def test_conditional_with_binary_symmetric_indices(self) -> None:
-        data = np.array([
-            [1.0, 0, "A"],
-            [2.0, 1, "B"],
-            [3.0, 0, "A"],
-        ], dtype=object)
+        data = np.array(
+            [
+                [1.0, 0, "A"],
+                [2.0, 1, "B"],
+                [3.0, 0, "A"],
+            ],
+            dtype=object,
+        )
         cfg = Config(
-            feature_types={0: "numeric", 1: "binary_symmetric", 2: "categorical_nominal"},
+            feature_types={
+                0: "numeric",
+                1: "binary_symmetric",
+                2: "categorical_nominal",
+            },
             conditional_distances=True,
         )
         gower = Gower(cfg).fit(data)
@@ -113,10 +123,13 @@ class TestConditionalDistancesEdgeCases:
         assert not np.isnan(dist)
 
     def test_conditional_with_cat_nominal_indices(self) -> None:
-        data = np.array([
-            [1.0, "A"],
-            [2.0, "B"],
-        ], dtype=object)
+        data = np.array(
+            [
+                [1.0, "A"],
+                [2.0, "B"],
+            ],
+            dtype=object,
+        )
         cfg = Config(
             feature_types={0: "numeric", 1: "categorical_nominal"},
             conditional_distances=True,
@@ -126,10 +139,13 @@ class TestConditionalDistancesEdgeCases:
         assert not np.isnan(dist)
 
     def test_conditional_with_cat_ordinal_indices(self) -> None:
-        data = np.array([
-            [1.0, "low"],
-            [2.0, "high"],
-        ], dtype=object)
+        data = np.array(
+            [
+                [1.0, "low"],
+                [2.0, "high"],
+            ],
+            dtype=object,
+        )
         cfg = Config(
             feature_types={0: "numeric", 1: "categorical_ordinal"},
             categorical_ordinal_values_order={1: ["low", "medium", "high"]},
@@ -141,10 +157,13 @@ class TestConditionalDistancesEdgeCases:
 
     def test_conditional_all_categorical_nan_returns_nan(self) -> None:
         """When all categorical features are NaN, cat_cnt==0 → return NaN."""
-        data = np.array([
-            [1.0, "A"],
-            [2.0, "B"],
-        ], dtype=object)
+        data = np.array(
+            [
+                [1.0, "A"],
+                [2.0, "B"],
+            ],
+            dtype=object,
+        )
         cfg = Config(
             feature_types={0: "numeric", 1: "categorical_nominal"},
             conditional_distances=True,
@@ -157,11 +176,14 @@ class TestConditionalDistancesEdgeCases:
         assert np.isnan(dist)
 
     def test_conditional_with_binary_asymmetric(self) -> None:
-        data = np.array([
-            [1.0, 0],
-            [2.0, 1],
-            [3.0, 0],
-        ], dtype=object)
+        data = np.array(
+            [
+                [1.0, 0],
+                [2.0, 1],
+                [3.0, 0],
+            ],
+            dtype=object,
+        )
         cfg = Config(
             feature_types={0: "numeric", 1: "binary_asymmetric"},
             conditional_distances=True,
@@ -305,4 +327,3 @@ class TestTransformDoesNotMutateFitMetadata:
             _ = gower.transform(data)
             dist = gower(data[0], data[2])
             assert pytest.approx(float(dist_baseline), rel=1e-12) == float(dist)
-

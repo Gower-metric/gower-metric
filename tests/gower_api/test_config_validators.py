@@ -45,11 +45,17 @@ class TestScaleWindowTypeValidation:
 
 class TestKNeighborsValidation:
     def test_zero_raises(self) -> None:
-        with pytest.raises(ValidationError, match="k_neighbors must be None or a positive integer"):
+        with pytest.raises(
+            ValidationError,
+            match="k_neighbors must be None or a positive integer",
+        ):
             Config(feature_types={0: "numeric"}, k_neighbors=0)
 
     def test_negative_raises(self) -> None:
-        with pytest.raises(ValidationError, match="k_neighbors must be None or a positive integer"):
+        with pytest.raises(
+            ValidationError,
+            match="k_neighbors must be None or a positive integer",
+        ):
             Config(feature_types={0: "numeric"}, k_neighbors=-5)
 
 
@@ -71,7 +77,7 @@ class TestOrdinalOrderValidation:
 
 class TestHandleUnseenValidation:
     """Pydantic Literal type checks catch invalid values before our validators run.
-    
+
     We test that the right error is raised regardless of whether it's Pydantic or our code.
     """
 

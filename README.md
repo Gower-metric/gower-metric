@@ -135,12 +135,6 @@ Please refer to the [CONTRIBUTING](.github/CONTRIBUTING.md) file.
 
 @TODO: add history of this project
 
-## Citation
-
-If you find this project useful in your research, please consider citing it as follows:
-
-@TODO: add citation
-
 ## References
 - [Distances with mixed type variables some modified Gower's coefficients (2021)](https://arxiv.org/abs/2101.02481)
 - [Extending Gower's General Coefficient of Similarity to Ordinal Characters (1999)](https://www.researchgate.net/publication/271789313_Extending_Gower%27s_General_Coefficient_of_Similarity_to_Ordinal_Characters)

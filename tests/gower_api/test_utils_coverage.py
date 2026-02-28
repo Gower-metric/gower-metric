@@ -9,8 +9,6 @@ from gower_metric.utils.cat_ord_ut import collect_ordinal_cardinalities
 from gower_metric.utils.kde_types.silverman import silverman_bandwidth
 from gower_metric.utils.knn_bandwidth import knn_bandwidth
 from gower_metric.utils.ranges import scale_method
-
-
 from gower_metric.utils.to_array import to_array
 
 

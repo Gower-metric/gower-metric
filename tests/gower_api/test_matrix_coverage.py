@@ -45,7 +45,12 @@ class TestMatrixCompute:
     def test_sparse_similarity_matrix(self) -> None:
         """Similarity + convert_to_sparse covers branch 164→167."""
         gower, data = self._get_fitted_gower()
-        gower.matrix(data, matrix_type="similarity", convert_to_sparse=True, sparse_type="csr")
+        gower.matrix(
+            data,
+            matrix_type="similarity",
+            convert_to_sparse=True,
+            sparse_type="csr",
+        )
 
     def test_similarity_matrix_pandas(self) -> None:
         """Matrix computation with pandas DataFrame."""
