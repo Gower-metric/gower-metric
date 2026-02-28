@@ -21,6 +21,8 @@ def _load_data(dataset_id: int) -> pd.DataFrame:
         target=dataset.default_target_attribute,
         dataset_format="dataframe",
     )
+    if not isinstance(X, pd.DataFrame):
+        X = pd.DataFrame(X)
     return X.drop(columns=["workclass", "occupation", "native-country"])
 
 
@@ -126,7 +128,7 @@ def _compare_matrices(
     mat2: np.ndarray,
     mat3: np.ndarray,
     tolerance: float = 1e-5,
-) -> bool:
+) -> None:
     if not np.allclose(mat1, mat2, atol=tolerance):
         sys.exit(1)
 

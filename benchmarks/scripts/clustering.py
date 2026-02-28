@@ -26,6 +26,8 @@ def _load_data(dataset_id: int, n_rows: int = 5_000) -> pd.DataFrame:
         dataset_format="dataframe",
     )
 
+    if not isinstance(X, pd.DataFrame):
+        X = pd.DataFrame(X)
     return X.head(n_rows)
 
 
@@ -71,7 +73,7 @@ def _get_gower_features(X: pd.DataFrame) -> dict:
     return gower_features
 
 
-def _compute_gower_row(i, X: np.asarray, gower: Gower):
+def _compute_gower_row(i, X: np.ndarray, gower: Gower):
     xi = X[i]
     return np.fromiter(
         (gower(xi, X[j]) if j > i else 0.0 for j in range(X.shape[0])),

@@ -206,4 +206,4 @@ You are welcome to help us improve the documentation, be it fixing typos, improv
 
 ## Join The Project Team
 
-Just open an issue or contact one of the maintainers. We will then discuss your ideas and see how we can help each other :)
+Just open an issue or contact one of the maintainers. We will then discuss your ideas and see how we can help each other.

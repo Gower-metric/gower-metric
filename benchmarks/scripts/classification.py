@@ -22,6 +22,10 @@ def _load_data(dataset_id: int, n_rows: int = 5_000) -> tuple[pd.DataFrame, pd.S
         target=dataset.default_target_attribute,
         dataset_format="dataframe",
     )
+    if not isinstance(X, pd.DataFrame):
+        X = pd.DataFrame(X)
+    if not isinstance(y, pd.Series):
+        y = pd.Series(y)
     return X.head(n_rows), y.head(n_rows)
 
 
@@ -29,7 +33,14 @@ def _split_data(
     X: pd.DataFrame,
     y: pd.Series,
 ) -> tuple[pd.DataFrame, pd.DataFrame, pd.Series, pd.Series]:
-    return train_test_split(X, y, test_size=0.2, random_state=42, stratify=y)
+    X_train, X_test, y_train, y_test = train_test_split(
+        X,
+        y,
+        test_size=0.2,
+        random_state=42,
+        stratify=y,
+    )
+    return X_train, X_test, y_train, y_test
 
 
 def _impute_data(
@@ -195,6 +206,10 @@ def main() -> None:
 
     results_df: pd.DataFrame = pd.DataFrame()
 
+    tasks = suite.tasks
+    if tasks is None:
+        msg = "No tasks found in suite"
+        raise ValueError(msg)
     n_tasks_to_run = len(tasks)
 
     with tqdm(total=len(strategies) * n_tasks_to_run) as pbar:
