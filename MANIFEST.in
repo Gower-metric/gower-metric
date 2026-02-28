@@ -2,6 +2,7 @@ include README.md
 include LICENSE.txt
 include pyproject.toml
 include uv.lock
+include requirements.txt
 
 recursive-include gower_metric *.py
 

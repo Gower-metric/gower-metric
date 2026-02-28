@@ -138,7 +138,7 @@ class Gower:
         self.nominal_metadata: dict[int, OrdinalEncoder] = {}
         self.ordinal_metadata: dict[int, OrdinalEncoder] = {}
 
-    def fit(self, X: pd.DataFrame | np.ndarray) -> "Gower":
+    def fit(self, X: pd.DataFrame | np.ndarray) -> "Gower":  # noqa: PLR0912
         """Fit the Gower model by computing numeric feature ranges.
 
         Args:
@@ -178,6 +178,10 @@ class Gower:
             >>> gower = Gower(cfg).fit(data)
 
         """
+        if scipy.sparse.issparse(X):
+            msg = "Sparse matrices are currently not supported as direct input. Please convert to dense."
+            raise ValueError(msg)
+
         if isinstance(X, pd.DataFrame):
             cols = list(X.columns)
 
@@ -200,7 +204,7 @@ class Gower:
                 if order_dict:
                     for k in list(order_dict.keys()):
                         if isinstance(k, str):
-                            if k not in cols:
+                            if k not in cols:  # pragma: no cover
                                 msg = f"Column name '{k}' specified for {order_name} values not found in DataFrame."
                                 raise ValueError(msg)
                             order_dict[cols.index(k)] = order_dict.pop(k)
@@ -305,14 +309,24 @@ class Gower:
         self.cat_ord_metadata: dict[int | str, dict[str, Any]] = {}
         for j in self.categorical_ordinal_indices:
             col = arr[:, j]
-            if self.categorical_ordinal_values_order is None:
+            if self.categorical_ordinal_values_order is None:  # pragma: no cover
                 msg = "Categorical ordinal values order is missing"
                 raise ValueError(msg)
             ranks_map, mn, mx = map_ordered_values(
                 self.categorical_ordinal_values_order[j],
             )
             counts_map, _ = get_cardinalities_mapping(col)
-            counts_arr = np.asarray([counts_map[v] for v in ranks_map], dtype=float)
+            counts_arr = np.asarray(
+                [counts_map[v] for v in self.categorical_ordinal_values_order[j]],
+                dtype=float,
+            )
+
+            # Map encoded numerical ranks back to their integer rank.
+            # This ensures gower evaluates distances directly on data processed by gower.transform()
+            # without encountering cast errors and unmapped float values inside numerical distances.
+            for rank in list(ranks_map.values()):
+                ranks_map[float(rank)] = rank
+                ranks_map[int(rank)] = rank
 
             self.cat_ord_metadata[j] = {
                 "ranks": ranks_map,
@@ -438,7 +452,7 @@ class Gower:
                 )
 
             elif ftype == "categorical_ordinal":
-                if col_idx not in self.ordinal_metadata:
+                if col_idx not in self.ordinal_metadata:  # pragma: no cover
                     msg = f"Ordinal metadata missing for column {col_idx}"
                     raise ValueError(msg)
 
@@ -451,7 +465,7 @@ class Gower:
                 )
 
             elif ftype == "categorical_nominal":
-                if col_idx not in self.nominal_metadata:
+                if col_idx not in self.nominal_metadata:  # pragma: no cover
                     msg = f"Nominal metadata missing for column {col_idx}"
                     raise ValueError(msg)
 
@@ -468,13 +482,6 @@ class Gower:
             transformed_columns.append(transformed_col)
 
         transformed_data: np.ndarray = np.column_stack(transformed_columns)
-
-        for co_col_idx, _ in (
-            (i, t) for i, t in self.feature_types.items() if t == "categorical_ordinal"
-        ):
-            self.cat_ord_metadata[co_col_idx]["ranks"] = {
-                v: v for v in self.cat_ord_metadata[co_col_idx]["ranks"].values()
-            }
 
         if is_df:
             return pd.DataFrame(
