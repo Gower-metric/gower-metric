@@ -1,9 +1,10 @@
+[build-system]
+build-backend = "setuptools.build_meta"
+requires = ["setuptools", "wheel"]
+
 [project]
-authors = [
-    {name = "Arch4ngel21", email = "adammichal657@gmail.com"},
-]
-license-files = ["LICENSE.txt"]
-requires-python = ">=3.10, <3.15"
+name = "gower-metric"
+version = "0.1.0"
 dependencies = [
     "joblib>=1.5.1",
     "numpy>=2.2.6",
@@ -13,10 +14,19 @@ dependencies = [
     "scipy>=1.15.3",
     "tqdm>=4.67.1",
 ]
-name = "gower-metric"
-version = "1.0.0"
+requires-python = ">=3.10, <3.15"
+authors = [
+    {name = "Arch4ngel21", email = "adammichal657@gmail.com"},
+    {name = "Bartłomiej Kruczek", email = "kruczek.bartlomiej@gmail.com"},
+    {name = "Marcin Wardyński"},
+]
+maintainers = [
+    {name = "Bartłomiej Kruczek", email = "kruczek.bartlomiej@gmail.com"},
+]
 description = "A Python implementation of the Gower distance metric for mixed data types."
 readme = "README.md"
+license-files = ["LICENSE.txt"]
+keywords = ["gower", "mixed-data", "machine-learning"]
 classifiers = [
     "Intended Audience :: Information Technology",
     "Intended Audience :: Science/Research",
@@ -30,6 +40,12 @@ classifiers = [
     "Topic :: Software Development :: Libraries :: Python Modules",
     "Typing :: Typed",
 ]
+
+[project.urls]
+Documentation = "https://gower-metric.readthedocs.io/en/latest/"
+Repository = "https://github.com/Gower-metric/gower-metric"
+Issues = "https://github.com/Gower-metric/gower-metric/issues"
+Changelog = "https://github.com/Gower-metric/gower-metric/blob/master/CHANGELOG.md"
 
 [tool.setuptools.packages.find]
 include = ["gower_metric*"]
@@ -122,10 +138,6 @@ benchmark = [
     "seaborn>=0.13.2",
     "tqdm>=4.67.1",
 ]
-
-[build-system]
-build-backend = "setuptools.build_meta"
-requires = ["setuptools", "wheel"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
