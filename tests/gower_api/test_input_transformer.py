@@ -129,3 +129,16 @@ def test_validate_transformation_pandas() -> None:
         assert gower(data.iloc[i], data.iloc[i + 1]) == pytest.approx(
             gower(d_t.iloc[i], d_t.iloc[i + 1]),  # type: ignore[union-attr]
         )
+
+
+def test_fit_transform() -> None:
+    data = pd.DataFrame({"level": ["low", "medium", "high"]})
+    cfg = Config(
+        feature_types={"level": "categorical_ordinal"},
+        categorical_ordinal_values_order={"level": ["low", "medium", "high"]},
+        data_type=DTYPE,
+    )
+    gower = Gower(cfg)
+    transformed_data = gower.fit_transform(data)
+    expected_data = pd.DataFrame({"level": [0.0, 1.0, 2.0]}, dtype=DTYPE)
+    pd.testing.assert_frame_equal(transformed_data, expected_data)

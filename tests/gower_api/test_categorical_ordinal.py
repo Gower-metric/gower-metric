@@ -19,8 +19,7 @@ def test_categorical_ordinal_kaufman_uniform_ndarray() -> None:
         data_type=DTYPE,
         categorical_ordinal_values_order=categorical_ordinal_values_order,
     )
-    gower = Gower(cfg)
-    transformed_data = gower.fit_transform(data)
+    gower = Gower(cfg).fit(data)
 
     expected = np.array(
         [
@@ -32,11 +31,9 @@ def test_categorical_ordinal_kaufman_uniform_ndarray() -> None:
         dtype=DTYPE,
     )
 
-    for i in range(transformed_data.shape[0]):
-        for j in range(transformed_data.shape[0]):
-            xi = transformed_data[i]
-            xj = transformed_data[j]
-            dist = gower(xi, xj)
+    for i in range(data.shape[0]):
+        for j in range(data.shape[0]):
+            dist = gower(data[i], data[j])
             assert pytest.approx(dist, rel=1e-6) == expected[i, j]
 
 
@@ -63,14 +60,11 @@ def test_categorical_ordinal_podani_uniform_ndarray() -> None:
         categorical_ordinal_values_order=categorical_ordinal_values_order,
         categorical_ordinal_calculation_type="podani",
     )
-    gower = Gower(cfg)
-    transformed_data = gower.fit_transform(data)
+    gower = Gower(cfg).fit(data)
 
-    for i in range(transformed_data.shape[0]):
-        for j in range(transformed_data.shape[0]):
-            xi = transformed_data[i]
-            xj = transformed_data[j]
-            dist = gower(xi, xj)
+    for i in range(data.shape[0]):
+        for j in range(data.shape[0]):
+            dist = gower(data[i], data[j])
             assert pytest.approx(dist, rel=1e-6) == PODANI_EXPECTED_RESULTS[i, j]
 
 
@@ -89,18 +83,16 @@ def test_categorical_ordinal_podani_uniform_df() -> None:
         categorical_ordinal_values_order=categorical_ordinal_values_order,
         categorical_ordinal_calculation_type="podani",
     )
-    gower = Gower(cfg)
-    transformed_data = gower.fit_transform(data)
+    gower = Gower(cfg).fit(data)
 
+    transformed_data = gower.transform(data)
     if isinstance(transformed_data, pd.DataFrame):
         assert (transformed_data.dtypes == "float32").all()
 
-        for i in range(transformed_data.shape[0]):
-            for j in range(transformed_data.shape[0]):
-                xi = transformed_data["level"].iloc[i]
-                xj = transformed_data["level"].iloc[j]
-                dist = gower(xi, xj)
-                assert pytest.approx(dist, rel=1e-6) == PODANI_EXPECTED_RESULTS[i, j]
+    for i in range(data.shape[0]):
+        for j in range(data.shape[0]):
+            dist = gower(data.iloc[i], data.iloc[j])
+            assert pytest.approx(dist, rel=1e-6) == PODANI_EXPECTED_RESULTS[i, j]
 
 
 def test_categorical_ordinal_not_valid_uniform_ndarray_() -> None:

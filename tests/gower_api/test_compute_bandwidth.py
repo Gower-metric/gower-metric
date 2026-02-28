@@ -1,4 +1,5 @@
 import numpy as np
+import pandas as pd
 import pytest
 
 from gower_metric import Config, Gower
@@ -12,6 +13,23 @@ def test_ratio_scale_knn_window_no_error() -> None:
 
     cfg = Config(
         feature_types={0: "ratio_scale_interval", 1: "numeric"},
+        scale_window="kNN",
+        scale_method="range",
+    )
+    gs_knn = Gower(cfg).fit(data)
+
+    assert isinstance(gs_knn._h_ratio, np.ndarray)
+    assert (np.asarray(gs_knn._h_ratio) > 0).all()
+    assert (np.asarray(gs_knn._h_numeric) > 0).all()
+
+
+def test_ratio_scale_knn_window_pandas() -> None:
+    rng = np.random.default_rng(seed=42)
+    arr = rng.normal(size=(60, 2))
+    data = pd.DataFrame(arr, columns=["ratio_col", "num_col"])
+
+    cfg = Config(
+        feature_types={"ratio_col": "ratio_scale_interval", "num_col": "numeric"},
         scale_window="kNN",
         scale_method="range",
     )

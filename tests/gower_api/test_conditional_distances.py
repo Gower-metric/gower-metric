@@ -1,4 +1,5 @@
 import numpy as np
+import pandas as pd
 import pytest
 from sklearn.metrics import pairwise_distances
 
@@ -34,11 +35,10 @@ def test_conditional_distances() -> None:
 
     expected = np.array(
         [
-            # 0, 1 , 2, 3
-            [d(0, 0), d(0, 2), d(0, 5), d(0, 7)],  # 0
-            [d(2, 0), d(2, 2), d(2, 5), d(2, 7)],  # 1
-            [d(5, 0), d(5, 2), d(5, 5), d(5, 7)],  # 2
-            [d(7, 0), d(7, 2), d(7, 5), d(7, 7)],  # 3
+            [d(0, 0), d(0, 2), d(0, 5), d(0, 7)],
+            [d(2, 0), d(2, 2), d(2, 5), d(2, 7)],
+            [d(5, 0), d(5, 2), d(5, 5), d(5, 7)],
+            [d(7, 0), d(7, 2), d(7, 5), d(7, 7)],
         ],
         dtype=float,
     )
@@ -48,6 +48,28 @@ def test_conditional_distances() -> None:
             dist = gower(raw[i], raw[j])
 
             assert pytest.approx(dist, rel=1e-6) == expected[i, j]
+
+
+def test_conditional_distances_pandas() -> None:
+    raw = pd.DataFrame(
+        {
+            "category": ["A", "A", "B", "B"],
+            "value": [0.0, 2.0, 5.0, 7.0],
+        },
+    )
+    cfg = Config(
+        feature_types={"category": "categorical_nominal", "value": "numeric"},
+        conditional_distances=True,
+    )
+    gower = Gower(cfg).fit(raw)
+
+    r_max_min = 7 - 0
+
+    def d(x, y):
+        return abs(x - y) / r_max_min
+
+    assert pytest.approx(gower(raw.iloc[0], raw.iloc[1]), rel=1e-6) == d(0, 2)
+    assert pytest.approx(gower(raw.iloc[0], raw.iloc[3]), rel=1e-6) == d(0, 7)
 
 
 def test_conditional_distances_clip() -> None:
@@ -180,9 +202,8 @@ def test_conditional_distances_threshold_coeff() -> None:
     )
 
     gower = Gower(cfg).fit(raw)
-    transformed_data = gower.transform(raw)
 
-    pairwise_dist_result = pairwise_distances(transformed_data, metric=gower)
+    pairwise_dist_result = pairwise_distances(raw, metric=gower)
 
     assert all_ones_off_diagonal(pairwise_dist_result)
 
@@ -194,8 +215,7 @@ def test_conditional_distances_threshold_coeff() -> None:
     )
 
     gower = Gower(cfg2).fit(raw)
-    transformed_data = gower.transform(raw)
 
-    pairwise_dist_result = pairwise_distances(transformed_data, metric=gower)
+    pairwise_dist_result = pairwise_distances(raw, metric=gower)
 
     assert not all_ones_off_diagonal(pairwise_dist_result)
