@@ -133,7 +133,7 @@ Please refer to the [CONTRIBUTING](.github/CONTRIBUTING.md) file.
 
 ## History
 
-@TODO: add history of this project
+Project started in 2023 as a project at AGH University of Krakow [Computer Science](https://www.informatyka.agh.edu.pl/en/) faculty. Within 2024-2026 it has been transformed into an open source library.
 
 ## References
 - [Distances with mixed type variables some modified Gower's coefficients (2021)](https://arxiv.org/abs/2101.02481)
