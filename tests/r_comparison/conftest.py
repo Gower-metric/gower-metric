@@ -32,20 +32,27 @@ def generate_mixed_df(n: int, rng: np.random.Generator) -> pd.DataFrame:
             - Education (categorical_ordinal, weighted choice)
 
     """
+    have_children = rng.choice([0, 1], n)
+    is_smoking = rng.choice([0, 1], n, p=[0.7, 0.3])
+    education = rng.choice(
+        EDUCATION_LEVELS,
+        n,
+        p=[0.3, 0.3, 0.2, 0.15, 0.05],
+    )
+
+    have_children[0], have_children[1] = 0, 1
+    is_smoking[0], is_smoking[1] = 0, 1
+    for i, level in enumerate(EDUCATION_LEVELS):
+        education[i] = level
+
     return pd.DataFrame(
         {
             "Age": np.clip(rng.normal(35, 12, n), 18, 80).astype(int),
             "Salary": np.round(rng.exponential(45000, n), 2),
-            "Have_children": rng.choice([0, 1], n),
-            "Is_smoking": rng.choice(
-                [0, 1], n, p=[0.7, 0.3],
-            ),
+            "Have_children": have_children,
+            "Is_smoking": is_smoking,
             "Birth": rng.choice(COUNTRIES, n),
-            "Education": rng.choice(
-                EDUCATION_LEVELS,
-                n,
-                p=[0.3, 0.3, 0.2, 0.15, 0.05],
-            ),
+            "Education": education,
         },
     )
 
@@ -100,7 +107,7 @@ def generate_adult_like_df(n: int, rng: np.random.Generator) -> pd.DataFrame:
     return df
 
 
-@pytest.fixture()
+@pytest.fixture
 def random_seed() -> int:
     """Provide a random seed and log it for reproducibility."""
     seed = int(np.random.default_rng().integers(0, 2**31))

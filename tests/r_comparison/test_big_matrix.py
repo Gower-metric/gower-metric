@@ -101,4 +101,6 @@ def test_big_matrix(n: int, random_seed: int) -> None:
         cast("np.ndarray", np_matrix),
         cast("np.ndarray", gower_matrix),
         atol=1e-6,
-    ), f"Matrices differ (seed={random_seed}, n={n}), max diff={np.max(np.abs(gower_matrix - np_matrix))}"
+    ), (
+        f"Matrices differ (seed={random_seed}, n={n}), max diff={np.max(np.abs(gower_matrix - np_matrix))}"
+    )

@@ -2,7 +2,6 @@ import warnings
 from typing import cast
 
 import numpy as np
-import pandas as pd
 import pytest
 from rpy2 import rinterface, robjects
 from rpy2.robjects import pandas2ri
@@ -60,7 +59,9 @@ def test_r_daisy_no_weights(n: int, random_seed: int) -> None:
         cast("np.ndarray", np_matrix),
         cast("np.ndarray", gower_matrix),
         atol=1e-6,
-    ), f"Matrices differ (seed={random_seed}, n={n}), max diff={np.max(np.abs(gower_matrix - np_matrix))}"
+    ), (
+        f"Matrices differ (seed={random_seed}, n={n}), max diff={np.max(np.abs(gower_matrix - np_matrix))}"
+    )
 
 
 @pytest.mark.parametrize("n", [20, 50, 100, 500, 1000, 2000])
@@ -163,4 +164,6 @@ def test_r_daisy_weights(n: int, random_seed: int) -> None:
         cast("np.ndarray", np_matrix),
         cast("np.ndarray", matrix),
         atol=1e-6,
-    ), f"Matrices differ (seed={random_seed}, n={n}), max diff={np.max(np.abs(matrix - np_matrix))}"
+    ), (
+        f"Matrices differ (seed={random_seed}, n={n}), max diff={np.max(np.abs(matrix - np_matrix))}"
+    )
