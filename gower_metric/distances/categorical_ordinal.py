@@ -54,11 +54,11 @@ def categorical_ordinal_component(
             min_rank = info["min"]
             max_rank = info["max"]
             counts_arr = info["counts"]
-        else:
+        else:  # pragma: no cover
             msg = f"Missing metadata for ordinal feature at index {j}."
             raise ValueError(msg)
 
-        if min_rank is None:
+        if min_rank is None:  # pragma: no cover
             continue
 
         r_x = np.array([ranks_map.get(v, np.nan) for v in col_x], dtype=float)

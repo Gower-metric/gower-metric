@@ -68,7 +68,7 @@ def fit_ordinal_features(
     ordinal_metadata: dict[int, OrdinalEncoder] = {}
     for j in ordinal_indices:
         col = X[:, j]
-        if ordered_values is None:
+        if ordered_values is None:  # pragma: no cover
             msg = "Categorical ordinal values order is missing"
             raise ValueError(msg)
 

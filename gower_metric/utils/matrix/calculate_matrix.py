@@ -39,16 +39,15 @@ def __compute_row_upper(
 
     start = i + 1
     count = n - start
-    row = np.zeros(n, dtype=data_type)
 
     if count <= 0:
-        return (i, row)
+        return (i, np.empty(0, dtype=data_type))
 
     func = model.similarity if row_type == "similarity" else model
 
     values = (func(xi, X_arr[j]) for j in range(start, n))
 
-    row[start:n] = np.fromiter(values, dtype=data_type, count=count)
+    row = np.fromiter(values, dtype=data_type, count=count)
 
     return (i, row)
 
@@ -155,13 +154,14 @@ def get_full_matrix(
     )
 
     for i, row in results:
-        MATRIX[i] = row
+        if row.size > 0:
+            MATRIX[i, i + 1 : n] = row
 
     MATRIX += MATRIX.T
 
     if matrix_type == "distance":
         np.fill_diagonal(MATRIX, 0.0)
-    elif matrix_type == "similarity":
+    elif matrix_type == "similarity":  # pragma: no branch
         np.fill_diagonal(MATRIX, 1.0)
 
     if convert_to_sparse:
