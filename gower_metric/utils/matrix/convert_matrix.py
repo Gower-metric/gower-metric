@@ -10,7 +10,7 @@ def __get_csr_matrix(
 
     Args:
         data (np.ndarray): dense array (n_samples, n_samples).
-        data_type (type[np.floating | np.integer]): ata type for the output sparse matrix.
+        data_type (type[np.floating | np.integer]): data type for the output sparse matrix.
 
     Returns:
         csr_matrix: CSR sparse matrix.
@@ -27,7 +27,7 @@ def __get_csc_matrix(
 
     Args:
         data (np.ndarray): dense array (n_samples, n_samples).
-        data_type (type[np.floating | np.integer]): ata type for the output sparse matrix.
+        data_type (type[np.floating | np.integer]): data type for the output sparse matrix.
 
     Returns:
         csc_matrix: CSC sparse matrix.

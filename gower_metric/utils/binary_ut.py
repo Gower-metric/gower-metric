@@ -47,7 +47,7 @@ def fit_binary_features(
             unexpected = set(actual_unique) - set(expected_vals)
             if unexpected:
                 msg = (
-                    f"Binary feature at index {j} contains values not in binary_asymmetric_value_order: "
+                    f"Binary feature at index {j} contains unexpected values: "
                     f"{unexpected}. Expected values: {expected_vals}"
                 )
                 raise ValueError(msg)

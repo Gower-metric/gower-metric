@@ -9,7 +9,7 @@ import numpy as np
 def map_ordered_values(
     ordered_values: Sequence[Any] | np.ndarray,
 ) -> tuple[dict[Any, int], int | None, int | None]:
-    """Map consequtive integers to passed ordered values.
+    """Map consecutive integers to passed ordered values.
 
     Args:
         ordered_values (Sequence[Any] | np.ndarray): A defined sequence of categorical values.

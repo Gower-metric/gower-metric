@@ -38,10 +38,10 @@ def get_numeric_ranges(
 ) -> np.ndarray:
     """Compute the range for each numeric column in X based on selected scale method.
 
-    Applied only to ratio-scale and internal-scale data types.
+    Applied only to ratio-scale and interval-scale data types.
 
     Args:
-        X (float): array of shape (n_samples, n_features).
+        X (np.ndarray): array of shape (n_samples, n_features).
         indices (list[int]): list of column indices to treat as numeric.
         method (str): method for scaling, either 'range' or 'iqr'.
 
