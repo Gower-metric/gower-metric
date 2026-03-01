@@ -1,3 +1,4 @@
+import warnings
 from typing import Any
 
 import numpy as np
@@ -76,12 +77,19 @@ def categorical_ordinal_component(
         else:
             diff = np.abs(r_x[:, None] - r_y[None, :])
             mid = (counts_arr - 1) / 2.0
-            mid_x = mid[r_x.astype(int)][:, None]
-            mid_y = mid[r_y.astype(int)][None, :]
+            safe_rx = np.where(np.isnan(r_x), 0, r_x).astype(int)
+            safe_ry = np.where(np.isnan(r_y), 0, r_y).astype(int)
+            mid_x = mid[safe_rx][:, None]
+            mid_y = mid[safe_ry][None, :]
             podani_denom = max_rank - min_rank - mid[0] - mid[-1]
 
             if podani_denom <= 0:
-                # fallback to kaufman if podani denominator is not valid
+                warnings.warn(
+                    f"Podani denominator <= 0 for ordinal feature at index {j}. "
+                    "Falling back to Kaufman method.",
+                    UserWarning,
+                    stacklevel=2,
+                )
                 base_denom = max_rank - min_rank
                 dist = (
                     np.zeros((n_x, n_y), dtype=float)
