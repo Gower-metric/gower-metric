@@ -13,5 +13,5 @@ Once a security vulnerability is reported, the gower-metric team will investigat
 ## Preferences
 
 - We prefer to receive security reports via the `Security` tab on GitHub
-- Please reposrt one issue at a time to help us address each vulnerability effectively
+- Please report one issue at a time to help us address each vulnerability effectively
 - We appreciate detailed information about the vulnerability, including steps to reproduce it if possible
