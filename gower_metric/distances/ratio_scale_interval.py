@@ -42,8 +42,8 @@ def ratio_scale_component(
         col_x = X[:, j].astype(float)
         col_y = Y[:, j].astype(float)
 
-        mask_x = ~np.array([is_missing(v) for v in col_x])
-        mask_y = ~np.array([is_missing(v) for v in col_y])
+        mask_x = np.array([not is_missing(v) for v in col_x], dtype=bool)
+        mask_y = np.array([not is_missing(v) for v in col_y], dtype=bool)
         present = mask_x[:, None] & mask_y[None, :]
 
         raw = np.abs(col_x[:, None] - col_y[None, :])

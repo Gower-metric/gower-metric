@@ -65,11 +65,15 @@ def apply_missing_strategy(
 
     elif nan_method == "max_dist":
         diff[~present] = 1.0
-        count_mask = present.astype(int)
+        count_mask = np.ones_like(present, dtype=int)
 
     elif nan_method == "raise_error":
         if not present.all():
-            raise ValueError
+            msg = (
+                "Missing values detected in data. "
+                "Set missing_strategy='ignore' or 'max_dist' to handle them."
+            )
+            raise ValueError(msg)
         count_mask = present.astype(int)
 
     else:
