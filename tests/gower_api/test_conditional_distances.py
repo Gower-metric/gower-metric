@@ -147,9 +147,6 @@ def test_value_error_on_no_numerical_features() -> None:
         )
 
 
-test_value_error_on_no_numerical_features()
-
-
 def test_value_error_on_no_categorical_features() -> None:
     f_types: dict[int | str, str] = {
         0: "numeric",

@@ -107,7 +107,7 @@ class TestBinaryAsymmetricValueOrder:
 
         with pytest.raises(
             ValueError,
-            match=r"contains values not in binary_asymmetric_value_order.*Maybe",
+            match=r"contains unexpected values.*Maybe.*Expected values",
         ):
             Gower(cfg).fit(X_train)
 

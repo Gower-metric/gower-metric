@@ -36,9 +36,11 @@ class TestApplyMissingStrategy:
 
     def test_max_dist_sets_missing_to_one(self) -> None:
         diff, present = self._make_data()
-        result_diff, _count = apply_missing_strategy(diff, present, "max_dist")
+        result_diff, count = apply_missing_strategy(diff, present, "max_dist")
         assert result_diff[0, 1] == 1.0
         assert result_diff[1, 0] == 1.0
+        # count_mask must be all-ones so missing pairs count in denominator
+        np.testing.assert_array_equal(count, np.ones((2, 2), dtype=int))
 
     def test_raise_error_with_missing_raises(self) -> None:
         diff, present = self._make_data()
