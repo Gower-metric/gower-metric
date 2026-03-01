@@ -1,6 +1,6 @@
 import numpy as np
 
-from gower_metric.utils.missing import apply_missing_strategy, is_missing
+from gower_metric.utils.missing import apply_missing_strategy
 
 
 def ratio_scale_component(
@@ -42,14 +42,14 @@ def ratio_scale_component(
         col_x = X[:, j].astype(float)
         col_y = Y[:, j].astype(float)
 
-        mask_x = np.array([not is_missing(v) for v in col_x], dtype=bool)
-        mask_y = np.array([not is_missing(v) for v in col_y], dtype=bool)
+        mask_x = ~np.isnan(col_x)
+        mask_y = ~np.isnan(col_y)
         present = mask_x[:, None] & mask_y[None, :]
 
         raw = np.abs(col_x[:, None] - col_y[None, :])
         if ranges[pos] > 0:
             diff = raw / ranges[pos]
-            diff[diff > 1.0] = 1.0
+            np.minimum(diff, 1.0, out=diff)
         else:
             diff = np.zeros_like(raw)
 
@@ -62,9 +62,9 @@ def ratio_scale_component(
 
         if w != 1.0:
             sum_diff += diff * w
-            count_present += mask.astype(float) * w
+            count_present += mask * w
         else:
             sum_diff += diff
-            count_present += mask.astype(float)
+            count_present += mask
 
     return sum_diff, count_present

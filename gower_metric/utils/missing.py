@@ -1,27 +1,8 @@
-import math
 from collections.abc import Sequence
 from typing import Any
 
 import numpy as np
 import pandas as pd
-
-
-def is_missing(value: Any) -> bool:
-    """Return True if the value is considered missing.
-
-    Args:
-        value (Any): The value to check.
-
-    Returns:
-        bool: True if the value is missing, False otherwise.
-
-    """
-    return bool(
-        value is None
-        or (isinstance(value, float) and math.isnan(value))
-        or (hasattr(pd, "isna") and pd.isna(value))
-        or (isinstance(value, float) and np.isnan(value)),
-    )
 
 
 def first_not_missing(sequence: Sequence) -> Any | None:
@@ -35,7 +16,7 @@ def first_not_missing(sequence: Sequence) -> Any | None:
 
     """
     for value in sequence:
-        if not is_missing(value):
+        if not pd.isna(value):
             return value
     return None
 

@@ -1,9 +1,9 @@
-import math
 from collections import Counter
 from collections.abc import Sequence
 from typing import Any
 
 import numpy as np
+import pandas as pd
 
 
 def map_ordered_values(
@@ -43,7 +43,11 @@ def get_cardinalities_mapping(
             - counts_list: List of counts corresponding to each category value, ordered by sorted category values.
 
     """
-    cleaned = [v for v in column if not (isinstance(v, float) and math.isnan(v))]
+    cleaned = (
+        column[~pd.isna(column)]
+        if isinstance(column, np.ndarray)
+        else [v for v in column if not pd.isna(v)]
+    )
     counts_map: dict[Any, int] = Counter(cleaned)
 
     unique_vals = sorted(counts_map.keys())
@@ -60,7 +64,7 @@ def collect_ordinal_cardinalities(data: np.ndarray) -> list[np.ndarray]:
             Each column may contain NaN and ordinal categorical values.
 
     Returns:
-        list[np.ndarray]):
+        list[np.ndarray]:
             - ordinals_cardinality:
                 A list where each element is a 1D NumPy array of integer counts. Counts[i] is the number of occurrences of the i-th sorted category in that column.
 

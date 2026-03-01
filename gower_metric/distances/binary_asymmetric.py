@@ -1,6 +1,7 @@
 import numpy as np
+import pandas as pd
 
-from gower_metric.utils.missing import apply_missing_strategy, is_missing
+from gower_metric.utils.missing import apply_missing_strategy
 
 
 def binary_asymmetric_component(
@@ -41,8 +42,8 @@ def binary_asymmetric_component(
         col_x = X[:, j]
         col_y = Y[:, j]
 
-        mask_x = np.array([not is_missing(v) for v in col_x], dtype=bool)
-        mask_y = np.array([not is_missing(v) for v in col_y], dtype=bool)
+        mask_x = ~pd.isna(col_x)
+        mask_y = ~pd.isna(col_y)
         valid = mask_x[:, None] & mask_y[None, :]
 
         # δ_ijt: at least one presence (1) and both non-missing
@@ -56,6 +57,6 @@ def binary_asymmetric_component(
 
         w = weights[pos] if weights is not None else 1.0
         sum_diff += diff * w
-        count_present += mask.astype(float) * w
+        count_present += mask * w
 
     return sum_diff, count_present

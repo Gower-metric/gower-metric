@@ -677,6 +677,7 @@ class Gower:
             np.floating | np.integer: Gower similarity in [0,1], defined as 1 - distance(a, b).
 
         Example:
+            >>> import pandas as pd
             >>> from gower_metric import Config, Gower
             >>> data = pd.DataFrame({
             ...     'feature1': [1.0, 2.0, 3.0, 4.0],
@@ -737,6 +738,7 @@ class Gower:
 
         Examples:
             Basic usage:
+                >>> import pandas as pd
                 >>> from gower_metric import Config, Gower
                 >>> data = pd.DataFrame({
                 ...     'feature1': [1.0, 2.0, 3.0, 4.0],

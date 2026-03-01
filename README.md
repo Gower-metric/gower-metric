@@ -83,7 +83,7 @@ distance = gower(data[0], data[1])
 
 ### Transformation
 
-We also provide a way to transform original data into it's numerical representation. It can be very useful when working with external libraries, 
+We also provide a way to transform original data into its numerical representation. It can be very useful when working with external libraries, 
 such as scikit-learn and scipy. More about how to use them with gower-metric can be found within [examples](examples) folder and documentation.
 
 ```python
