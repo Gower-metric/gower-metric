@@ -1,3 +1,4 @@
+import warnings
 from typing import TYPE_CHECKING, Any, cast
 
 import numpy as np
@@ -61,12 +62,12 @@ class Gower:
             >>> import pandas as pd
             >>> from gower_metric import Config, Gower
             >>> data = pd.DataFrame({
-            ...     'feature1': [[1.0], [2.0], [3.0], [4.0]],
+            ...     'feature1': [1.0, 2.0, 3.0, 4.0],
             ...     'feature2': ['A', 'B', 'A', 'C'],
             ...     'feature3': [0, 1, 0, 1],
             ... })
             >>> feature_types = {
-            ...     'feature1': 'numeric_interval',
+            ...     'feature1': 'numeric',
             ...     'feature2': 'categorical_nominal',
             ...     'feature3': 'binary_symmetric',
             ... }
@@ -157,12 +158,12 @@ class Gower:
             >>> import pandas as pd
             >>> from gower_metric import Config, Gower
             >>> data = pd.DataFrame({
-            ...     'feature1': [[1.0], [2.0], [3.0], [4.0]],
+            ...     'feature1': [1.0, 2.0, 3.0, 4.0],
             ...     'feature2': ['A', 'B', 'A', 'C'],
             ...     'feature3': [0, 1, 0, 1],
             ... })
             >>> feature_types = {
-            ...     'feature1': 'numeric_interval',
+            ...     'feature1': 'numeric',
             ...     'feature2': 'categorical_nominal',
             ...     'feature3': 'binary_symmetric',
             ... }
@@ -396,12 +397,12 @@ class Gower:
             >>> import pandas as pd
             >>> from gower_metric import Config, Gower
             >>> data = pd.DataFrame({
-            ...     'feature1': [[1.0], [2.0], [3.0], [4.0]],
+            ...     'feature1': [1.0, 2.0, 3.0, 4.0],
             ...     'feature2': ['A', 'B', 'A', 'C'],
             ...     'feature3': [0, 1, 0, 1],
             ... })
             >>> feature_types = {
-            ...     'feature1': 'numeric_interval',
+            ...     'feature1': 'numeric',
             ...     'feature2': 'categorical_nominal',
             ...     'feature3': 'binary_symmetric',
             ... }
@@ -524,11 +525,11 @@ class Gower:
             >>> import pandas as pd
             >>> from gower_metric import Config, Gower
             >>> data = pd.DataFrame({
-            ...     'feature1': [[1.0], [2.0], [3.0], [4.0]],
+            ...     'feature1': [1.0, 2.0, 3.0, 4.0],
             ...     'feature2': ['A', 'B', 'A', 'C'],
             ...     })
             >>> feature_types = {
-            ...     'feature1': 'numeric_interval',
+            ...     'feature1': 'numeric',
             ...     'feature2': 'categorical_nominal',
             ... }
             >>> cfg = Config(
@@ -678,11 +679,11 @@ class Gower:
         Example:
             >>> from gower_metric import Config, Gower
             >>> data = pd.DataFrame({
-            ...     'feature1': [[1.0], [2.0], [3.0], [4.0]],
+            ...     'feature1': [1.0, 2.0, 3.0, 4.0],
             ...     'feature2': ['A', 'B', 'A', 'C'],
             ... })
             >>> feature_types = {
-            ...     'feature1': 'numeric_interval',
+            ...     'feature1': 'numeric',
             ...     'feature2': 'categorical_nominal',
             ... }
             >>> cfg = Config(
@@ -730,20 +731,20 @@ class Gower:
             np.ndarray | scipy.sparse.csr_matrix | scipy.sparse.csc_matrix | scipy.sparse.coo_matrix:
                 Pairwise Gower distance or similarity matrix of shape (n_samples, n_samples) or sparse matrix.
 
-        Raises:
-            Warning: If fit(X) was not called before computing the matrix. In this case,
-                the model will be fitted automatically.
+        Note:
+            If fit(X) was not called before computing the matrix, the model will be
+            fitted automatically and a UserWarning will be emitted.
 
         Examples:
             Basic usage:
                 >>> from gower_metric import Config, Gower
                 >>> data = pd.DataFrame({
-                ...     'feature1': [[1.0], [2.0], [3.0], [4.0]],
+                ...     'feature1': [1.0, 2.0, 3.0, 4.0],
                 ...     'feature2': ['A', 'B', 'A', 'C'],
                 ...     'feature3': [0, 1, 0, 1],
                 ...})
                 >>> feature_types = {
-                ...     'feature1': 'numeric_interval',
+                ...     'feature1': 'numeric',
                 ...     'feature2': 'categorical_nominal',
                 ...     'feature3': 'binary_symmetric',
                 ... }
@@ -762,12 +763,12 @@ class Gower:
                 >>> import pandas as pd
                 >>> from gower_metric import Config, Gower
                 >>> data = pd.DataFrame({
-                ...     'feature1': [[1.0], [2.0], [3.0], [4.0]],
+                ...     'feature1': [1.0, 2.0, 3.0, 4.0],
                 ...     'feature2': ['A', 'B', 'A', 'C'],
                 ...     'feature3': [0, 1, 0, 1],
                 ... })
                 >>> feature_types = {
-                ...     'feature1': 'numeric_interval',
+                ...     'feature1': 'numeric',
                 ...     'feature2': 'categorical_nominal',
                 ...     'feature3': 'binary_symmetric',
                 ... }
@@ -786,7 +787,7 @@ class Gower:
         if not self._is_fitted:
             self.fit(X)
             msg = "Calling .fit(X) inside .matrix(X)."
-            raise Warning(msg)
+            warnings.warn(msg, UserWarning, stacklevel=2)
 
         if data_type is None:
             data_type = self.data_type

@@ -41,17 +41,17 @@ class Config(BaseModel):
             {0: 1.0, 1: 2.0}.
         data_type (DataType): Optional data type required for __call__, transformation and matrix method.
             If omitted, np.float32 will be used.
-        scale_method (str): Optional scaling method for numeric features. Can be 'range' or 'iqr'.
+        scale_method (ScaleMethod): Optional scaling method for numeric features. Can be 'range' or 'iqr'.
             Default is 'range' if omitted.
-        scale_window (str | None): Optional scaling window for numeric or ratio features. Can be None, 'kde'
+        scale_window (ScaleWindow | None): Optional scaling window for numeric or ratio features. Can be None, 'kde'
             or 'kNN'. Default is None if omitted.
-        scale_window_type (str | None): Optional type of scaling window. Can be None or 'silverman'.
+        scale_window_type (ScaleWindowType | None): Optional type of scaling window. Can be None or 'silverman'.
             Default is None if omitted, not recommended to use without scale_window.
-        missing_strategy (str): Optional strategy for handling missing values. Can be 'ignore',
+        missing_strategy (MissingStrategy): Optional strategy for handling missing values. Can be 'ignore',
             'max_dist' or 'raise_error'. Default is 'ignore' if omitted.
         categorical_ordinal_values_order (dict[int | str, list[str]] | None): Optional dict defining the order of the values contained in
             the columns of type 'categorical_ordinal'. Must contain values for all such columns.
-        categorical_ordinal_calculation_type (str): Optional calculation type for categorical
+        categorical_ordinal_calculation_type (CategoricalOrdinalCalcType): Optional calculation type for categorical
             ordinal features. Can be 'kaufman' or 'podani'. Default is 'kaufman' if omitted.
         k_neighbors (int | None): Optional number of nearest neighbors for 'kNN' scaling window.
             Default is None if omitted. If k_neighbors is None, it will be set to the square root of the number of points.
@@ -59,25 +59,25 @@ class Config(BaseModel):
             triggered to calculate formula. More information in `references year 2021 -> chapter 3 <https://arxiv.org/abs/2101.02481>`_.
         conditional_distances_threshold_coeff (int): Value to be used as the numerator in the fraction (with p_cat as the denominator)
             that defines the threshold above which the distance will be set to 1. More information in reference from year 2021 -> chapter 3.
-        handle_unseen_binary_asymmetric (str): Strategy for handling unseen categories in binary asymmetric features. Can be 'warning', 'error' or 'missing'.
+        handle_unseen_binary_asymmetric (HandleUnseenBinaryAsymmetric): Strategy for handling unseen categories in binary asymmetric features. Can be 'warning', 'error' or 'missing'.
             Default is 'error' if omitted.
         binary_asymmetric_value_order (dict[int | str, list[Any]] | None): Optional explicit ordering of binary values for binary_asymmetric features.
             Similar to categorical_ordinal_values_order. If None, values are auto-detected from training data.
             If provided, must contain exactly 2 values per binary column. Example: {0: [False, True], 1: ['No', 'Yes']}.
             Recommended for production to ensure reproducibility and handle expected-but-not-yet-seen values.
-        handle_unseen_binary_symmetric (str): Strategy for handling unseen categories in binary symmetric features. Can be 'warning', 'error' or 'missing'.
+        handle_unseen_binary_symmetric (HandleUnseenBinarySymmetric): Strategy for handling unseen categories in binary symmetric features. Can be 'warning', 'error' or 'missing'.
             Default is 'error' if omitted.
         binary_symmetric_value_order (dict[int | str, list[Any]] | None): Optional explicit ordering of binary values for binary_symmetric features.
             Similar to categorical_ordinal_values_order. If None, values are auto-detected from training data.
             If provided, must contain exactly 2 values per binary column. Example: {0: [False, True], 1: ['No', 'Yes']}.
             Recommended for production to ensure reproducibility and handle expected-but-not-yet-seen values.
-        handle_unseen_categorical_nominal (str): Strategy for handling unseen categories in categorical nominal features. Can be 'warning', 'error' or 'missing'.
+        handle_unseen_categorical_nominal (HandleUnseenCategoricalNominal): Strategy for handling unseen categories in categorical nominal features. Can be 'warning', 'error' or 'missing'.
             Default is 'error' if omitted.
-        handle_unseen_categorical_ordinal (str): Strategy for handling unseen categories in categorical ordinal features. Can be 'warning', 'error' or 'missing'.
+        handle_unseen_categorical_ordinal (HandleUnseenCategoricalOrdinal): Strategy for handling unseen categories in categorical ordinal features. Can be 'warning', 'error' or 'missing'.
             Default is 'error' if omitted.
 
     Raises:
-            ValueError: If custom validation rule fail.
+            ValueError: If custom validation rules fail.
 
     """
 
