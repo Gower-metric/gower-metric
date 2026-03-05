@@ -8,7 +8,7 @@ from sklearn.preprocessing import OrdinalEncoder
 def fit_nominal_features(
     X: np.ndarray,
     nominal_indices: list[int],
-    data_type: type[np.floating | np.integer] = np.float32,
+    data_type: type[np.floating] = np.float32,
     handle_unseen: str = "error",
 ) -> dict[int, OrdinalEncoder]:
     """Fit OrdinalEncoders for categorical nominal features.
@@ -16,7 +16,7 @@ def fit_nominal_features(
     Args:
         X (np.ndarray): The input data array.
         nominal_indices (list[int]): Indices of nominal columns.
-        data_type (type[np.floating | np.integer]): Data type for the encoder output.
+        data_type (type[np.floating]): Data type for the encoder output.
         handle_unseen (str): Strategy for handling unseen categories ('error', 'warning', 'missing').
 
     Returns:
@@ -46,7 +46,7 @@ def fit_ordinal_features(
     X: np.ndarray,
     ordinal_indices: list[int],
     ordered_values: dict[int | str, list[Any]] | None,
-    data_type: type[np.floating | np.integer] = np.float32,
+    data_type: type[np.floating] = np.float32,
     handle_unseen: str = "error",
 ) -> dict[int, OrdinalEncoder]:
     """Fit OrdinalEncoders for categorical ordinal features.
@@ -55,7 +55,7 @@ def fit_ordinal_features(
         X (np.ndarray): The input data array.
         ordinal_indices (list[int]): Indices of ordinal columns.
         ordered_values (dict[int | str, list[Any]] | None): Dictionary defining order for each column.
-        data_type (type[np.floating | np.integer]): Data type for the encoder output.
+        data_type (type[np.floating]): Data type for the encoder output.
         handle_unseen (str): Strategy for handling unseen categories ('error', 'warning', 'missing').
 
     Returns:

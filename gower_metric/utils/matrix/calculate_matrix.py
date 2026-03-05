@@ -17,7 +17,7 @@ def __compute_row_upper(
     X_arr: np.ndarray,
     n: int,
     model: "Gower",
-    data_type: type[np.floating | np.integer],
+    data_type: type[np.floating],
     row_type: str,
 ) -> tuple[int, np.ndarray]:
     """Compute one upper triangle row of Gower distances.
@@ -27,7 +27,7 @@ def __compute_row_upper(
         X_arr (np.ndarray): data array of shape (n_samples, n_features).
         n (int): number of samples.
         model (gower_metric.Gower): fitted Gower instance.
-        data_type (type[np.integer | np.floating]): data type for the output row array.
+        data_type (type[np.floating]): data type for the output row array.
         row_type (str): type of row to compute, distance or similarity. Defaults to "distance".
 
     Returns:
@@ -56,7 +56,7 @@ def _get_results_from_joblib(
     arr: np.ndarray,
     n_jobs: int,
     verbose: int,
-    data_type: type[np.floating | np.integer],
+    data_type: type[np.floating],
     model: "Gower",
     matrix_type: str,
     backend: str = "loky",
@@ -68,7 +68,7 @@ def _get_results_from_joblib(
         arr (np.ndarray): data array of shape (n_samples, n_features).
         n_jobs (int): number of parallel jobs.
         verbose (int): whether to show progress bar.
-        data_type (type[np.floating | np.integer]): data type for the output rows.
+        data_type (type[np.floating]): data type for the output rows.
         model (gower_metric.Gower): fitted Gower instance.
         matrix_type (str): type of matrix to compute, distance or similarity. Defaults to "distance".
         backend (str): joblib backend to use. Defaults to "loky".
@@ -98,7 +98,7 @@ def _get_results_from_joblib(
 def get_full_matrix(
     self: "Gower",
     X: pd.DataFrame | np.ndarray,
-    data_type: type[np.floating | np.integer],
+    data_type: type[np.floating],
     n_jobs: int = -1,
     verbose: int = 0,
     matrix_type: str = "distance",
@@ -116,7 +116,7 @@ def get_full_matrix(
     Args:
         self (gower_metric.Gower): Fitted Gower instance.
         X (pd.DataFrame | np.ndarray): shape of (n_samples, n_features).
-        data_type (type[np.floating | np.integer]): data type for the output distance matrix, default self.data_type.
+        data_type (type[np.floating]): data type for the output distance matrix, default self.data_type.
         n_jobs (int): number of parallel jobs to run, -1 means using all processors. Default is -1.
         verbose (int): whether to show tqdm progress bar. Default is 0 (no progress bar).
         matrix_type (str): Type of matrix to compute, either 'distance' or 'similarity'.
