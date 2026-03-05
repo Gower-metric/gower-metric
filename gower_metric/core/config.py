@@ -12,7 +12,7 @@ FeatureType = Literal[
     "ratio_scale_interval",
 ]
 WeightsType = Literal["uniform"] | dict[int, float]
-DataType = type[np.integer] | type[np.floating]
+DataType = type[np.floating]
 ScaleMethod = Literal["range", "iqr"]
 ScaleWindow = Literal["kde", "kNN"]
 ScaleWindowType = Literal["silverman"]

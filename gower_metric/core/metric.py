@@ -87,7 +87,7 @@ class Gower:
 
         self.feature_weights = config.feature_weights
 
-        self.data_type: type[np.integer | np.floating] = (
+        self.data_type: type[np.floating] = (
             config.data_type if config.data_type is not None else np.float32
         )
 
@@ -145,7 +145,7 @@ class Gower:
         Args:
             X (np.ndarray | pd.DataFrame): shape of (n_samples, n_features).
                 For DataFrame inputs, column names in feature_types are converted to indices.
-                Sparse matrices are not supported and will be converted to dense arrays (may cause OOM).
+                Sparse matrices are not supported as direct input.
 
         Returns:
             Gower: The fitted instance.
@@ -318,13 +318,15 @@ class Gower:
             )
             counts_map, _ = get_cardinalities_mapping(col)
             counts_arr = np.asarray(
-                [counts_map[v] for v in self.categorical_ordinal_values_order[j]],
+                [
+                    counts_map.get(v, 0)
+                    for v in self.categorical_ordinal_values_order[j]
+                ],
                 dtype=float,
             )
 
-            # Map encoded numerical ranks back to their integer rank.
-            # This ensures gower evaluates distances directly on data processed by gower.transform()
-            # without encountering cast errors and unmapped float values inside numerical distances.
+            # we need to map ranks to both int and float to avoid cast errors within .fit()
+            # to maintain compatibility with multiple .transform() calls
             for rank in list(ranks_map.values()):
                 ranks_map[float(rank)] = rank
                 ranks_map[int(rank)] = rank
@@ -508,7 +510,7 @@ class Gower:
         self.fit(X)
         return self.transform(X)
 
-    def __call__(self, a: Any, b: Any) -> np.floating | np.integer:
+    def __call__(self, a: Any, b: Any) -> np.floating:
         """Compute the Gower distance between two records.
 
         Args:
@@ -516,7 +518,7 @@ class Gower:
             b (Any): Second record of data.
 
         Returns:
-            np.floating | np.integer: Gower distance in [0,1], or np.nan if no features are comparable.
+            np.floating: Gower distance in [0,1], or np.nan if no features are comparable.
 
         Raises:
             IllegalStateError: If fit(X) was not called before computing distance.
@@ -666,7 +668,7 @@ class Gower:
 
         return self.data_type(total_sum[0, 0] / total_count[0, 0])
 
-    def similarity(self, a: Any, b: Any) -> np.floating | np.integer:
+    def similarity(self, a: Any, b: Any) -> np.floating:
         """Compute the Gower similarity between two records.
 
         Args:
@@ -674,7 +676,7 @@ class Gower:
             b (Any): Second record of data.
 
         Returns:
-            np.floating | np.integer: Gower similarity in [0,1], defined as 1 - distance(a, b).
+            np.floating: Gower similarity in [0,1], defined as 1 - distance(a, b).
 
         Example:
             >>> import pandas as pd
@@ -694,12 +696,12 @@ class Gower:
             >>> similarity = gower.similarity(data.iloc[0], data.iloc[1])
 
         """
-        return 1.0 - self(a, b)
+        return self.data_type(1.0 - self(a, b))
 
     def matrix(
         self,
         X: pd.DataFrame | np.ndarray,
-        data_type: type[np.floating | np.integer] | None = None,
+        data_type: type[np.floating] | None = None,
         n_jobs: int = -1,
         verbose: int = 0,
         matrix_type: str = "distance",
@@ -716,7 +718,7 @@ class Gower:
 
         Args:
             X (pd.DataFrame | np.ndarray): shape of (n_samples, n_features).
-            data_type (type[np.floating | np.integer] | None): data type used for the output distance matrix.
+            data_type (type[np.floating] | None): data type used for the output distance matrix.
                 If None, uses the data_type from the Gower instance configuration.
             n_jobs (int): number of parallel jobs to run, -1 means using all processors. Default is -1.
             verbose (int): whether to show tqdm progress bar. Default is 0 (no progress bar).
