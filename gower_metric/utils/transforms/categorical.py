@@ -10,7 +10,7 @@ def transform_categorical_nominal(
     col_idx: int,
     enc: OrdinalEncoder,
     handle_unseen: str,
-    data_type: type[np.floating | np.integer],
+    data_type: type[np.floating],
 ) -> np.ndarray:
     """Transform a categorical nominal feature column.
 
@@ -57,7 +57,7 @@ def transform_categorical_ordinal(
     col_idx: int,
     enc: OrdinalEncoder,
     handle_unseen: str,
-    data_type: type[np.floating | np.integer],
+    data_type: type[np.floating],
 ) -> np.ndarray:
     """Transform a categorical ordinal feature column.
 
