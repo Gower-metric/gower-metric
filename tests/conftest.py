@@ -15,7 +15,6 @@ TYPES_TO_CHECK = [
     "float16",
     "float32",
     "float64",
-    "float128",
 ]  # here define all numerical types to check
 NUMPY_NUMERIC_TYPES = [getattr(np, t) for t in TYPES_TO_CHECK if hasattr(np, t)]
 

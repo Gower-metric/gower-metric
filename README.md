@@ -34,6 +34,8 @@ Implementation of Gower's Metric in Python.
 
 Legend: ✅ - supported and tested, 🚧 - work in progress
 
+Supported and tested numerical scalar types: `numpy.float16`, `np.float32`, `np.float64`.
+
 ## Documentation
 
 Documentation is available [here](https://gower-metric.readthedocs.io/en/latest/).
