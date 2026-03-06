@@ -20,7 +20,9 @@ class TestHandleUnseenCategoricalNominal:
         X_train = np.array([["A"], ["B"]], dtype=object)
         X_test = np.array([["C"]], dtype=object)
 
-        cfg = Config(feature_types={0: "categorical_nominal"})
+        cfg = Config(
+            feature_types={0: "categorical_nominal"},
+        )
         gower = Gower(cfg).fit(X_train)
 
         with pytest.raises(ValueError, match=r"Found unknown categories"):
@@ -106,7 +108,9 @@ class TestHandleUnseenCategoricalNominal:
         X_train = np.array([["A"], ["B"], ["C"]], dtype=object)
         X_test = np.array([["A"], ["B"], ["C"]], dtype=object)
 
-        cfg = Config(feature_types={0: "categorical_nominal"})
+        cfg = Config(
+            feature_types={0: "categorical_nominal"},
+        )
         gower = Gower(cfg).fit(X_train)
 
         result = gower.transform(X_test)

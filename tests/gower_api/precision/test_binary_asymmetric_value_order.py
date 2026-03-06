@@ -6,9 +6,10 @@ import pytest
 from pydantic import ValidationError
 
 from gower_metric import Config, Gower
+from tests.gower_api.precision.conftest import BaseTest
 
 
-class TestBinaryAsymmetricValueOrder:
+class TestBinaryAsymmetricValueOrder(BaseTest):
     """Test explicit value ordering for binary_asymmetric features."""
 
     def test_explicit_order_complete_fit(self) -> None:
@@ -22,6 +23,7 @@ class TestBinaryAsymmetricValueOrder:
 
         cfg = Config(
             feature_types={0: "binary_asymmetric"},
+            data_type=self.dtype,
             binary_asymmetric_value_order={0: ["No", "Yes"]},
         )
         gower = Gower(cfg).fit(X_train)
@@ -41,6 +43,7 @@ class TestBinaryAsymmetricValueOrder:
 
         cfg = Config(
             feature_types={0: "binary_asymmetric"},
+            data_type=self.dtype,
             binary_asymmetric_value_order={0: ["No", "Yes"]},
         )
         gower = Gower(cfg).fit(X_train)
@@ -59,6 +62,7 @@ class TestBinaryAsymmetricValueOrder:
 
         cfg = Config(
             feature_types={0: "binary_asymmetric"},
+            data_type=self.dtype,
             binary_asymmetric_value_order={0: ["No", "Yes"]},
             handle_unseen_binary_asymmetric="missing",
         )
@@ -82,6 +86,7 @@ class TestBinaryAsymmetricValueOrder:
         for strategy in ["error", "warning", "missing"]:
             cfg = Config(
                 feature_types={0: "binary_asymmetric"},
+                data_type=self.dtype,
                 binary_asymmetric_value_order={0: ["A", "B"]},
                 handle_unseen_binary_asymmetric=strategy,  # type: ignore[arg-type]
             )
@@ -102,6 +107,7 @@ class TestBinaryAsymmetricValueOrder:
 
         cfg = Config(
             feature_types={0: "binary_asymmetric"},
+            data_type=self.dtype,
             binary_asymmetric_value_order={0: ["No", "Yes"]},
         )
 
@@ -120,6 +126,7 @@ class TestBinaryAsymmetricValueOrder:
         X_train1 = np.array([["Yes"], ["No"]], dtype=object)
         cfg1 = Config(
             feature_types={0: "binary_asymmetric"},
+            data_type=self.dtype,
             binary_asymmetric_value_order={0: ["No", "Yes"]},
         )
         gower1 = Gower(cfg1).fit(X_train1)
@@ -128,6 +135,7 @@ class TestBinaryAsymmetricValueOrder:
         X_train2 = np.array([["No"], ["Yes"]], dtype=object)
         cfg2 = Config(
             feature_types={0: "binary_asymmetric"},
+            data_type=self.dtype,
             binary_asymmetric_value_order={0: ["No", "Yes"]},
         )
         gower2 = Gower(cfg2).fit(X_train2)
@@ -148,6 +156,7 @@ class TestBinaryAsymmetricValueOrder:
 
         cfg = Config(
             feature_types={0: "binary_asymmetric"},
+            data_type=self.dtype,
             binary_asymmetric_value_order={0: ["No", "Yes"]},
         )
         gower = Gower(cfg).fit(X_train)
@@ -168,6 +177,7 @@ class TestBinaryAsymmetricValueOrder:
 
         cfg = Config(
             feature_types={0: "binary_asymmetric"},
+            data_type=self.dtype,
         )
         gower = Gower(cfg).fit(X_train)
         result = gower.transform(X_test)
@@ -187,6 +197,7 @@ class TestBinaryAsymmetricValueOrder:
         X_test = np.array([["B"]], dtype=object)
         cfg = Config(
             feature_types={0: "binary_asymmetric"},
+            data_type=self.dtype,
             handle_unseen_binary_asymmetric="missing",
         )
         gower = Gower(cfg).fit(X_train)
@@ -207,6 +218,7 @@ class TestBinaryAsymmetricValueOrder:
 
         cfg = Config(
             feature_types={0: "binary_asymmetric"},
+            data_type=self.dtype,
             handle_unseen_binary_asymmetric="missing",
         )
         gower = Gower(cfg).fit(X_train)
@@ -218,7 +230,7 @@ class TestBinaryAsymmetricValueOrder:
             gower.transform(X_test)
 
 
-class TestBinaryAsymmetricValueOrderValidation:
+class TestBinaryAsymmetricValueOrderValidation(BaseTest):
     """Test config validation for binary_asymmetric_value_order."""
 
     def test_validation_wrong_number_of_values(self) -> None:
@@ -226,6 +238,7 @@ class TestBinaryAsymmetricValueOrderValidation:
         with pytest.raises(ValidationError, match=r"must have exactly 2 values"):
             Config(
                 feature_types={0: "binary_asymmetric"},
+                data_type=self.dtype,
                 binary_asymmetric_value_order={0: ["Only", "One", "Three"]},
             )
 
@@ -234,6 +247,7 @@ class TestBinaryAsymmetricValueOrderValidation:
         with pytest.raises(ValidationError, match=r"must have exactly 2 values"):
             Config(
                 feature_types={0: "binary_asymmetric"},
+                data_type=self.dtype,
                 binary_asymmetric_value_order={0: ["OnlyOne"]},
             )
 
@@ -242,6 +256,7 @@ class TestBinaryAsymmetricValueOrderValidation:
         with pytest.raises(ValidationError, match=r"must be unique"):
             Config(
                 feature_types={0: "binary_asymmetric"},
+                data_type=self.dtype,
                 binary_asymmetric_value_order={0: ["Same", "Same"]},
             )
 
@@ -253,6 +268,7 @@ class TestBinaryAsymmetricValueOrderValidation:
         ):
             Config(
                 feature_types={0: "categorical_nominal"},
+                data_type=self.dtype,
                 binary_asymmetric_value_order={0: ["A", "B"]},
             )
 
@@ -261,6 +277,7 @@ class TestBinaryAsymmetricValueOrderValidation:
         with pytest.raises(ValidationError, match=r"Input should be a valid list"):
             Config(
                 feature_types={0: "binary_asymmetric"},
+                data_type=self.dtype,
                 binary_asymmetric_value_order={0: "NotAList"},  # type: ignore[dict-item]
             )
 
@@ -268,6 +285,7 @@ class TestBinaryAsymmetricValueOrderValidation:
         """Test that None is a valid value (uses auto-detection)."""
         cfg = Config(
             feature_types={0: "binary_asymmetric"},
+            data_type=self.dtype,
             binary_asymmetric_value_order=None,
         )
         assert cfg.binary_asymmetric_value_order is None
@@ -280,6 +298,7 @@ class TestBinaryAsymmetricValueOrderValidation:
                 1: "binary_asymmetric",
                 2: "categorical_nominal",
             },
+            data_type=self.dtype,
             binary_asymmetric_value_order={
                 0: ["No", "Yes"],
                 1: [False, True],

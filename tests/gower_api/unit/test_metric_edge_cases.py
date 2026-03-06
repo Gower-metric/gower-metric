@@ -6,6 +6,7 @@ import numpy as np
 import pandas as pd
 import pytest
 import scipy.sparse
+from pydantic import ValidationError
 
 from gower_metric import Config, Gower
 from gower_metric.core.exceptions import IllegalStateError
@@ -369,3 +370,23 @@ class TestTransformDoesNotMutateFitMetadata:
             _ = gower.transform(data)
             dist = gower(data[0], data[2])
             assert pytest.approx(float(dist_baseline), rel=1e-12) == float(dist)
+
+
+class TestIntegerDtypeRejected:
+    """Config must reject integer data_type since NaN cannot be represented."""
+
+    def test_config_rejects_int32(self) -> None:
+        with pytest.raises(ValidationError):
+            Config(feature_types={0: "numeric"}, data_type=np.int32)  # type: ignore[arg-type]
+
+    def test_config_rejects_int64(self) -> None:
+        with pytest.raises(ValidationError):
+            Config(feature_types={0: "numeric"}, data_type=np.int64)  # type: ignore[arg-type]
+
+    def test_config_accepts_float32(self) -> None:
+        cfg = Config(feature_types={0: "numeric"}, data_type=np.float32)
+        assert cfg.data_type is np.float32
+
+    def test_config_accepts_float64(self) -> None:
+        cfg = Config(feature_types={0: "numeric"}, data_type=np.float64)
+        assert cfg.data_type is np.float64

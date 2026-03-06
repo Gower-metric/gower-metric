@@ -1,4 +1,4 @@
-"""Tests for handle_unseen_binary_asymmetric parameter."""
+"""Tests for handle_unseen_binary_symmetric parameter."""
 
 import numpy as np
 import pandas as pd
@@ -8,11 +8,11 @@ from pydantic import ValidationError
 from gower_metric import Config, Gower
 
 
-class TestHandleUnseenBinaryAsymmetric:
-    """Test unseen value handling for binary_asymmetric features."""
+class TestHandleUnseenBinarySymmetric:
+    """Test unseen value handling for binary_symmetric features."""
 
     def test_strategy_error_raises_on_unseen_value(self) -> None:
-        """Test that handle_unseen_binary_asymmetric='error' raises ValueError.
+        """Test that handle_unseen_binary_symmetric='error' raises ValueError.
 
         Training data: only 'A'
         Test data: has 'B' (unseen) -> ValueError
@@ -21,8 +21,8 @@ class TestHandleUnseenBinaryAsymmetric:
         X_test = np.array([["A"], ["B"]], dtype=object)
 
         cfg = Config(
-            feature_types={0: "binary_asymmetric"},
-            handle_unseen_binary_asymmetric="error",
+            feature_types={0: "binary_symmetric"},
+            handle_unseen_binary_symmetric="error",
         )
         gower = Gower(cfg).fit(X_train)
 
@@ -33,7 +33,7 @@ class TestHandleUnseenBinaryAsymmetric:
             gower.transform(X_test)
 
     def test_strategy_warning_maps_to_nan(self) -> None:
-        """Test that handle_unseen_binary_asymmetric='warning' maps to nan with warning.
+        """Test that handle_unseen_binary_symmetric='warning' maps to nan with warning.
 
         Training data: only 'A'
         Test data: has 'B' (unseen) -> warning, nan
@@ -42,8 +42,8 @@ class TestHandleUnseenBinaryAsymmetric:
         X_test = np.array([["A"], ["B"]], dtype=object)
 
         cfg = Config(
-            feature_types={0: "binary_asymmetric"},
-            handle_unseen_binary_asymmetric="warning",
+            feature_types={0: "binary_symmetric"},
+            handle_unseen_binary_symmetric="warning",
         )
         gower = Gower(cfg).fit(X_train)
 
@@ -57,7 +57,7 @@ class TestHandleUnseenBinaryAsymmetric:
         assert np.isnan(result[1, 0])
 
     def test_strategy_missing_maps_to_nan_silently(self) -> None:
-        """Test that handle_unseen_binary_asymmetric='missing' maps to nan without warning.
+        """Test that handle_unseen_binary_symmetric='missing' maps to nan without warning.
 
         Training data: only 'A'
         Test data: has 'B' (unseen) -> nan
@@ -66,8 +66,8 @@ class TestHandleUnseenBinaryAsymmetric:
         X_test = np.array([["A"], ["B"]], dtype=object)
 
         cfg = Config(
-            feature_types={0: "binary_asymmetric"},
-            handle_unseen_binary_asymmetric="missing",
+            feature_types={0: "binary_symmetric"},
+            handle_unseen_binary_symmetric="missing",
         )
         gower = Gower(cfg).fit(X_train)
 
@@ -85,7 +85,9 @@ class TestHandleUnseenBinaryAsymmetric:
         X_train = np.array([["Yes"], ["Yes"]], dtype=object)
         X_test = np.array([["No"]], dtype=object)
 
-        cfg = Config(feature_types={0: "binary_asymmetric"})
+        cfg = Config(
+            feature_types={0: "binary_symmetric"},
+        )
         gower = Gower(cfg).fit(X_train)
 
         with pytest.raises(
@@ -104,8 +106,8 @@ class TestHandleUnseenBinaryAsymmetric:
         X_test = np.array([["C"]], dtype=object)
 
         cfg = Config(
-            feature_types={0: "binary_asymmetric"},
-            handle_unseen_binary_asymmetric="error",
+            feature_types={0: "binary_symmetric"},
+            handle_unseen_binary_symmetric="error",
         )
         gower = Gower(cfg).fit(X_train)
 
@@ -122,8 +124,8 @@ class TestHandleUnseenBinaryAsymmetric:
         X_test = np.array([[2]], dtype=object)
 
         cfg = Config(
-            feature_types={0: "binary_asymmetric"},
-            handle_unseen_binary_asymmetric="missing",
+            feature_types={0: "binary_symmetric"},
+            handle_unseen_binary_symmetric="missing",
         )
         gower = Gower(cfg).fit(X_train)
 
@@ -137,8 +139,8 @@ class TestHandleUnseenBinaryAsymmetric:
             match=r"Input should be 'warning', 'error' or 'missing'",
         ):
             Config(
-                feature_types={0: "binary_asymmetric"},
-                handle_unseen_binary_asymmetric="invalid",  # type: ignore[arg-type]
+                feature_types={0: "binary_symmetric"},
+                handle_unseen_binary_symmetric="invalid",  # type: ignore[arg-type]
             )
 
     def test_strategy_with_pandas_dataframe(self) -> None:
@@ -147,8 +149,8 @@ class TestHandleUnseenBinaryAsymmetric:
         X_test = pd.DataFrame({"col": ["B"]})
 
         cfg = Config(
-            feature_types={"col": "binary_asymmetric"},
-            handle_unseen_binary_asymmetric="missing",
+            feature_types={"col": "binary_symmetric"},
+            handle_unseen_binary_symmetric="missing",
         )
         gower = Gower(cfg).fit(X_train)
 
@@ -165,8 +167,8 @@ class TestHandleUnseenBinaryAsymmetric:
         X_test = np.array([["B"], ["C"], ["D"]], dtype=object)
 
         cfg = Config(
-            feature_types={0: "binary_asymmetric"},
-            handle_unseen_binary_asymmetric="missing",
+            feature_types={0: "binary_symmetric"},
+            handle_unseen_binary_symmetric="missing",
         )
         gower = Gower(cfg).fit(X_train)
 

@@ -79,3 +79,16 @@ class TestMatrixCompute:
         gower = Gower(cfg).fit(data)
         mat = gower.matrix(data)
         assert mat.dtype == np.float64
+
+
+class TestSparseFloat16Upcast:
+    def test_float16_upcasts_to_float32_with_warning(self) -> None:
+        """scipy.sparse does not support float16; verify upcast + warning."""
+        data = np.array([[0.1, 0.2], [0.3, 0.4]], dtype=np.float32)
+        with pytest.warns(UserWarning, match="scipy.sparse does not support"):
+            result = get_scipy_sparse_matrix(
+                data,
+                matrix_format="csr",
+                data_type=np.float16,
+            )
+        assert result.dtype == np.float32

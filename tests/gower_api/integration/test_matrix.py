@@ -1,31 +1,16 @@
 from typing import cast
 
 import numpy as np
-import pandas as pd
 import scipy.sparse as sp
 
 from gower_metric import Config, Gower
+from tests.conftest import generate_adult_like_df
 
 
 def test_gower_matrix_endpoint_with_custom_created_matrix() -> None:
     n_rows = 500
-    df = pd.read_csv("data/files/adult.csv").head(n_rows)
-
-    df = df[
-        [
-            "age",
-            "educational-num",
-            "race",
-            "gender",
-            "hours-per-week",
-            "relationship",
-            "occupation",
-            "education",
-            "workclass",
-        ]
-    ]
-
-    df = df.replace(to_replace="?", value=np.nan)
+    rng = np.random.default_rng(seed=42)
+    df = generate_adult_like_df(n_rows, rng)
 
     feature_types: dict[int | str, str] = {
         "age": "ratio_scale_interval",
@@ -67,23 +52,8 @@ def test_gower_matrix_endpoint_with_custom_created_matrix() -> None:
 
 def test_gower_matrix_endpoint_similarity() -> None:
     n_rows = 500
-    df = pd.read_csv("data/files/adult.csv").head(n_rows)
-
-    df = df[
-        [
-            "age",
-            "educational-num",
-            "race",
-            "gender",
-            "hours-per-week",
-            "relationship",
-            "occupation",
-            "education",
-            "workclass",
-        ]
-    ]
-
-    df = df.replace(to_replace="?", value=np.nan)
+    rng = np.random.default_rng(seed=42)
+    df = generate_adult_like_df(n_rows, rng)
 
     feature_types: dict[int | str, str] = {
         "age": "ratio_scale_interval",
@@ -131,23 +101,8 @@ def test_gower_matrix_endpoint_similarity() -> None:
 
 def test_gower_matrix_endpoint_if_it_symmetrical() -> None:
     n_rows = 500
-    df = pd.read_csv("data/files/adult.csv").head(n_rows)
-
-    df = df[
-        [
-            "age",
-            "educational-num",
-            "race",
-            "gender",
-            "hours-per-week",
-            "relationship",
-            "occupation",
-            "education",
-            "workclass",
-        ]
-    ]
-
-    df = df.replace(to_replace="?", value=np.nan)
+    rng = np.random.default_rng(seed=42)
+    df = generate_adult_like_df(n_rows, rng)
 
     feature_types: dict[int | str, str] = {
         "age": "ratio_scale_interval",

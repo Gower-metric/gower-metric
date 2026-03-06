@@ -6,9 +6,10 @@ import pytest
 from pydantic import ValidationError
 
 from gower_metric import Config, Gower
+from tests.gower_api.precision.conftest import BaseTest
 
 
-class TestBinarySymmetricValueOrder:
+class TestBinarySymmetricValueOrder(BaseTest):
     """Test explicit value ordering for binary_symmetric features."""
 
     def test_explicit_order_complete_fit(self) -> None:
@@ -22,6 +23,7 @@ class TestBinarySymmetricValueOrder:
 
         cfg = Config(
             feature_types={0: "binary_symmetric"},
+            data_type=self.dtype,
             binary_symmetric_value_order={0: ["No", "Yes"]},
         )
         gower = Gower(cfg).fit(X_train)
@@ -42,6 +44,7 @@ class TestBinarySymmetricValueOrder:
         cfg = Config(
             feature_types={0: "binary_symmetric"},
             binary_symmetric_value_order={0: ["No", "Yes"]},
+            data_type=self.dtype,
         )
         gower = Gower(cfg).fit(X_train)
         result = gower.transform(X_test)
@@ -61,6 +64,7 @@ class TestBinarySymmetricValueOrder:
             feature_types={0: "binary_symmetric"},
             binary_symmetric_value_order={0: ["No", "Yes"]},
             handle_unseen_binary_symmetric="missing",
+            data_type=self.dtype,
         )
         gower = Gower(cfg).fit(X_train)
 
@@ -84,6 +88,7 @@ class TestBinarySymmetricValueOrder:
                 feature_types={0: "binary_symmetric"},
                 binary_symmetric_value_order={0: ["A", "B"]},
                 handle_unseen_binary_symmetric=strategy,  # type: ignore[arg-type]
+                data_type=self.dtype,
             )
             gower = Gower(cfg).fit(X_train)
 
@@ -103,6 +108,7 @@ class TestBinarySymmetricValueOrder:
         cfg = Config(
             feature_types={0: "binary_symmetric"},
             binary_symmetric_value_order={0: ["No", "Yes"]},
+            data_type=self.dtype,
         )
 
         with pytest.raises(
@@ -121,6 +127,7 @@ class TestBinarySymmetricValueOrder:
         cfg1 = Config(
             feature_types={0: "binary_symmetric"},
             binary_symmetric_value_order={0: ["No", "Yes"]},
+            data_type=self.dtype,
         )
         gower1 = Gower(cfg1).fit(X_train1)
         result1 = gower1.transform(np.array([["No"], ["Yes"]], dtype=object))
@@ -129,6 +136,7 @@ class TestBinarySymmetricValueOrder:
         cfg2 = Config(
             feature_types={0: "binary_symmetric"},
             binary_symmetric_value_order={0: ["No", "Yes"]},
+            data_type=self.dtype,
         )
         gower2 = Gower(cfg2).fit(X_train2)
         result2 = gower2.transform(np.array([["No"], ["Yes"]], dtype=object))
@@ -149,6 +157,7 @@ class TestBinarySymmetricValueOrder:
         cfg = Config(
             feature_types={0: "binary_symmetric"},
             binary_symmetric_value_order={0: ["No", "Yes"]},
+            data_type=self.dtype,
         )
         gower = Gower(cfg).fit(X_train)
         result = gower.transform(X_test)
@@ -168,6 +177,7 @@ class TestBinarySymmetricValueOrder:
 
         cfg = Config(
             feature_types={0: "binary_symmetric"},
+            data_type=self.dtype,
         )
         gower = Gower(cfg).fit(X_train)
         result = gower.transform(X_test)
@@ -188,6 +198,7 @@ class TestBinarySymmetricValueOrder:
         cfg = Config(
             feature_types={0: "binary_symmetric"},
             handle_unseen_binary_symmetric="missing",
+            data_type=self.dtype,
         )
         gower = Gower(cfg).fit(X_train)
         result = gower.transform(X_test)
@@ -208,6 +219,7 @@ class TestBinarySymmetricValueOrder:
         cfg = Config(
             feature_types={0: "binary_symmetric"},
             handle_unseen_binary_symmetric="missing",
+            data_type=self.dtype,
         )
         gower = Gower(cfg).fit(X_train)
 
@@ -218,7 +230,7 @@ class TestBinarySymmetricValueOrder:
             gower.transform(X_test)
 
 
-class TestBinarySymmetricValueOrderValidation:
+class TestBinarySymmetricValueOrderValidation(BaseTest):
     """Test config validation for binary_symmetric_value_order."""
 
     def test_validation_wrong_number_of_values(self) -> None:
@@ -227,6 +239,7 @@ class TestBinarySymmetricValueOrderValidation:
             Config(
                 feature_types={0: "binary_symmetric"},
                 binary_symmetric_value_order={0: ["Only", "One", "Three"]},
+                data_type=self.dtype,
             )
 
     def test_validation_single_value(self) -> None:
@@ -235,6 +248,7 @@ class TestBinarySymmetricValueOrderValidation:
             Config(
                 feature_types={0: "binary_symmetric"},
                 binary_symmetric_value_order={0: ["OnlyOne"]},
+                data_type=self.dtype,
             )
 
     def test_validation_duplicate_values(self) -> None:
@@ -243,6 +257,7 @@ class TestBinarySymmetricValueOrderValidation:
             Config(
                 feature_types={0: "binary_symmetric"},
                 binary_symmetric_value_order={0: ["Same", "Same"]},
+                data_type=self.dtype,
             )
 
     def test_validation_non_binary_column(self) -> None:
@@ -254,6 +269,7 @@ class TestBinarySymmetricValueOrderValidation:
             Config(
                 feature_types={0: "categorical_nominal"},
                 binary_symmetric_value_order={0: ["A", "B"]},
+                data_type=self.dtype,
             )
 
     def test_validation_not_a_list(self) -> None:
@@ -262,6 +278,7 @@ class TestBinarySymmetricValueOrderValidation:
             Config(
                 feature_types={0: "binary_symmetric"},
                 binary_symmetric_value_order={0: "NotAList"},  # type: ignore[dict-item]
+                data_type=self.dtype,
             )
 
     def test_validation_none_is_valid(self) -> None:
@@ -269,6 +286,7 @@ class TestBinarySymmetricValueOrderValidation:
         cfg = Config(
             feature_types={0: "binary_symmetric"},
             binary_symmetric_value_order=None,
+            data_type=self.dtype,
         )
         assert cfg.binary_symmetric_value_order is None
 
@@ -284,6 +302,7 @@ class TestBinarySymmetricValueOrderValidation:
                 0: ["No", "Yes"],
                 1: [False, True],
             },
+            data_type=self.dtype,
         )
         assert cfg.binary_symmetric_value_order[0] == ["No", "Yes"]  # type: ignore[index]
         assert cfg.binary_symmetric_value_order[1] == [False, True]  # type: ignore[index]

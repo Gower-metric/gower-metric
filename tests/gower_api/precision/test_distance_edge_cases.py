@@ -7,9 +7,10 @@ import pandas as pd
 import pytest
 
 from gower_metric import Config, Gower
+from tests.gower_api.precision.conftest import BaseTest
 
 
-class TestCategoricalOrdinalEdgeCases:
+class TestCategoricalOrdinalEdgeCases(BaseTest):
     def test_podani_fallback_to_kaufman(self) -> None:
         """Podani denominator <= 0 triggers fallback to kaufman."""
         data = np.array(
@@ -25,11 +26,12 @@ class TestCategoricalOrdinalEdgeCases:
             feature_types={0: "numeric", 1: "categorical_ordinal"},
             categorical_ordinal_values_order={1: ["a", "b"]},
             categorical_ordinal_calculation_type="podani",
+            data_type=self.dtype,
         )
         gower = Gower(cfg).fit(data)
         with pytest.warns(UserWarning, match=r"Podani denominator"):
             dist = gower(data[0], data[3])
-        assert 0.0 <= float(dist) <= 1.0
+        assert 0.0 <= self.dtype(dist) <= 1.0
 
     def test_podani_fallback_pandas(self) -> None:
         """Same podani fallback test with pandas DataFrame."""
@@ -43,11 +45,12 @@ class TestCategoricalOrdinalEdgeCases:
             feature_types={"value": "numeric", "grade": "categorical_ordinal"},
             categorical_ordinal_values_order={"grade": ["a", "b"]},
             categorical_ordinal_calculation_type="podani",
+            data_type=self.dtype,
         )
         gower = Gower(cfg).fit(data)
         with pytest.warns(UserWarning, match=r"Podani denominator"):
             dist = gower(data.iloc[0], data.iloc[3])
-        assert 0.0 <= float(dist) <= 1.0
+        assert 0.0 <= self.dtype(dist) <= 1.0
 
     def test_kaufman_zero_denom_returns_zero_dist(self) -> None:
         """All ordinal values the same → denom=0 → dist=0."""
@@ -61,23 +64,25 @@ class TestCategoricalOrdinalEdgeCases:
         cfg = Config(
             feature_types={0: "numeric", 1: "categorical_ordinal"},
             categorical_ordinal_values_order={1: ["a"]},
+            data_type=self.dtype,
         )
         gower = Gower(cfg).fit(data)
         dist = gower(data[0], data[1])
-        assert 0.0 <= float(dist) <= 1.0
+        assert 0.0 <= self.dtype(dist) <= 1.0
 
     def test_kaufman_zero_denom_pandas(self) -> None:
         data = pd.DataFrame({"val": [1.0, 2.0], "grade": ["a", "a"]})
         cfg = Config(
             feature_types={"val": "numeric", "grade": "categorical_ordinal"},
             categorical_ordinal_values_order={"grade": ["a"]},
+            data_type=self.dtype,
         )
         gower = Gower(cfg).fit(data)
         dist = gower(data.iloc[0], data.iloc[1])
-        assert 0.0 <= float(dist) <= 1.0
+        assert 0.0 <= self.dtype(dist) <= 1.0
 
 
-class TestRatioScaleZeroRange:
+class TestRatioScaleZeroRange(BaseTest):
     def test_zero_range_ratio_produces_zero_diff(self) -> None:
         """Constant ratio column → range=0 → diff should be 0."""
         data = np.array(
@@ -90,10 +95,11 @@ class TestRatioScaleZeroRange:
         )
         cfg = Config(
             feature_types={0: "ratio_scale_interval", 1: "categorical_nominal"},
+            data_type=self.dtype,
         )
         gower = Gower(cfg).fit(data)
         dist = gower(data[0], data[1])
-        assert 0.0 <= float(dist) <= 1.0
+        assert 0.0 <= self.dtype(dist) <= 1.0
 
     def test_zero_range_ratio_pandas(self) -> None:
         data = pd.DataFrame({"ratio": [5.0, 5.0, 5.0], "cat": ["A", "B", "A"]})
@@ -102,13 +108,14 @@ class TestRatioScaleZeroRange:
                 "ratio": "ratio_scale_interval",
                 "cat": "categorical_nominal",
             },
+            data_type=self.dtype,
         )
         gower = Gower(cfg).fit(data)
         dist = gower(data.iloc[0], data.iloc[1])
-        assert 0.0 <= float(dist) <= 1.0
+        assert 0.0 <= self.dtype(dist) <= 1.0
 
 
-class TestMissingStrategyIntegration:
+class TestMissingStrategyIntegration(BaseTest):
     def test_max_dist_strategy(self) -> None:
         data = np.array(
             [
@@ -121,20 +128,22 @@ class TestMissingStrategyIntegration:
         cfg = Config(
             feature_types={0: "numeric", 1: "categorical_nominal"},
             missing_strategy="max_dist",
+            data_type=self.dtype,
         )
         gower = Gower(cfg).fit(data)
         dist = gower(data[0], data[2])
-        assert float(dist) > 0
+        assert self.dtype(dist) > 0
 
     def test_max_dist_strategy_pandas(self) -> None:
         data = pd.DataFrame({"val": [1.0, 2.0, np.nan], "cat": ["A", "B", "A"]})
         cfg = Config(
             feature_types={"val": "numeric", "cat": "categorical_nominal"},
             missing_strategy="max_dist",
+            data_type=self.dtype,
         )
         gower = Gower(cfg).fit(data)
         dist = gower(data.iloc[0], data.iloc[2])
-        assert float(dist) > 0
+        assert self.dtype(dist) > 0
 
     def test_raise_error_strategy(self) -> None:
         data = np.array(
@@ -147,43 +156,14 @@ class TestMissingStrategyIntegration:
         cfg = Config(
             feature_types={0: "numeric", 1: "categorical_nominal"},
             missing_strategy="raise_error",
+            data_type=self.dtype,
         )
         gower = Gower(cfg).fit(data)
         dist = gower(data[0], data[1])
-        assert 0.0 <= float(dist) <= 1.0
+        assert 0.0 <= self.dtype(dist) <= 1.0
 
 
-class TestDtypeVariants:
-    def test_float64_ordinal_distance(self) -> None:
-        """Verify ordinal distances work with float64 data type."""
-        data = np.array(
-            [
-                [1.0, "a"],
-                [2.0, "b"],
-            ],
-            dtype=object,
-        )
-        cfg = Config(
-            feature_types={0: "numeric", 1: "categorical_ordinal"},
-            categorical_ordinal_values_order={1: ["a", "b"]},
-            data_type=np.float64,
-        )
-        gower = Gower(cfg).fit(data)
-        dist = gower(data[0], data[1])
-        assert 0.0 <= float(dist) <= 1.0
-
-    def test_float64_ratio_scale(self) -> None:
-        data = np.array([[1.0], [5.0], [10.0]])
-        cfg = Config(
-            feature_types={0: "ratio_scale_interval"},
-            data_type=np.float64,
-        )
-        gower = Gower(cfg).fit(data)
-        dist = gower(data[0], data[2])
-        assert 0.0 <= float(dist) <= 1.0
-
-
-class TestMaxDistBounded:
+class TestMaxDistBounded(BaseTest):
     """Max_dist strategy must produce distances in [0, 1]."""
 
     def test_max_dist_single_missing_feature(self) -> None:
@@ -194,10 +174,11 @@ class TestMaxDistBounded:
         cfg = Config(
             feature_types={0: "numeric", 1: "categorical_nominal"},
             missing_strategy="max_dist",
+            data_type=self.dtype,
         )
         gower = Gower(cfg).fit(data)
-        dist = float(gower(data[0], data[1]))
-        assert 0.0 <= dist <= 1.0
+        dist = gower(data[0], data[1])
+        assert 0.0 <= self.dtype(dist) <= 1.0
 
     def test_max_dist_all_missing_one_side(self) -> None:
         data = np.array(
@@ -207,10 +188,11 @@ class TestMaxDistBounded:
         cfg = Config(
             feature_types={0: "numeric", 1: "categorical_nominal", 2: "numeric"},
             missing_strategy="max_dist",
+            data_type=self.dtype,
         )
         gower = Gower(cfg).fit(data)
-        dist = float(gower(data[0], data[1]))
-        assert 0.0 <= dist <= 1.0
+        dist = gower(data[0], data[1])
+        assert 0.0 <= self.dtype(dist) <= 1.0
         assert dist == pytest.approx(1.0, rel=1e-6)
 
     def test_max_dist_partial_missing_bounded(self) -> None:
@@ -225,13 +207,14 @@ class TestMaxDistBounded:
         cfg = Config(
             feature_types={0: "numeric", 1: "categorical_nominal", 2: "numeric"},
             missing_strategy="max_dist",
+            data_type=self.dtype,
         )
         gower = Gower(cfg).fit(data)
-        dist = float(gower(data[0], data[1]))
-        assert 0.0 <= dist <= 1.0
+        dist = gower(data[0], data[1])
+        assert 0.0 <= self.dtype(dist) <= 1.0
 
 
-class TestRaiseErrorMessage:
+class TestRaiseErrorMessage(BaseTest):
     """Raise_error strategy provides descriptive error message."""
 
     def test_raise_error_message_content(self) -> None:
@@ -242,13 +225,14 @@ class TestRaiseErrorMessage:
         cfg = Config(
             feature_types={0: "numeric", 1: "categorical_nominal"},
             missing_strategy="raise_error",
+            data_type=self.dtype,
         )
         gower = Gower(cfg).fit(data)
         with pytest.raises(ValueError, match="Missing values detected"):
             gower(data[0], data[1])
 
 
-class TestPodaniNaN:
+class TestPodaniNaN(BaseTest):
     """Podani calculation with NaN should not produce RuntimeWarning."""
 
     def test_podani_with_missing_no_warning(self) -> None:
@@ -260,6 +244,7 @@ class TestPodaniNaN:
             feature_types={0: "categorical_ordinal", 1: "categorical_nominal"},
             categorical_ordinal_values_order={0: ["low", "medium", "high"]},
             categorical_ordinal_calculation_type="podani",
+            data_type=self.dtype,
         )
         gower = Gower(cfg).fit(data)
 
@@ -274,7 +259,7 @@ class TestPodaniNaN:
         assert dist == pytest.approx(0.0)
 
 
-class TestPodaniFallbackWarning:
+class TestPodaniFallbackWarning(BaseTest):
     """Podani fallback to Kaufman should emit a warning."""
 
     def test_podani_fallback_emits_warning(self) -> None:
@@ -287,6 +272,7 @@ class TestPodaniFallbackWarning:
             feature_types={0: "categorical_ordinal"},
             categorical_ordinal_values_order={0: ["low"]},
             categorical_ordinal_calculation_type="podani",
+            data_type=self.dtype,
         )
         gower = Gower(cfg).fit(data)
 
