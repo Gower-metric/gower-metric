@@ -23,6 +23,9 @@ def get_weights(
 
     if isinstance(config, dict):
         for idx, val in config.items():
+            if idx >= n_features:
+                msg = f"feature_weights index {idx} is out of bounds for {n_features} features."
+                raise ValueError(msg)
             w[idx] = float(val)
 
     elif config is None or config == "uniform":
