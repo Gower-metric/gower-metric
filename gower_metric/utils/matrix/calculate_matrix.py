@@ -140,7 +140,7 @@ def get_full_matrix(
 
     n: int = arr.shape[0]
 
-    MATRIX: np.ndarray = np.zeros((n, n), dtype=data_type)
+    result_matrix: np.ndarray = np.zeros((n, n), dtype=data_type)
 
     results: list[tuple[int, np.ndarray]] = _get_results_from_joblib(
         n_jobs=n_jobs,
@@ -155,20 +155,25 @@ def get_full_matrix(
 
     for i, row in results:
         if row.size > 0:
-            MATRIX[i, i + 1 : n] = row
+            result_matrix[i, i + 1 : n] = row
 
-    MATRIX += MATRIX.T
+    result_matrix += result_matrix.T
 
     if matrix_type == "distance":
-        np.fill_diagonal(MATRIX, 0.0)
+        np.fill_diagonal(result_matrix, 0.0)
     elif matrix_type == "similarity":  # pragma: no branch
-        np.fill_diagonal(MATRIX, 1.0)
+        np.fill_diagonal(result_matrix, 1.0)
+    else:
+        msg = (
+            f"Unknown matrix_type '{matrix_type}'. Must be 'distance' or 'similarity'."
+        )
+        raise ValueError(msg)
 
     if convert_to_sparse:
         return get_scipy_sparse_matrix(
-            MATRIX,
+            result_matrix,
             matrix_format=sparse_type,
             data_type=data_type,
         )
 
-    return MATRIX
+    return result_matrix
