@@ -22,6 +22,8 @@ def map_ordered_values(
 
     """
     ranks_mapping = {value: rank for rank, value in enumerate(ordered_values)}
+    if len(ordered_values) == 0:
+        return ranks_mapping, None, None
     min_rank: int | None = 0
     max_rank: int | None = len(ordered_values) - 1
 
@@ -54,24 +56,3 @@ def get_cardinalities_mapping(
     counts_list = [counts_map[val] for val in unique_vals]
 
     return counts_map, counts_list
-
-
-def collect_ordinal_cardinalities(data: np.ndarray) -> list[np.ndarray]:
-    """Process a 2D array of ordinal columns to get counts per level for each column.
-
-    Args:
-        data (np.ndarray): Two-dimensional array with shape (n_samples, n_ordinal_columns).
-            Each column may contain NaN and ordinal categorical values.
-
-    Returns:
-        list[np.ndarray]:
-            - ordinals_cardinality:
-                A list where each element is a 1D NumPy array of integer counts. Counts[i] is the number of occurrences of the i-th sorted category in that column.
-
-    """
-    ordinals_cardinality: list[np.ndarray] = []
-    for i in range(data.shape[1]):
-        column = data[:, i]
-        _, counts_list = get_cardinalities_mapping(column)
-        ordinals_cardinality.append(np.array(counts_list, dtype=int))
-    return ordinals_cardinality
