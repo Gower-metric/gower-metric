@@ -19,7 +19,7 @@ ScaleWindowType = Literal["silverman"]
 MissingStrategy = Literal["ignore", "max_dist", "raise_error"]
 CategoricalOrdinalCalcType = Literal["kaufman", "podani"]
 K_NeighborsType = int | None
-ConditionalDistancesFlag = Literal[True, False]
+ConditionalDistancesFlag = bool
 ConditionalDistancesThresholdCoeffType = int
 HandleUnseenBinaryAsymmetric = Literal["warning", "error", "missing"]
 BinaryAsymmetricValueOrderType = dict[int | str, list[Any]] | None
@@ -156,6 +156,10 @@ class Config(BaseModel):
         elif scale_window == "kde" and v not in (None, "silverman"):  # pragma: no cover
             msg = "scale_window_type must be one of [None, 'silverman'] when scale_window='kde'"
             raise ValueError(msg)
+        elif scale_window == "kNN":
+            if v is not None:
+                msg = "scale_window_type must be None when scale_window='kNN'; kNN windowing does not use a bandwidth type"
+                raise ValueError(msg)
         return v
 
     @field_validator("k_neighbors")
@@ -217,6 +221,10 @@ class Config(BaseModel):
             if missing:
                 msg = f"Missing order definitions for columns: {missing}"
                 raise ValueError(msg)
+            for col_key, order_list in v.items():
+                if len(order_list) == 0:
+                    msg = f"Empty values order for column '{col_key}'. At least one ordinal level is required."
+                    raise ValueError(msg)
         return v
 
     @field_validator("conditional_distances")
@@ -277,31 +285,6 @@ class Config(BaseModel):
         if v < 1:
             msg = f"conditional_distances_threshold_coeff must be at least 1, got {v}"
             raise ValueError(msg)
-        return v
-
-    @field_validator("handle_unseen_binary_asymmetric")
-    @classmethod
-    def check_handle_unseen_binary_asymmetric(
-        cls,
-        v: HandleUnseenBinaryAsymmetric,
-    ) -> HandleUnseenBinaryAsymmetric:
-        """Validate the strategy for handling unseen categories in binary asymmetric features.
-
-        Args:
-            v (HandleUnseenBinaryAsymmetric): The strategy to check.
-
-        Returns:
-            v (HandleUnseenBinaryAsymmetric): The validated strategy.
-
-        Raises:
-            ValueError: If the strategy is not one of 'warning', 'error', or 'missing'.
-
-        """
-        valid_strategies = get_args(HandleUnseenBinaryAsymmetric)
-        if v not in valid_strategies:  # pragma: no cover
-            msg = f"handle_unseen_binary_asymmetric must be one of {valid_strategies}, got {v}"
-            raise ValueError(msg)
-
         return v
 
     @field_validator("binary_asymmetric_value_order")
@@ -365,31 +348,6 @@ class Config(BaseModel):
                 f"binary_asymmetric_value_order contains non-binary_asymmetric columns: {extra_cols}. "
                 f"Binary asymmetric columns are: {binary_asymmetric_cols or 'none'}"
             )
-            raise ValueError(msg)
-
-        return v
-
-    @field_validator("handle_unseen_binary_symmetric")
-    @classmethod
-    def check_handle_unseen_binary_symmetric(
-        cls,
-        v: HandleUnseenBinarySymmetric,
-    ) -> HandleUnseenBinarySymmetric:
-        """Validate the strategy for handling unseen categories in binary symmetric features.
-
-        Args:
-            v (HandleUnseenBinarySymmetric): The strategy to check.
-
-        Returns:
-            v (HandleUnseenBinarySymmetric): The validated strategy.
-
-        Raises:
-            ValueError: If the strategy is not one of 'warning', 'error', or 'missing'.
-
-        """
-        valid_strategies = get_args(HandleUnseenBinarySymmetric)
-        if v not in valid_strategies:  # pragma: no cover
-            msg = f"handle_unseen_binary_symmetric must be one of {valid_strategies}, got {v}"
             raise ValueError(msg)
 
         return v
@@ -459,52 +417,3 @@ class Config(BaseModel):
 
         return v
 
-    @field_validator("handle_unseen_categorical_nominal")
-    @classmethod
-    def check_handle_unseen_categorical_nominal(
-        cls,
-        v: HandleUnseenCategoricalNominal,
-    ) -> HandleUnseenCategoricalNominal:
-        """Validate the strategy for handling unseen categories in categorical nominal features.
-
-        Args:
-            v (HandleUnseenCategoricalNominal): The strategy to check.
-
-        Returns:
-            v (HandleUnseenCategoricalNominal): The validated strategy.
-
-        Raises:
-            ValueError: If the strategy is not one of 'warning', 'error', or 'missing'.
-
-        """
-        valid_strategies = get_args(HandleUnseenCategoricalNominal)
-        if v not in valid_strategies:  # pragma: no cover
-            msg = f"handle_unseen_categorical_nominal must be one of {valid_strategies}, got {v}"
-            raise ValueError(msg)
-
-        return v
-
-    @field_validator("handle_unseen_categorical_ordinal")
-    @classmethod
-    def check_handle_unseen_categorical_ordinal(
-        cls,
-        v: HandleUnseenCategoricalOrdinal,
-    ) -> HandleUnseenCategoricalOrdinal:
-        """Validate the strategy for handling unseen categories in categorical ordinal features.
-
-        Args:
-            v (HandleUnseenCategoricalOrdinal): The strategy to check.
-
-        Returns:
-            v (HandleUnseenCategoricalOrdinal): The validated strategy.
-
-        Raises:
-            ValueError: If the strategy is not one of 'warning', 'error', or 'missing'.
-
-        """
-        valid_strategies = get_args(HandleUnseenCategoricalOrdinal)
-        if v not in valid_strategies:  # pragma: no cover
-            msg = f"handle_unseen_categorical_ordinal must be one of {valid_strategies}, got {v}"
-            raise ValueError(msg)
-
-        return v
