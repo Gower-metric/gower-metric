@@ -54,7 +54,7 @@ uv add gower-metric
 
 ## Quick start
 
-Gower metric, by definition, is being designed to work with mixed, non-changed data types. We provide simple, two methods to how user can use algorithm. First, on original data. Second, on transformed ones (numerically encoded).
+Gower metric, by definition, is being designed to work with mixed, non-changed data types. We provide two methods for using the algorithm. First, on original data. Second, on transformed ones (numerically encoded).
 
 ### Original data
 
