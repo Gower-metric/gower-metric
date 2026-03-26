@@ -72,15 +72,25 @@ Below are listed implemented enhancements.
 
 **Ordinal variables**
 
-The basic implementation of Gower’s distance does not account for ordinal variables.  
-To address this, we can use the solution proposed by Podani (1999):
+The basic implementation of Gower’s distance does not account for ordinal variables.
+
+*Kaufman and Rousseeuw (1990)* suggest replacing ordinal categories with their position index
+:math:`o_{ik}` (:math:`1 \leq o_{ik} \leq C_k`, where :math:`C_k` is the number of categories for variable *k*) and normalizing to a ratio scale (this is the default ``calculation_type="kaufman"``):
 
 .. math::
 
-   s_{ijk} = 
+   z_{ik} = \frac{o_{ik} - 1}{C_k - 1}
+
+The similarity is then computed as for ratio-scale variables: :math:`s_{ijk} = 1 - |z_{ik} - z_{jk}|`.
+
+*Podani (1999)* extends this with a correction for tied ranks (``calculation_type="podani"``):
+
+.. math::
+
+   s_{ijk} =
    \begin{cases}
    1 & \text{if } r_{ik} = r_{jk} \\
-   1 - \frac{r_{ik} - r_{jk} - \frac{T_{ik} - 1}{2} - \frac{T_{jk} - 1}{2}}{\max(r_k) - \min(r_k) - \frac{T_{\max,k} - 1}{2} - \frac{T_{\min,k} - 1}{2}} & \text{otherwise}
+   1 - \frac{|r_{ik} - r_{jk}| - \frac{T_{ik} - 1}{2} - \frac{T_{jk} - 1}{2}}{\max(r_k) - \min(r_k) - \frac{T_{\max,k} - 1}{2} - \frac{T_{\min,k} - 1}{2}} & \text{otherwise}
    \end{cases}
 
 where:
@@ -147,11 +157,11 @@ like *Kernel Density Estimation (KDE)*.
 
 .. math::
 
-   s_{ijk} =
+   d_{ijk}^{(kde)} =
    \begin{cases}
-   1 & \text{if } |x_{ik} - x_{jk}| \leq h_k \\
+   0 & \text{if } |x_{ik} - x_{jk}| \leq h_k \\
    \frac{|x_{ik} - x_{jk}|}{g_k} & \text{if } h_k < |x_{ik} - x_{jk}| < g_k \\
-   0 & \text{if } |x_{ik} - x_{jk}| \geq g_k
+   1 & \text{if } |x_{ik} - x_{jk}| \geq g_k
    \end{cases}
 
 Where:

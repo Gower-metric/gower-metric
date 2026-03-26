@@ -6,7 +6,8 @@ def all_ones_off_diagonal(X: pd.DataFrame | np.ndarray) -> bool:
     """Return True if all off-diagonal elements are 1 (diagonal ignored).
 
     Args:
-        X (np.ndarray): shape of (n_samples, n_samples). A distance or similarity matrix.
+        X (np.ndarray | pd.DataFrame): shape of (n_samples, n_features).
+            For DataFrame inputs, column names in feature_types are converted to indices.
 
     Returns:
         bool: True if Gower distance between all pairs of samples is equal to 1.
