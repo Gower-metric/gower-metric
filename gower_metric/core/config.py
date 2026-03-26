@@ -287,21 +287,21 @@ class Config(BaseModel):
             raise ValueError(msg)
         return v
 
-    @field_validator("binary_asymmetric_value_order")
-    @classmethod
-    def check_binary_asymmetric_value_order(
-        cls,
-        v: BinaryAsymmetricValueOrderType,
+    @staticmethod
+    def _check_binary_value_order(
+        v: dict[int | str, list[Any]] | None,
         info: ValidationInfo,
-    ) -> BinaryAsymmetricValueOrderType:
-        """Verify that binary value orders contain exactly 2 values per column.
+        binary_type: str,
+    ) -> dict[int | str, list[Any]] | None:
+        """Verify that binary value orders contain exactly 2 unique values per column.
 
         Args:
-            v (BinaryAsymmetricValueOrderType): The binary value order definitions.
+            v (dict[int | str, list[Any]] | None): The binary value order definitions.
             info (ValidationInfo): Validation context containing feature types.
+            binary_type (str): The binary feature type name (e.g. 'binary_asymmetric').
 
         Returns:
-            BinaryAsymmetricValueOrderType: The validated order definitions.
+            dict[int | str, list[Any]] | None: The validated order definitions.
 
         Raises:
             ValueError: If any binary column order doesn't have exactly 2 values.
@@ -316,10 +316,10 @@ class Config(BaseModel):
 
         expected_binary_values = 2
 
-        binary_asymmetric_cols = {
+        binary_cols = {
             k
             for k, t in info.data.get("feature_types", {}).items()
-            if t == "binary_asymmetric"
+            if t == binary_type
         }
 
         for col_idx, values in v.items():
@@ -329,28 +329,38 @@ class Config(BaseModel):
 
             if len(values) != expected_binary_values:
                 msg = (
-                    f"Binary asymmetric column {col_idx} must have exactly {expected_binary_values} values in order, "
+                    f"Binary {binary_type} column {col_idx} must have exactly {expected_binary_values} values in order, "
                     f"got {len(values)}: {values}"
                 )
                 raise ValueError(msg)
 
             if len(set(values)) != expected_binary_values:
-                msg = f"Binary asymmetric values for column {col_idx} must be unique, got {values}"
+                msg = f"Binary {binary_type} values for column {col_idx} must be unique, got {values}"
                 raise ValueError(msg)
 
         extra_cols = (
-            set(v.keys()) - binary_asymmetric_cols
-            if binary_asymmetric_cols
+            set(v.keys()) - binary_cols
+            if binary_cols
             else set(v.keys())
         )
         if extra_cols:
             msg = (
-                f"binary_asymmetric_value_order contains non-binary_asymmetric columns: {extra_cols}. "
-                f"Binary asymmetric columns are: {binary_asymmetric_cols or 'none'}"
+                f"{binary_type}_value_order contains non-{binary_type} columns: {extra_cols}. "
+                f"Binary {binary_type} columns are: {binary_cols or 'none'}"
             )
             raise ValueError(msg)
 
         return v
+
+    @field_validator("binary_asymmetric_value_order")
+    @classmethod
+    def check_binary_asymmetric_value_order(
+        cls,
+        v: BinaryAsymmetricValueOrderType,
+        info: ValidationInfo,
+    ) -> BinaryAsymmetricValueOrderType:
+        """Validate binary asymmetric value order definitions."""
+        return cls._check_binary_value_order(v, info, "binary_asymmetric")
 
     @field_validator("binary_symmetric_value_order")
     @classmethod
@@ -359,61 +369,6 @@ class Config(BaseModel):
         v: BinarySymmetricValueOrderType,
         info: ValidationInfo,
     ) -> BinarySymmetricValueOrderType:
-        """Verify that binary symmetric value orders contain exactly 2 values per column.
-
-        Args:
-            v (BinarySymmetricValueOrderType): The binary value order definitions.
-            info (ValidationInfo): Validation context containing feature types.
-
-        Returns:
-            BinarySymmetricValueOrderType: The validated order definitions.
-
-        Raises:
-            ValueError: If any binary column order doesn't have exactly 2 values.
-            TypeError: If any binary column order is not a list.
-
-        """
-        if v is None:
-            return v
-
-        if not info.data:  # pragma: no cover
-            return v
-
-        expected_binary_values = 2
-
-        binary_symmetric_cols = {
-            k
-            for k, t in info.data.get("feature_types", {}).items()
-            if t == "binary_symmetric"
-        }
-
-        for col_idx, values in v.items():
-            if not isinstance(values, list):  # pragma: no cover
-                msg = f"Binary values for column {col_idx} must be a list, got {type(values)}"
-                raise TypeError(msg)
-
-            if len(values) != expected_binary_values:
-                msg = (
-                    f"Binary symmetric column {col_idx} must have exactly {expected_binary_values} values in order, "
-                    f"got {len(values)}: {values}"
-                )
-                raise ValueError(msg)
-
-            if len(set(values)) != expected_binary_values:
-                msg = f"Binary symmetric values for column {col_idx} must be unique, got {values}"
-                raise ValueError(msg)
-
-        extra_cols = (
-            set(v.keys()) - binary_symmetric_cols
-            if binary_symmetric_cols
-            else set(v.keys())
-        )
-        if extra_cols:
-            msg = (
-                f"binary_symmetric_value_order contains non-binary_symmetric columns: {extra_cols}. "
-                f"Binary symmetric columns are: {binary_symmetric_cols or 'none'}"
-            )
-            raise ValueError(msg)
-
-        return v
+        """Validate binary symmetric value order definitions."""
+        return cls._check_binary_value_order(v, info, "binary_symmetric")
 
