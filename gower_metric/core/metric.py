@@ -139,7 +139,7 @@ class Gower:
         self.nominal_metadata: dict[int, OrdinalEncoder] = {}
         self.ordinal_metadata: dict[int, OrdinalEncoder] = {}
 
-    def fit(self, X: pd.DataFrame | np.ndarray) -> "Gower":  # noqa: PLR0912
+    def fit(self, X: pd.DataFrame | np.ndarray) -> "Gower":  # noqa: PLR0912, C901
         """Fit the Gower model by computing numeric feature ranges.
 
         Args:
@@ -247,6 +247,17 @@ class Gower:
         )
 
         self.n_feats = arr.shape[1]
+
+        int_keys = [k for k in self.feature_types if isinstance(k, int)]
+        if int_keys:
+            max_idx = max(int_keys)
+            if max_idx >= self.n_feats:
+                msg = (
+                    f"feature_types references column index {max_idx}, "
+                    f"but data has only {self.n_feats} columns."
+                )
+                raise ValueError(msg)
+
         if self.conditional_distances:
             self.p_cat = (
                 len(self.binary_symmetric_indices)
@@ -310,7 +321,7 @@ class Gower:
         self.cat_ord_metadata: dict[int | str, dict[str, Any]] = {}
         for j in self.categorical_ordinal_indices:
             col = arr[:, j]
-            if self.categorical_ordinal_values_order is None:  # pragma: no cover
+            if self.categorical_ordinal_values_order is None:
                 msg = "Categorical ordinal values order is missing"
                 raise ValueError(msg)
             ranks_map, mn, mx = map_ordered_values(
@@ -328,8 +339,11 @@ class Gower:
             # we need to map ranks to both int and float to avoid cast errors within .fit()
             # to maintain compatibility with multiple .transform() calls
             for rank in list(ranks_map.values()):
-                ranks_map[float(rank)] = rank
-                ranks_map[int(rank)] = rank
+                fk, ik = float(rank), int(rank)
+                if fk not in ranks_map:
+                    ranks_map[fk] = rank
+                if ik not in ranks_map:
+                    ranks_map[ik] = rank
 
             self.cat_ord_metadata[j] = {
                 "ranks": ranks_map,
@@ -381,7 +395,7 @@ class Gower:
         (e.g., KNN) requiring numeric input exclusively.
 
         Note:
-            - Sparse matrices are not supported and will be converted to dense arrays.
+            - Sparse matrices are not supported.
             - Model ranges and parameters are NOT updated by this method (it is stateless).
 
         Args:
@@ -429,10 +443,10 @@ class Gower:
 
         transformed_columns: list[np.ndarray] = []
 
-        for col_idx_raw, ftype in self.feature_types.items():
+        for col_idx_raw, ftype in sorted(self.feature_types.items()):
             col_idx = int(col_idx_raw)
 
-            if is_df and isinstance(X, pd.DataFrame):
+            if is_df:
                 col_series = cast("pd.Series", X.iloc[:, col_idx])
                 col = col_series.to_numpy()
             else:
@@ -563,6 +577,7 @@ class Gower:
             self.binary_asymmetric_indices,
             missing_strategy=self.missing_strategy,
             weights=bin_asym_w,
+            metadata=self.binary_asymmetric_metadata,
         )
 
         bin_sym_sum, bin_sym_count = binary_symmetric_component(
@@ -571,6 +586,7 @@ class Gower:
             self.binary_symmetric_indices,
             missing_strategy=self.missing_strategy,
             weights=bin_sym_w,
+            metadata=self.binary_symmetric_metadata,
         )
 
         cat_nom_sum, cat_nom_count = categorical_nominal_component(
@@ -716,6 +732,8 @@ class Gower:
     ):
         """Return symmetric pairwise Gower distance matrix using joblib (parallel).
 
+        Scipy sparse matrices are not supported as direct input.
+
         Args:
             X (pd.DataFrame | np.ndarray): shape of (n_samples, n_features).
             data_type (type[np.floating] | None): data type used for the output distance matrix.
@@ -788,6 +806,10 @@ class Gower:
                 ... )
 
         """
+        if scipy.sparse.issparse(X):
+            msg = "Sparse matrices are currently not supported as direct input. Please provide a dense matrix."
+            raise ValueError(msg)
+
         if not self._is_fitted:
             self.fit(X)
             msg = "Calling .fit(X) inside .matrix(X)."
