@@ -26,6 +26,7 @@ def fit_binary_features(
             - mapping: dict mapping values to 0.0/1.0
             - values: array of unique values (or expected values if explicit order provided)
             - is_explicit_order: bool indicating if explicit order was used
+            - positive_value: the value treated as positive (1.0); second value in sorted or explicit order
 
     Raises:
         ValueError: If a binary column has more than 2 unique values, or if training data
@@ -58,6 +59,7 @@ def fit_binary_features(
                 "mapping": mapping,
                 "values": unique_vals,
                 "is_explicit_order": True,
+                "positive_value": expected_vals[1],
             }
 
         else:
@@ -80,10 +82,19 @@ def fit_binary_features(
             if len(unique_vals) > 1:
                 mapping[unique_vals[1]] = 1.0
 
+            positive_value = (
+                unique_vals[1]
+                if len(unique_vals) > 1
+                else unique_vals[0]
+                if len(unique_vals) > 0
+                else 1
+            )
+
             binary_metadata[j] = {
                 "mapping": mapping,
                 "values": unique_vals,
                 "is_explicit_order": False,
+                "positive_value": positive_value,
             }
 
     return binary_metadata

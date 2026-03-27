@@ -1,3 +1,5 @@
+from typing import Any
+
 import numpy as np
 import pandas as pd
 
@@ -10,6 +12,7 @@ def binary_symmetric_component(
     binary_indices: list[int],
     missing_strategy: str = "ignore",
     weights: np.ndarray | None = None,
+    metadata: dict[int, dict[str, Any]] | None = None,
 ) -> tuple[np.ndarray, np.ndarray]:
     """Compute the symmetric binary component of Gower metric between rows of X and Y.
 
@@ -24,6 +27,10 @@ def binary_symmetric_component(
         binary_indices (list[int]): Indices of binary symmetric features.
         missing_strategy (str): Strategy for handling missing values, default is 'ignore'.
         weights (Optional[np.ndarray]): Optional weight per binary feature.
+        metadata (Optional[dict[int, dict[str, Any]]]): fitted binary metadata per feature index,
+            containing 'positive_value' key identifying the presence attribute.
+            If None, defaults to comparing with integer 1.
+
 
     Returns:
         tuple[np.ndarray, np.ndarray]:
@@ -46,8 +53,14 @@ def binary_symmetric_component(
         mask_y = ~pd.isna(col_y)
         present = mask_x[:, None] & mask_y[None, :]
 
+        positive_val = (
+            metadata[j]["positive_value"] if metadata and j in metadata else 1
+        )
+
         # s_ijt: 1 if pairs of values are equal, else 0 -> (0,0) and (1,1)
-        equal = col_x[:, None] == col_y[None, :]
+        x_is_pos = col_x[:, None] == positive_val
+        y_is_pos = col_y[None, :] == positive_val
+        equal = x_is_pos == y_is_pos
         diff = (present & ~equal).astype(float)
 
         diff, mask = apply_missing_strategy(diff, present, missing_strategy)
