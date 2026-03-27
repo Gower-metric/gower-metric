@@ -30,7 +30,6 @@ keywords = ["gower", "mixed-data", "machine-learning"]
 classifiers = [
     "Intended Audience :: Information Technology",
     "Intended Audience :: Science/Research",
-    "License :: OSI Approved :: MIT License",
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
@@ -69,6 +68,7 @@ override-dependencies = [
     "pip>=26.0",
     "setuptools>=78.1.1",
     "fonttools>=4.60.2",
+    "requests>=2.33.0", 
 ]
 
 [dependency-groups]
@@ -94,6 +94,7 @@ tests = [
     "scipy>=1.15.3",
     "scikit-learn>=1.7.1",
     "pytest>=8.4.1",
+    "pytest-cov>=7.0.0",
     "setuptools>=80.9.0",
     "mypy>=1.17.0",
     "numpy>=2.2.6",

@@ -632,17 +632,17 @@ iniconfig==2.3.0 \
 ipykernel==7.2.0 \
     --hash=sha256:18ed160b6dee2cbb16e5f3575858bc19d8f1fe6046a9a680c708494ce31d909e \
     --hash=sha256:3bbd4420d2b3cc105cbdf3756bfc04500b1e52f090a90716851f3916c62e1661
-ipython==8.38.0 ; python_full_version < '3.11' \
-    --hash=sha256:750162629d800ac65bb3b543a14e7a74b0e88063eac9b92124d4b2aa3f6d8e86 \
-    --hash=sha256:9cfea8c903ce0867cc2f23199ed8545eb741f3a69420bfcf3743ad1cec856d39
+ipython==8.39.0 ; python_full_version < '3.11' \
+    --hash=sha256:4110ae96012c379b8b6db898a07e186c40a2a1ef5d57a7fa83166047d9da7624 \
+    --hash=sha256:bb3c51c4fa8148ab1dea07a79584d1c854e234ea44aa1283bcb37bc75054651f
     # via ipykernel
-ipython==9.10.0 ; python_full_version == '3.11.*' \
-    --hash=sha256:c6ab68cc23bba8c7e18e9b932797014cc61ea7fd6f19de180ab9ba73e65ee58d \
-    --hash=sha256:cd9e656be97618a0676d058134cd44e6dc7012c0e5cb36a9ce96a8c904adaf77
+ipython==9.10.1 ; python_full_version == '3.11.*' \
+    --hash=sha256:82d18ae9fb9164ded080c71ef92a182ee35ee7db2395f67616034bebb020a232 \
+    --hash=sha256:e170e9b2a44312484415bdb750492699bf329233b03f2557a9692cce6466ada4
     # via ipykernel
-ipython==9.11.0 ; python_full_version >= '3.12' \
-    --hash=sha256:2a94bc4406b22ecc7e4cb95b98450f3ea493a76bec8896cda11b78d7752a6667 \
-    --hash=sha256:6922d5bcf944c6e525a76a0a304451b60a2b6f875e86656d8bc2dfda5d710e19
+ipython==9.12.0 ; python_full_version >= '3.12' \
+    --hash=sha256:01daa83f504b693ba523b5a407246cabde4eb4513285a3c6acaff11a66735ee4 \
+    --hash=sha256:0f2701e8ee86e117e37f50563205d36feaa259d2e08d4a6bc6b6d74b18ce128d
     # via ipykernel
 ipython-pygments-lexers==1.1.1 ; python_full_version >= '3.11' \
     --hash=sha256:09c0138009e56b6854f9535736f4171d855c8c08a563a0dcd8022f78355c7e81 \
@@ -1599,9 +1599,9 @@ python-dateutil==2.9.0.post0 \
     #   jupyter-client
     #   matplotlib
     #   pandas
-python-discovery==1.2.0 \
-    --hash=sha256:1e108f1bbe2ed0ef089823d28805d5ad32be8e734b86a5f212bf89b71c266e4a \
-    --hash=sha256:7d33e350704818b09e3da2bd419d37e21e7c30db6e0977bb438916e06b41b5b1
+python-discovery==1.2.1 \
+    --hash=sha256:180c4d114bff1c32462537eac5d6a332b768242b76b69c0259c7d14b1b680c9e \
+    --hash=sha256:b6a957b24c1cd79252484d3566d1b49527581d46e789aaf43181005e56201502
     # via virtualenv
 pytz==2026.1.post1 ; python_full_version < '3.11' \
     --hash=sha256:3378dde6a0c3d26719182142c56e60c7f9af7e968076f31aae569d72a0358ee1 \
