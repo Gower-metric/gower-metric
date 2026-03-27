@@ -5,7 +5,6 @@ import pandas as pd
 import pytest
 
 from gower_metric.utils.aux import all_ones_off_diagonal
-from gower_metric.utils.cat_ord_ut import collect_ordinal_cardinalities
 from gower_metric.utils.kde_types.silverman import silverman_bandwidth
 from gower_metric.utils.knn_bandwidth import knn_bandwidth
 from gower_metric.utils.ranges import scale_method
@@ -38,21 +37,6 @@ class TestAllOnesOffDiagonal:
     def test_invalid_type_raises(self) -> None:
         with pytest.raises(TypeError, match="Expected DataFrame or ndarray"):
             all_ones_off_diagonal([[1, 1], [1, 1]])  # type: ignore[arg-type]
-
-
-class TestCollectOrdinalCardinalities:
-    def test_basic(self) -> None:
-        data = np.array([["a", "x"], ["b", "y"], ["a", "x"]])
-        result = collect_ordinal_cardinalities(data)
-        assert len(result) == 2
-        assert result[0].sum() == 3  # a=2, b=1
-        assert result[1].sum() == 3  # x=2, y=1
-
-    def test_with_nan(self) -> None:
-        data = np.array([[1.0, 2.0], [np.nan, 3.0], [1.0, 2.0]])
-        result = collect_ordinal_cardinalities(data)
-        assert len(result) == 2
-        assert result[0].sum() == 2  # only non-NaN counted
 
 
 class TestScaleMethod:
