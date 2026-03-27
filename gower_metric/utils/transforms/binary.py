@@ -50,8 +50,9 @@ def _transform_binary(
         total_unique = len(fitted_vals) + len(unseen_vals)
 
         if total_unique > MAX_BINARY_UNIQUE_VALUES:
+            short_type = binary_type.replace("binary_", "")
             msg = (
-                f"Binary {binary_type} column {col_idx} has {total_unique} unique values total "
+                f"Binary {short_type} column {col_idx} has {total_unique} unique values total "
                 f"(fitted: {sorted(fitted_vals)}, unseen: {sorted(unseen_vals)}). "
                 f"Binary features must have at most {MAX_BINARY_UNIQUE_VALUES} values. "
                 f"Consider using {binary_type}_value_order to explicitly define the expected binary values, "
@@ -63,11 +64,17 @@ def _transform_binary(
         if pd.isna(v):
             transformed_col[i] = np.nan
         elif v not in mapping:
+            if is_explicit:
+                unseen_msg = (
+                    f"Value '{v}' in column {col_idx} violates {binary_type}_value_order. "
+                    f"Expected one of {list(mapping.keys())}."
+                )
+                raise ValueError(unseen_msg)
             unseen_msg = (
-                f"Unseen value '{v}' in {binary_type} column {col_idx}. "
+                f"Value '{v}' in column {col_idx} not found in fitted binary mapping. "
                 f"Expected one of {list(mapping.keys())}."
             )
-            if is_explicit or handle_unseen == "error":
+            if handle_unseen == "error":
                 raise ValueError(unseen_msg)
             if handle_unseen == "warning":
                 warnings.warn(
