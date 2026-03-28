@@ -21,6 +21,7 @@ def _binary_config(
     kw: dict[str, Any] = {
         "feature_types": feature_types,
         f"handle_unseen_{binary_type}": "missing",
+        "out_of_range": "clip",
     }
     kw.update(extra)
     return Config(**kw)
@@ -31,6 +32,7 @@ def _categorical_config(cat_type: str, **extra: Any) -> Config:
     kw: dict[str, Any] = {
         "feature_types": {0: cat_type, 1: "numeric"},
         f"handle_unseen_{cat_type}": "warning",
+        "out_of_range": "clip",
     }
     if cat_type == "categorical_ordinal":
         kw["categorical_ordinal_values_order"] = extra.pop(
@@ -46,6 +48,7 @@ def _categorical_config_pandas(cat_type: str) -> Config:
     kw: dict[str, Any] = {
         "feature_types": {"cat": cat_type, "val": "numeric"},
         f"handle_unseen_{cat_type}": "warning",
+        "out_of_range": "clip",
     }
     if cat_type == "categorical_ordinal":
         kw["categorical_ordinal_values_order"] = {"cat": ["low", "medium", "high"]}
