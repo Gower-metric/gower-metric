@@ -5,7 +5,7 @@ import numpy as np
 import pandas as pd
 import scipy.sparse
 
-from gower_metric.core.config import Config
+from gower_metric.core.config import Config, OutOfRangeStrategy
 from gower_metric.core.exceptions import IllegalStateError
 from gower_metric.distances.binary_asymmetric import (
     binary_asymmetric_component,
@@ -141,7 +141,7 @@ class Gower:
             config.handle_unseen_categorical_ordinal
         )
 
-        self.out_of_range = config.out_of_range
+        self.out_of_range: OutOfRangeStrategy = config.out_of_range
 
         self._is_fitted: bool = False
         self._skip_oor_check: bool = False
@@ -482,7 +482,7 @@ class Gower:
             col_idx = int(col_idx_raw)
 
             if is_df:
-                col_series = cast("pd.Series", X.iloc[:, col_idx])
+                col_series = cast("pd.Series", df.iloc[:, col_idx])
                 col = col_series.to_numpy()
             else:
                 col = X_arr[:, col_idx]
