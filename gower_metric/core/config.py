@@ -27,6 +27,7 @@ HandleUnseenBinarySymmetric = Literal["warning", "error", "missing"]
 BinarySymmetricValueOrderType = dict[int | str, list[Any]] | None
 HandleUnseenCategoricalNominal = Literal["warning", "error", "missing"]
 HandleUnseenCategoricalOrdinal = Literal["warning", "error", "missing"]
+OutOfRangeStrategy = Literal["clip", "warning", "error"]
 
 
 class Config(BaseModel):
@@ -75,6 +76,8 @@ class Config(BaseModel):
             Default is 'error' if omitted.
         handle_unseen_categorical_ordinal (HandleUnseenCategoricalOrdinal): Strategy for handling unseen categories in categorical ordinal features. Can be 'warning', 'error' or 'missing'.
             Default is 'error' if omitted.
+        out_of_range (OutOfRangeStrategy): Strategy for handling transform-time numeric values outside the fitted range. Default is 'warning' if omitted.
+            Can be: 'clip' silently clips normalized distances to [0, 1], 'warning' emits a UserWarning and clips, 'error' raises ValueError.
 
     Raises:
             ValueError: If custom validation rules fail.
@@ -99,6 +102,7 @@ class Config(BaseModel):
     binary_symmetric_value_order: BinarySymmetricValueOrderType = None
     handle_unseen_categorical_nominal: HandleUnseenCategoricalNominal = "error"
     handle_unseen_categorical_ordinal: HandleUnseenCategoricalOrdinal = "error"
+    out_of_range: OutOfRangeStrategy = "warning"
 
     @field_validator("feature_types")
     @classmethod
@@ -156,10 +160,9 @@ class Config(BaseModel):
         elif scale_window == "kde" and v not in (None, "silverman"):  # pragma: no cover
             msg = "scale_window_type must be one of [None, 'silverman'] when scale_window='kde'"
             raise ValueError(msg)
-        elif scale_window == "kNN":
-            if v is not None:
-                msg = "scale_window_type must be None when scale_window='kNN'; kNN windowing does not use a bandwidth type"
-                raise ValueError(msg)
+        elif scale_window == "kNN" and v is not None:
+            msg = "scale_window_type must be None when scale_window='kNN'; kNN windowing does not use a bandwidth type"
+            raise ValueError(msg)
         return v
 
     @field_validator("k_neighbors")
@@ -317,9 +320,7 @@ class Config(BaseModel):
         expected_binary_values = 2
 
         binary_cols = {
-            k
-            for k, t in info.data.get("feature_types", {}).items()
-            if t == binary_type
+            k for k, t in info.data.get("feature_types", {}).items() if t == binary_type
         }
 
         for col_idx, values in v.items():
@@ -338,11 +339,7 @@ class Config(BaseModel):
                 msg = f"Binary {binary_type} values for column {col_idx} must be unique, got {values}"
                 raise ValueError(msg)
 
-        extra_cols = (
-            set(v.keys()) - binary_cols
-            if binary_cols
-            else set(v.keys())
-        )
+        extra_cols = set(v.keys()) - binary_cols if binary_cols else set(v.keys())
         if extra_cols:
             msg = (
                 f"{binary_type}_value_order contains non-{binary_type} columns: {extra_cols}. "
@@ -371,4 +368,3 @@ class Config(BaseModel):
     ) -> BinarySymmetricValueOrderType:
         """Validate binary symmetric value order definitions."""
         return cls._check_binary_value_order(v, info, "binary_symmetric")
-
