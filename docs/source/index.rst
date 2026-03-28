@@ -2,7 +2,7 @@
 Welcome to gower-metric documentation!
 =======================================
 
-**Gower-metric** is a Python library for calculating distance or similarity for mixed-type variables 
+**Gower-metric** is a Python library for calculating distance or similarity for mixed-type variables
 derived as the complement of the Gower's similarity coefficient.
 
 Main features include:
@@ -17,10 +17,10 @@ Main features include:
 .. note::
 
    This project is under active development. If you would like to contribute,
-   or if you find any issues, please visit the main `repository <https://github.com/mwardynski/gower-metric>`_ and 
+   or if you find any issues, please visit the main `repository <https://github.com/Gower-metric/gower-metric>`_ and
    submit a pull request or open an issue.
 
-Installation, user guide, and API reference can be found in the respective sections. We also provide separate section 
+Installation, user guide, and API reference can be found in the respective sections. We also provide separate section
 for describing how Gower's metric formula works and how it can be used with external libraries.
 
 ------------------------
@@ -41,17 +41,17 @@ Future improvements
 
 We understand that there are still some features missing in the current version of the package. Here are some of the planned improvements for future releases:
 
-- Numerical pipeline optimizations. 
+- Numerical pipeline optimizations.
    Currently, the package is optimized for clarity and correctness, but we plan to enhance its performance using lower-level languages (Cython) or Numba for JIT compilation.
-- GPU parallelization support. 
+- GPU parallelization support.
    Leveraging GPU capabilities can significantly speed up computations, especially for large datasets. We plan to explore libraries like CuPy or RAPIDS for this purpose.
-- Conditional distances support. 
+- Conditional distances support.
    Here is the problem. For now, conditional distances optimization is not being done iteratively. It compares calculated results with set, by user, threshold.
    That's it. It is possible to make it iterative, so the algorithm will keep changing the threshold until it reaches desired state. However,
    this will require more numerical speed optimizations. More on that `here <https://arxiv.org/abs/2101.02481>`_ (chapter 3).
-- Advanced weights optimization techniques. 
+- Advanced weights optimization techniques.
    Currently, the package supports basic weight handling methodology. We plan to implement more advanced handling, saving and loading weights to/from files.
-- Kernel density estimator bandwidth selection methods. 
+- Kernel density estimator bandwidth selection methods.
    Currently, the package supports Silverman's rule of thumb for bandwidth selection. We plan to add more methods, such as Scott's rule.
 
 If you have any suggestions or would like to contribute to these improvements, please feel free to reach out.

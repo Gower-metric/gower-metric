@@ -2,7 +2,7 @@
 Installation
 =============
 
-On this page we provide instructions on how to install the package. What is more, if you would like to contribute, 
+On this page we provide instructions on how to install the package. What is more, if you would like to contribute,
 please refer to the Contribution section and local development environment setup instructions.
 
 .. toctree::

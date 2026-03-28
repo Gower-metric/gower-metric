@@ -2,7 +2,7 @@
 Transform method
 =================
 
-The ``transform`` method allows user to convert original dataframe into its numerical representation. Thanks to that, 
+The ``transform`` method allows user to convert original dataframe into its numerical representation. Thanks to that,
 we can use our metric with external libraries such as scipy or scikit-learn. More on that in :ref:`Python External Api Compatibility <python_environment_external_api>` section.
 
 ----------
@@ -60,6 +60,32 @@ For convenience, Gower also implements ``fit_transform`` method, which combines 
 
    transformed_data = gower.fit_transform(data)
 
+-----------------------------------
+Out-of-range values in transform
+-----------------------------------
+
+When numeric or ratio-scale features in the transform (or test) data contain values outside the range
+observed during ``fit()``, the ``out_of_range`` config parameter controls the behavior.
+By default it is set to ``"warning"`` — a ``UserWarning`` is emitted listing each column where values
+exceed the fitted range, and the resulting normalized distances are clipped to [0, 1].
+
+.. code-block:: python
+
+   import numpy as np
+   from gower_metric import Config, Gower
+
+   X_train = np.array([[1.0], [5.0]], dtype=object)
+   X_test = np.array([[10.0]], dtype=object)  # outside [1, 5]
+
+   cfg = Config(
+       feature_types={0: "numeric"},
+       out_of_range="error",  # raise instead of warn
+   )
+   gower = Gower(cfg).fit(X_train)
+   gower.transform(X_test)  # raises ValueError
+
+For more details and all available strategies, see :ref:`Configuration Class <configuration_class>`.
+
 ---------------------------
 Unseen values in transform
 ---------------------------
@@ -77,14 +103,14 @@ This is intentional – it forces you to make a conscious decision about how to 
    from gower_metric import Config, Gower
 
    X_train = np.array([["A"], ["B"]], dtype=object)
-   X_test = np.array([["C"]], dtype=object)   # "C" was never in training
+   X_test = np.array([["C"]], dtype=object)  # "C" was never in training
 
    cfg = Config(
       feature_types={0: "categorical_nominal"},
       handle_unseen_categorical_nominal="error",  # default
    )
    gower = Gower(cfg).fit(X_train)
-   gower.transform(X_test)   # raises ValueError
+   gower.transform(X_test)  # raises ValueError
 
 If you'd rather treat unseen values as missing data (``NaN``), switch to ``"missing"`` or ``"warning"``:
 

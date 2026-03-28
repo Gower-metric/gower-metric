@@ -134,14 +134,14 @@ strategy up front.
     from gower_metric import Config, Gower
 
     data = np.array([
-        [25, "low",    "car",   True,  0],
-        [30, "medium", "bus",   False, 1],
-        [35, "high",   "car",   True,  0],
-        [40, "low",    "train", False, 1],
-        [28, "medium", "car",   True,  0],
-        [50, "high",   "bus",   False, 1],
-        [22, "low",    "train", True,  0],
-        [45, "medium", "car",   False, 1],
+        [25, "low", "car", True, 0],
+        [30, "medium", "bus", False, 1],
+        [35, "high", "car", True, 0],
+        [40, "low", "train", False, 1],
+        [28, "medium", "car", True, 0],
+        [50, "high", "bus", False, 1],
+        [22, "low", "train", True, 0],
+        [45, "medium", "car", False, 1],
     ], dtype=object)
 
     y = np.array([0, 1, 0, 1, 0, 1, 0, 1])
@@ -164,6 +164,8 @@ strategy up front.
         handle_unseen_categorical_ordinal="missing",
         handle_unseen_binary_asymmetric="missing",
         handle_unseen_binary_symmetric="missing",
+        # Numeric values outside the fitted range will be clipped silently
+        out_of_range="clip",
     )
 
     gower = Gower(cfg).fit(X_train)
@@ -198,13 +200,13 @@ Here's a complete example combining all Config options with scikit-learn's KNN.
     from gower_metric import Config, Gower
 
     df = pd.DataFrame({
-        "age":      [25, 30, 35, 40, 28, 50, 22, 45, 33, 38],
-        "level":    ["low", "medium", "high", "low", "medium",
-                     "high", "low", "medium", "high", "low"],
-        "vehicle":  ["car", "bus", "car", "train", "car",
-                     "bus", "train", "car", "bus", "train"],
-        "married":  [True, False, True, False, True,
-                     False, True, False, True, False],
+        "age": [25, 30, 35, 40, 28, 50, 22, 45, 33, 38],
+        "level": ["low", "medium", "high", "low", "medium",
+                  "high", "low", "medium", "high", "low"],
+        "vehicle": ["car", "bus", "car", "train", "car",
+                    "bus", "train", "car", "bus", "train"],
+        "married": [True, False, True, False, True,
+                    False, True, False, True, False],
         "infected": [1, 0, 1, 0, 1, 0, 1, 0, 1, 0],
     })
     y = pd.Series([0, 1, 0, 1, 0, 1, 0, 1, 0, 1])
@@ -215,10 +217,10 @@ Here's a complete example combining all Config options with scikit-learn's KNN.
 
     cfg = Config(
         feature_types={
-            "age":      "ratio_scale_interval",
-            "level":    "categorical_ordinal",
-            "vehicle":  "categorical_nominal",
-            "married":  "binary_symmetric",
+            "age": "ratio_scale_interval",
+            "level": "categorical_ordinal",
+            "vehicle": "categorical_nominal",
+            "married": "binary_symmetric",
             "infected": "binary_asymmetric",
         },
         categorical_ordinal_values_order={"level": ["low", "medium", "high"]},
@@ -227,6 +229,7 @@ Here's a complete example combining all Config options with scikit-learn's KNN.
         handle_unseen_categorical_ordinal="warning",
         handle_unseen_binary_asymmetric="warning",
         handle_unseen_binary_symmetric="warning",
+        out_of_range="warning",
     )
 
     gower = Gower(cfg).fit(X_train)
