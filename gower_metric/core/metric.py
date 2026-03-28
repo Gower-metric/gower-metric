@@ -141,7 +141,7 @@ class Gower:
             config.handle_unseen_categorical_ordinal
         )
 
-        self.out_of_range: str = config.out_of_range
+        self.out_of_range = config.out_of_range
 
         self._is_fitted: bool = False
         self._skip_oor_check: bool = False

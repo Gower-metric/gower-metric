@@ -2,6 +2,8 @@ import warnings
 
 import numpy as np
 
+from gower_metric.core.config import OutOfRangeStrategy
+
 
 def scale_method(valid: np.ndarray, method: str) -> float:
     """Compute the scaling span for a 1D array of valid (non-NaN) values.
@@ -128,7 +130,7 @@ def check_out_of_range(
 
 def enforce_oor_policy(
     *arrays: np.ndarray,
-    strategy: str,
+    strategy: OutOfRangeStrategy,
     numeric_indices: list[int],
     numeric_mins: np.ndarray,
     numeric_maxs: np.ndarray,
