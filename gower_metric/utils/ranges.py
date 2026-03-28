@@ -148,7 +148,7 @@ def enforce_oor_policy(
 
     Args:
         *arrays (np.ndarray): one or more object arrays of shape (n_samples, n_features).
-        strategy (str): 'clip', 'warning', or 'error'.
+        strategy (OutOfRangeStrategy): 'clip', 'warning', or 'error'.
         numeric_indices (list[int]): fitted numeric column indices.
         numeric_mins (np.ndarray): fitted minimums for numeric columns.
         numeric_maxs (np.ndarray): fitted maximums for numeric columns.
