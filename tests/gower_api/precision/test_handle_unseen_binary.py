@@ -1,4 +1,6 @@
-"""Tests for handle_unseen_binary_asymmetric parameter."""
+"""Tests for handle_unseen_binary_asymmetric and handle_unseen_binary_symmetric parameters."""
+
+from typing import Any
 
 import numpy as np
 import pandas as pd
@@ -7,24 +9,31 @@ from pydantic import ValidationError
 
 from gower_metric import Config, Gower
 
+BINARY_TYPES = ["binary_asymmetric", "binary_symmetric"]
 
-class TestHandleUnseenBinaryAsymmetric:
-    """Test unseen value handling for binary_asymmetric features."""
+
+def _config(binary_type: str, strategy: str | None = ..., **extra: Any) -> Config:  # type: ignore[assignment]
+    """Build a Config for a single binary column with the given unseen strategy."""
+    kw: dict[str, Any] = {"feature_types": extra.pop("feature_types", {0: binary_type})}
+    if strategy is not ...:
+        kw[f"handle_unseen_{binary_type}"] = strategy
+    kw.update(extra)
+    return Config(**kw)
+
+
+class TestHandleUnseenBinary:
+    """Test unseen value handling for binary features (asymmetric + symmetric)."""
+
+    @pytest.fixture(autouse=True, params=BINARY_TYPES)
+    def setup_binary_type(self, request: pytest.FixtureRequest) -> None:
+        self.binary_type: str = request.param
 
     def test_strategy_error_raises_on_unseen_value(self) -> None:
-        """Test that handle_unseen_binary_asymmetric='error' raises ValueError.
-
-        Training data: only 'A'
-        Test data: has 'B' (unseen) -> ValueError
-        """
+        """handle_unseen='error' raises ValueError on unseen value."""
         X_train = np.array([["A"], ["A"], ["A"]], dtype=object)
         X_test = np.array([["A"], ["B"]], dtype=object)
 
-        cfg = Config(
-            feature_types={0: "binary_asymmetric"},
-            handle_unseen_binary_asymmetric="error",
-        )
-        gower = Gower(cfg).fit(X_train)
+        gower = Gower(_config(self.binary_type, "error")).fit(X_train)
 
         with pytest.raises(
             ValueError,
@@ -33,19 +42,11 @@ class TestHandleUnseenBinaryAsymmetric:
             gower.transform(X_test)
 
     def test_strategy_warning_maps_to_nan(self) -> None:
-        """Test that handle_unseen_binary_asymmetric='warning' maps to nan with warning.
-
-        Training data: only 'A'
-        Test data: has 'B' (unseen) -> warning, nan
-        """
+        """handle_unseen='warning' maps unseen to NaN with warning."""
         X_train = np.array([["A"], ["A"], ["A"]], dtype=object)
         X_test = np.array([["A"], ["B"]], dtype=object)
 
-        cfg = Config(
-            feature_types={0: "binary_asymmetric"},
-            handle_unseen_binary_asymmetric="warning",
-        )
-        gower = Gower(cfg).fit(X_train)
+        gower = Gower(_config(self.binary_type, "warning")).fit(X_train)
 
         with pytest.warns(
             UserWarning,
@@ -57,38 +58,22 @@ class TestHandleUnseenBinaryAsymmetric:
         assert np.isnan(result[1, 0])
 
     def test_strategy_missing_maps_to_nan_silently(self) -> None:
-        """Test that handle_unseen_binary_asymmetric='missing' maps to nan without warning.
-
-        Training data: only 'A'
-        Test data: has 'B' (unseen) -> nan
-        """
+        """handle_unseen='missing' maps unseen to NaN without warning."""
         X_train = np.array([["A"], ["A"]], dtype=object)
         X_test = np.array([["A"], ["B"]], dtype=object)
 
-        cfg = Config(
-            feature_types={0: "binary_asymmetric"},
-            handle_unseen_binary_asymmetric="missing",
-        )
-        gower = Gower(cfg).fit(X_train)
-
+        gower = Gower(_config(self.binary_type, "missing")).fit(X_train)
         result = gower.transform(X_test)
 
         assert result[0, 0] == 0.0
         assert np.isnan(result[1, 0])
 
     def test_default_strategy_is_error(self) -> None:
-        """Test that default strategy is 'error'.
-
-        Training data: only 'Yes'
-        Test data: has 'No' (unseen) -> ValueError
-        """
+        """Default strategy is 'error' — unseen value raises ValueError."""
         X_train = np.array([["Yes"], ["Yes"]], dtype=object)
         X_test = np.array([["No"]], dtype=object)
 
-        cfg = Config(
-            feature_types={0: "binary_asymmetric"},
-        )
-        gower = Gower(cfg).fit(X_train)
+        gower = Gower(_config(self.binary_type)).fit(X_train)
 
         with pytest.raises(
             ValueError,
@@ -97,60 +82,42 @@ class TestHandleUnseenBinaryAsymmetric:
             gower.transform(X_test)
 
     def test_complete_fit_with_strategy_error(self) -> None:
-        """Test that with complete fit, third value violates binary dtype.
-
-        Training data: 'A' and 'B'
-        Test data: 'C' (unseen) -> ValueError because of 3 total values
-        """
+        """Third value after complete fit violates binary constraint."""
         X_train = np.array([["A"], ["B"], ["A"], ["B"]], dtype=object)
         X_test = np.array([["C"]], dtype=object)
 
-        cfg = Config(
-            feature_types={0: "binary_asymmetric"},
-            handle_unseen_binary_asymmetric="error",
-        )
-        gower = Gower(cfg).fit(X_train)
+        gower = Gower(_config(self.binary_type, "error")).fit(X_train)
 
         with pytest.raises(ValueError, match=r"has 3 unique values total"):
             gower.transform(X_test)
 
     def test_complete_fit_with_strategy_missing(self) -> None:
-        """Test complete fit with third value and 'missing' strategy.
-
-        Training data: '0' and '1'
-        Test data: '2' (unseen) -> ValueError because of 3 total values
-        """
+        """Third value with 'missing' strategy still raises (3 total values)."""
         X_train = np.array([[0], [1], [0], [1]], dtype=object)
         X_test = np.array([[2]], dtype=object)
 
-        cfg = Config(
-            feature_types={0: "binary_asymmetric"},
-            handle_unseen_binary_asymmetric="missing",
-        )
-        gower = Gower(cfg).fit(X_train)
+        gower = Gower(_config(self.binary_type, "missing")).fit(X_train)
 
         with pytest.raises(ValueError, match=r"has 3 unique values total"):
             gower.transform(X_test)
 
     def test_invalid_strategy_raises_validation_error(self) -> None:
-        """Test that invalid strategy raises validation error."""
+        """Invalid strategy string raises pydantic ValidationError."""
         with pytest.raises(
             ValidationError,
             match=r"Input should be 'warning', 'error' or 'missing'",
         ):
-            Config(
-                feature_types={0: "binary_asymmetric"},
-                handle_unseen_binary_asymmetric="invalid",  # type: ignore[arg-type]
-            )
+            _config(self.binary_type, "invalid")  # type: ignore[arg-type]
 
     def test_strategy_with_pandas_dataframe(self) -> None:
-        """Test that strategy works with pandas DataFrame."""
+        """Strategy works with pandas DataFrame input."""
         X_train = pd.DataFrame({"col": ["A", "A"]})
         X_test = pd.DataFrame({"col": ["B"]})
 
-        cfg = Config(
-            feature_types={"col": "binary_asymmetric"},
-            handle_unseen_binary_asymmetric="missing",
+        cfg = _config(
+            self.binary_type,
+            "missing",
+            feature_types={"col": self.binary_type},
         )
         gower = Gower(cfg).fit(X_train)
 
@@ -158,19 +125,11 @@ class TestHandleUnseenBinaryAsymmetric:
         assert np.isnan(result.iloc[0, 0])  # type: ignore[union-attr]
 
     def test_strategy_with_multiple_unseen_values(self) -> None:
-        """Test that multiple unseen values violate binary dtype.
-
-        Training data: only 'A'
-        Test data: 'B', 'C', 'D' (unseen) -> ValueError because of 4 total values
-        """
+        """Multiple unseen values violate binary constraint (4 total)."""
         X_train = np.array([["A"], ["A"], ["A"]], dtype=object)
         X_test = np.array([["B"], ["C"], ["D"]], dtype=object)
 
-        cfg = Config(
-            feature_types={0: "binary_asymmetric"},
-            handle_unseen_binary_asymmetric="missing",
-        )
-        gower = Gower(cfg).fit(X_train)
+        gower = Gower(_config(self.binary_type, "missing")).fit(X_train)
 
         with pytest.raises(ValueError, match=r"has 4 unique values total"):
             gower.transform(X_test)
