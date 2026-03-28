@@ -29,7 +29,11 @@ from gower_metric.utils.categorical_ut import (
 from gower_metric.utils.kde_types.silverman import silverman_bandwidth
 from gower_metric.utils.knn_bandwidth import knn_bandwidth
 from gower_metric.utils.matrix.calculate_matrix import get_full_matrix
-from gower_metric.utils.ranges import get_numeric_ranges
+from gower_metric.utils.ranges import (
+    enforce_oor_policy,
+    get_numeric_bounds,
+    get_numeric_ranges,
+)
 from gower_metric.utils.to_array import to_array
 from gower_metric.utils.transforms import (
     transform_binary_asymmetric,
@@ -99,6 +103,10 @@ class Gower:
         self.ratio_scale_indices: list[int] = []
         self.ratio_ranges: np.ndarray = np.array([])
         self.numeric_ranges: np.ndarray = np.array([])
+        self.numeric_mins: np.ndarray = np.array([])
+        self.numeric_maxs: np.ndarray = np.array([])
+        self.ratio_mins: np.ndarray = np.array([])
+        self.ratio_maxs: np.ndarray = np.array([])
 
         self.scale_method: str = config.scale_method
 
@@ -133,13 +141,16 @@ class Gower:
             config.handle_unseen_categorical_ordinal
         )
 
+        self.out_of_range: str = config.out_of_range
+
         self._is_fitted: bool = False
+        self._skip_oor_check: bool = False
         self.binary_symmetric_metadata: dict[int, dict[str, Any]] = {}
         self.binary_asymmetric_metadata: dict[int, dict[str, Any]] = {}
         self.nominal_metadata: dict[int, OrdinalEncoder] = {}
         self.ordinal_metadata: dict[int, OrdinalEncoder] = {}
 
-    def fit(self, X: pd.DataFrame | np.ndarray) -> "Gower":  # noqa: PLR0912, C901
+    def fit(self, X: pd.DataFrame | np.ndarray) -> "Gower":  # noqa: C901, PLR0912, PLR0915
         """Fit the Gower model by computing numeric feature ranges.
 
         Args:
@@ -272,8 +283,14 @@ class Gower:
                 self.ratio_scale_indices,
                 self.scale_method,
             )
+            self.ratio_mins, self.ratio_maxs = get_numeric_bounds(
+                arr,
+                self.ratio_scale_indices,
+            )
         else:
             self.ratio_ranges = np.array([])
+            self.ratio_mins = np.array([])
+            self.ratio_maxs = np.array([])
 
         if self.numeric_indices:
             self.numeric_ranges = get_numeric_ranges(
@@ -281,8 +298,14 @@ class Gower:
                 self.numeric_indices,
                 self.scale_method,
             )
+            self.numeric_mins, self.numeric_maxs = get_numeric_bounds(
+                arr,
+                self.numeric_indices,
+            )
         else:
             self.numeric_ranges = np.array([])
+            self.numeric_mins = np.array([])
+            self.numeric_maxs = np.array([])
 
         if self.scale_window == "kde" and self.scale_window_type == "silverman":
             self._h_ratio = np.array(
@@ -441,6 +464,18 @@ class Gower:
             arr: np.ndarray = X
             X_arr = np.asarray(arr, dtype=object)
 
+        enforce_oor_policy(
+            np.asarray(X_arr, dtype=object),
+            strategy=self.out_of_range,
+            numeric_indices=self.numeric_indices,
+            numeric_mins=self.numeric_mins,
+            numeric_maxs=self.numeric_maxs,
+            ratio_scale_indices=self.ratio_scale_indices,
+            ratio_mins=self.ratio_mins,
+            ratio_maxs=self.ratio_maxs,
+            stacklevel=2,
+        )
+
         transformed_columns: list[np.ndarray] = []
 
         for col_idx_raw, ftype in sorted(self.feature_types.items()):
@@ -563,6 +598,19 @@ class Gower:
         y = to_array(b)
         Xn = x.reshape(1, -1)
         Yn = y.reshape(1, -1)
+
+        if not self._skip_oor_check:
+            enforce_oor_policy(
+                Xn,
+                Yn,
+                strategy=self.out_of_range,
+                numeric_indices=self.numeric_indices,
+                numeric_mins=self.numeric_mins,
+                numeric_maxs=self.numeric_maxs,
+                ratio_scale_indices=self.ratio_scale_indices,
+                ratio_mins=self.ratio_mins,
+                ratio_maxs=self.ratio_maxs,
+            )
 
         num_w = self.weights[self.numeric_indices]
         cat_nom_w = self.weights[self.categorical_nominal_indices]
@@ -818,14 +866,35 @@ class Gower:
         if data_type is None:
             data_type = self.data_type
 
-        return get_full_matrix(
-            self,
-            X,
-            data_type=data_type,
-            n_jobs=n_jobs,
-            verbose=verbose,
-            matrix_type=matrix_type,
-            convert_to_sparse=convert_to_sparse,
-            sparse_type=sparse_type,
-            backend=backend,
+        arr_check = (
+            X.to_numpy(dtype=object)
+            if isinstance(X, pd.DataFrame)
+            else np.asarray(X, dtype=object)
         )
+        enforce_oor_policy(
+            arr_check,
+            strategy=self.out_of_range,
+            numeric_indices=self.numeric_indices,
+            numeric_mins=self.numeric_mins,
+            numeric_maxs=self.numeric_maxs,
+            ratio_scale_indices=self.ratio_scale_indices,
+            ratio_mins=self.ratio_mins,
+            ratio_maxs=self.ratio_maxs,
+            stacklevel=2,
+        )
+        self._skip_oor_check = True
+
+        try:
+            return get_full_matrix(
+                self,
+                X,
+                data_type=data_type,
+                n_jobs=n_jobs,
+                verbose=verbose,
+                matrix_type=matrix_type,
+                convert_to_sparse=convert_to_sparse,
+                sparse_type=sparse_type,
+                backend=backend,
+            )
+        finally:
+            self._skip_oor_check = False
