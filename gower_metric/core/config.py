@@ -102,7 +102,7 @@ class Config(BaseModel):
     binary_symmetric_value_order: BinarySymmetricValueOrderType = None
     handle_unseen_categorical_nominal: HandleUnseenCategoricalNominal = "error"
     handle_unseen_categorical_ordinal: HandleUnseenCategoricalOrdinal = "error"
-    out_of_range: OutOfRangeStrategy = "warning"
+    out_of_range: OutOfRangeStrategy = "error"
 
     @field_validator("feature_types")
     @classmethod

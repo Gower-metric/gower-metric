@@ -66,7 +66,7 @@ Out-of-range values in transform
 
 When numeric or ratio-scale features in the transform (or test) data contain values outside the range
 observed during ``fit()``, the ``out_of_range`` config parameter controls the behavior.
-By default it is set to ``"warning"`` — a ``UserWarning`` is emitted listing each column where values
+By default it is set to ``"error"`` — a ``ValueError`` is raised listing each column where values
 exceed the fitted range, and the resulting normalized distances are clipped to [0, 1].
 
 .. code-block:: python
@@ -75,14 +75,14 @@ exceed the fitted range, and the resulting normalized distances are clipped to [
    from gower_metric import Config, Gower
 
    X_train = np.array([[1.0], [5.0]], dtype=object)
-   X_test = np.array([[10.0]], dtype=object)  # outside [1, 5]
+   X_test = np.array([[10.0]], dtype=object) # outside [1, 5]
 
    cfg = Config(
        feature_types={0: "numeric"},
-       out_of_range="error",  # raise instead of warn
+       out_of_range="warning", # raises UserWarning instead of ValueError (does not kill the process, clips to [0.0, 1.0])
    )
    gower = Gower(cfg).fit(X_train)
-   gower.transform(X_test)  # raises ValueError
+   gower.transform(X_test) # raises ValueError
 
 For more details and all available strategies, see :ref:`Configuration Class <configuration_class>`.
 
