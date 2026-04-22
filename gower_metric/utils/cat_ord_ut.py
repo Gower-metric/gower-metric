@@ -8,26 +8,39 @@ import pandas as pd
 
 def map_ordered_values(
     ordered_values: Sequence[Any] | np.ndarray,
+    data_type: type[np.floating] = np.float32,
 ) -> tuple[dict[Any, int], int | None, int | None]:
-    """Map consecutive integers to passed ordered values.
+    """Map consecutive integer ranks to passed ordered values.
+
+    The returned mapping is lookup-ready for both raw user values (e.g. strings)
+    and post-``Gower.transform`` numeric ranks — callers can feed either form
+    into ``categorical_ordinal_component`` without post-processing the map.
 
     Args:
-        ordered_values (Sequence[Any] | np.ndarray): A defined sequence of categorical values.
+        ordered_values (Sequence[Any] | np.ndarray): A defined sequence of
+            categorical values in raw form.
+        data_type (type[np.floating]): Floating dtype used by ``OrdinalEncoder``
+            in the Gower pipeline. Encoded-form keys are inserted with this
+            dtype so lookups with transformed columns succeed without casting.
 
     Returns:
         tuple[dict[Any, int], int | None, int | None]:
-            - ranks_mapping: A dictionary mapping each unique value to its rank.
-            - min_rank: The minimum rank (or None if no categories).
-            - max_rank: The maximum rank (or None if no categories).
+            - ranks_mapping: ``{raw_value: rank, data_type(rank): rank, int(rank): rank}``
+              for each position. Values are integer ranks.
+            - min_rank: 0, or None if ``ordered_values`` is empty.
+            - max_rank: ``len(ordered_values) - 1``, or None if empty.
 
     """
-    ranks_mapping = {value: rank for rank, value in enumerate(ordered_values)}
     if len(ordered_values) == 0:
-        return ranks_mapping, None, None
-    min_rank: int | None = 0
-    max_rank: int | None = len(ordered_values) - 1
+        return {}, None, None
 
-    return ranks_mapping, min_rank, max_rank
+    ranks_mapping: dict[Any, int] = {}
+    for rank, value in enumerate(ordered_values):
+        ranks_mapping[value] = rank
+        ranks_mapping[data_type(rank)] = rank
+        ranks_mapping[int(rank)] = rank
+
+    return ranks_mapping, 0, len(ordered_values) - 1
 
 
 def get_cardinalities_mapping(

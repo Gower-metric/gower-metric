@@ -150,7 +150,7 @@ class Gower:
         self.nominal_metadata: dict[int, OrdinalEncoder] = {}
         self.ordinal_metadata: dict[int, OrdinalEncoder] = {}
 
-    def fit(self, X: pd.DataFrame | np.ndarray) -> "Gower":  # noqa: C901, PLR0912, PLR0915
+    def fit(self, X: pd.DataFrame | np.ndarray) -> "Gower":  # noqa: PLR0912
         """Fit the Gower model by computing numeric feature ranges.
 
         Args:
@@ -349,6 +349,7 @@ class Gower:
                 raise ValueError(msg)
             ranks_map, mn, mx = map_ordered_values(
                 self.categorical_ordinal_values_order[j],
+                data_type=self.data_type,
             )
             counts_map, _ = get_cardinalities_mapping(col)
             counts_arr = np.asarray(
@@ -358,15 +359,6 @@ class Gower:
                 ],
                 dtype=float,
             )
-
-            # we need to map ranks to both int and float to avoid cast errors within .fit()
-            # to maintain compatibility with multiple .transform() calls
-            for rank in list(ranks_map.values()):
-                fk, ik = float(rank), int(rank)
-                if fk not in ranks_map:
-                    ranks_map[fk] = rank
-                if ik not in ranks_map:
-                    ranks_map[ik] = rank
 
             self.cat_ord_metadata[j] = {
                 "ranks": ranks_map,
