@@ -179,6 +179,6 @@ class TestOutOfRangeConfigValidation:
         with pytest.raises(ValidationError, match=r"Input should be"):
             Config(feature_types={0: "numeric"}, out_of_range="invalid")  # type: ignore[arg-type]
 
-    def test_default_is_warning(self) -> None:
+    def test_default_is_error(self) -> None:
         cfg = Config(feature_types={0: "numeric"})
-        assert cfg.out_of_range == "warning"
+        assert cfg.out_of_range == "error"
