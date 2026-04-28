@@ -2,6 +2,7 @@ from typing import Any, Literal, get_args
 
 import numpy as np
 from pydantic import BaseModel, ValidationInfo, field_validator
+from pydantic.types import StrictBool
 
 FeatureType = Literal[
     "numeric",
@@ -28,6 +29,7 @@ BinarySymmetricValueOrderType = dict[int | str, list[Any]] | None
 HandleUnseenCategoricalNominal = Literal["warning", "error", "missing"]
 HandleUnseenCategoricalOrdinal = Literal["warning", "error", "missing"]
 OutOfRangeStrategy = Literal["clip", "warning", "error"]
+SkipOutOfRangeValidation = StrictBool
 
 
 class Config(BaseModel):
@@ -78,6 +80,8 @@ class Config(BaseModel):
             Default is 'error' if omitted.
         out_of_range (OutOfRangeStrategy): Strategy for handling transform-time numeric values outside the fitted range. Default is 'warning' if omitted.
             Can be: 'clip' silently clips normalized distances to [0, 1], 'warning' emits a UserWarning and clips, 'error' raises ValueError.
+        skip_out_of_range_validation (SkipOutOfRangeValidation): If True, skips validation of out-of-range values during transformation.
+            Default is ``False`` if omitted.
 
     Raises:
             ValueError: If custom validation rules fail.
@@ -103,6 +107,7 @@ class Config(BaseModel):
     handle_unseen_categorical_nominal: HandleUnseenCategoricalNominal = "error"
     handle_unseen_categorical_ordinal: HandleUnseenCategoricalOrdinal = "error"
     out_of_range: OutOfRangeStrategy = "error"
+    skip_out_of_range_validation: SkipOutOfRangeValidation = False
 
     @field_validator("feature_types")
     @classmethod

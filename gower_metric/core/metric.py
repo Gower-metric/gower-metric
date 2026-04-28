@@ -5,7 +5,11 @@ import numpy as np
 import pandas as pd
 import scipy.sparse
 
-from gower_metric.core.config import Config, OutOfRangeStrategy
+from gower_metric.core.config import (
+    Config,
+    OutOfRangeStrategy,
+    SkipOutOfRangeValidation,
+)
 from gower_metric.core.exceptions import IllegalStateError
 from gower_metric.distances.binary_asymmetric import (
     binary_asymmetric_component,
@@ -142,6 +146,7 @@ class Gower:
         )
 
         self.out_of_range: OutOfRangeStrategy = config.out_of_range
+        self.skip_oor: SkipOutOfRangeValidation = config.skip_out_of_range_validation
 
         self._is_fitted: bool = False
         self._skip_oor_check: bool = False
@@ -456,17 +461,18 @@ class Gower:
             arr: np.ndarray = X
             X_arr = np.asarray(arr, dtype=object)
 
-        enforce_oor_policy(
-            np.asarray(X_arr, dtype=object),
-            strategy=self.out_of_range,
-            numeric_indices=self.numeric_indices,
-            numeric_mins=self.numeric_mins,
-            numeric_maxs=self.numeric_maxs,
-            ratio_scale_indices=self.ratio_scale_indices,
-            ratio_mins=self.ratio_mins,
-            ratio_maxs=self.ratio_maxs,
-            stacklevel=2,
-        )
+        if not self.skip_oor and not self._skip_oor_check:
+            enforce_oor_policy(
+                np.asarray(X_arr, dtype=object),
+                strategy=self.out_of_range,
+                numeric_indices=self.numeric_indices,
+                numeric_mins=self.numeric_mins,
+                numeric_maxs=self.numeric_maxs,
+                ratio_scale_indices=self.ratio_scale_indices,
+                ratio_mins=self.ratio_mins,
+                ratio_maxs=self.ratio_maxs,
+                stacklevel=2,
+            )
 
         transformed_columns: list[np.ndarray] = []
 
@@ -591,7 +597,7 @@ class Gower:
         Xn = x.reshape(1, -1)
         Yn = y.reshape(1, -1)
 
-        if not self._skip_oor_check:
+        if not self.skip_oor and not self._skip_oor_check:
             enforce_oor_policy(
                 Xn,
                 Yn,
@@ -863,19 +869,21 @@ class Gower:
             if isinstance(X, pd.DataFrame)
             else np.asarray(X, dtype=object)
         )
-        enforce_oor_policy(
-            arr_check,
-            strategy=self.out_of_range,
-            numeric_indices=self.numeric_indices,
-            numeric_mins=self.numeric_mins,
-            numeric_maxs=self.numeric_maxs,
-            ratio_scale_indices=self.ratio_scale_indices,
-            ratio_mins=self.ratio_mins,
-            ratio_maxs=self.ratio_maxs,
-            stacklevel=2,
-        )
-        self._skip_oor_check = True
 
+        if not self.skip_oor:
+            enforce_oor_policy(
+                arr_check,
+                strategy=self.out_of_range,
+                numeric_indices=self.numeric_indices,
+                numeric_mins=self.numeric_mins,
+                numeric_maxs=self.numeric_maxs,
+                ratio_scale_indices=self.ratio_scale_indices,
+                ratio_mins=self.ratio_mins,
+                ratio_maxs=self.ratio_maxs,
+                stacklevel=2,
+            )
+
+        self._skip_oor_check = True
         try:
             return get_full_matrix(
                 self,
