@@ -50,6 +50,8 @@ some of these configuration flags depend on one another. It will be clearly indi
   exceeds the threshold defined as ``conditional_distances_threshold_coeff * (p_cat / p)`` (where p_cat is the number of categorical and binary features, and p is the total number of features),
   then the final distance will be set to 1. Otherwise, the ratio scale and numeric features will be included in the distance calculation in the second step.
 - ``out_of_range (str)`` - Strategy for handling numeric and ratio-scale values that fall outside the range observed during ``fit()``. Possible values are ``"clip"`` (silently clip normalized distances to [0, 1]), ``"warning"`` (default, emit a ``UserWarning`` listing offending columns and clip), or ``"error"`` (raise a ``ValueError``). This applies to both ``transform()`` and pairwise distance calculations (``__call__``, ``matrix``).
+- ``skip_out_of_range_validation (StrictBool)`` - Determine whether to skip validation of out-of-range values. Settings to ``False`` might
+    increase overall speedup, however it is not recommended without great care and solid data preprocessing. Default to ``False`` if omitted.
 
 ----------------------------
 Handling unseen values
