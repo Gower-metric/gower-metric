@@ -5,6 +5,7 @@ import pytest
 from pydantic import ValidationError
 
 from gower_metric import Config
+from gower_metric.core.config import OutOfRangeStrategy, SkipOutOfRangeValidation
 
 DEFAULT_DTYPE = np.float64
 
@@ -186,3 +187,41 @@ class TestConditionalDistancesValidation:
                 conditional_distances=2,  # type: ignore[arg-type]
                 data_type=DEFAULT_DTYPE,
             )
+
+
+class TestOutOfRangeConfigValidation:
+    """Config validation for out_of_range parameter."""
+
+    @pytest.mark.parametrize("strategy", ["clip", "warning", "error"])
+    def test_valid_values(self, strategy: OutOfRangeStrategy) -> None:
+        cfg = Config(feature_types={0: "numeric"}, out_of_range=strategy)
+        assert cfg.out_of_range == strategy
+
+    def test_invalid_value_raises(self) -> None:
+        with pytest.raises(ValidationError, match=r"Input should be"):
+            Config(feature_types={0: "numeric"}, out_of_range="invalid")  # type: ignore[arg-type]
+
+    def test_default_is_error(self) -> None:
+        cfg = Config(feature_types={0: "numeric"})
+        assert cfg.out_of_range == "error"
+
+
+class TestSkipOutOfRangeConfigValidation:
+    """Config validation for skip_out_of_range_validation parameter."""
+
+    @pytest.mark.parametrize("flag", [True, False])
+    def test_valid_values(self, flag: SkipOutOfRangeValidation) -> None:
+        cfg = Config(feature_types={0: "numeric"}, skip_out_of_range_validation=flag)
+        assert cfg.skip_out_of_range_validation == flag
+
+    @pytest.mark.parametrize("invalid_value", ["no", "yes", 1, 0])
+    def test_invalid_value_raises(self, invalid_value: object) -> None:
+        with pytest.raises(ValidationError, match=r"Input should be a valid boolean"):
+            Config(
+                feature_types={0: "numeric"},
+                skip_out_of_range_validation=invalid_value,  # type: ignore[arg-type]
+            )
+
+    def test_default_is_false(self) -> None:
+        cfg = Config(feature_types={0: "numeric"})
+        assert cfg.skip_out_of_range_validation is False

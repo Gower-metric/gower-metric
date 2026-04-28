@@ -6,7 +6,6 @@ from typing import Any
 import numpy as np
 import pandas as pd
 import pytest
-from pydantic import ValidationError
 
 from gower_metric import Config, Gower
 from gower_metric.core.config import FeatureType, OutOfRangeStrategy
@@ -165,20 +164,3 @@ class TestOutOfRangeMatrix:
 
         result = gower.matrix(test)
         assert result.shape == (3, 3)
-
-
-class TestOutOfRangeConfigValidation:
-    """Config validation for out_of_range parameter."""
-
-    @pytest.mark.parametrize("strategy", ["clip", "warning", "error"])
-    def test_valid_values(self, strategy: OutOfRangeStrategy) -> None:
-        cfg = Config(feature_types={0: "numeric"}, out_of_range=strategy)
-        assert cfg.out_of_range == strategy
-
-    def test_invalid_value_raises(self) -> None:
-        with pytest.raises(ValidationError, match=r"Input should be"):
-            Config(feature_types={0: "numeric"}, out_of_range="invalid")  # type: ignore[arg-type]
-
-    def test_default_is_error(self) -> None:
-        cfg = Config(feature_types={0: "numeric"})
-        assert cfg.out_of_range == "error"
