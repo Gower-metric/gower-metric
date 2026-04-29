@@ -1,7 +1,8 @@
 from .core.config import Config
+from .core.exceptions import IllegalStateError
 from .core.metric import Gower
 
-__all__ = ["Config", "Gower"]
+__all__ = ["Config", "Gower", "IllegalStateError"]
 
 __doc__ = """
 Gower metric for mixed data types.

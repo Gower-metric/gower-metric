@@ -77,6 +77,29 @@ tox -r -e py310,py311,py312,py313,py314
 > [!NOTE]
 > The key difference between `tests` and `r_env_tests` is presence of [rpy2](https://rpy2.readthedocs.io/en/latest/) package, which requires [R](https://www.r-project.org) to be installed on your system. If you want to run tests that do not require R, feel free to use first group.
 
+### Test Coverage
+
+Coverage is collected automatically every time you run `uv run pytest` — no extra flags needed. The report shows which lines are missing coverage right in the terminal:
+
+```bash
+uv run pytest
+```
+
+At the end of the output you'll see a table like this:
+
+```
+Name                              Stmts   Miss  Cover   Missing
+---------------------------------------------------------------
+gower_metric/core/config.py          95      3    97%   122, 155, 180
+gower_metric/core/metric.py         210     12    94%   289-295, 400
+...
+```
+
+The `Missing` column tells you exactly which lines still need test coverage. This is powered by `pytest-cov` with the `--cov-report=term-missing` flag configured in `pyproject.toml`.
+
+> [!IMPORTANT]
+> When contributing, please make sure your changes **do not decrease** the overall test coverage. If you're adding new functionality, include tests that cover the new code paths. If you're modifying existing code, verify that the existing tests still pass and that the coverage for the affected files remains the same or improves.
+
 ### Creating documentation
 
 To create the documentation, you can use [sphinx-autobuild](https://github.com/sphinx-doc/sphinx-autobuild) tool. It will automatically create the documentation for you and host it locally. You can run the following command to create the environment first:
@@ -94,7 +117,7 @@ sphinx-autobuild docs/source docs/build/html
 ## I Have a Question
 
 > [!NOTE]
-> If you want to ask a question, we assume that you have read the available [documentation]() @TODO add docs ref here
+> If you want to ask a question, we assume that you have read the available [documentation](https://gower-metric.readthedocs.io/en/latest/)
 
 Before you ask a question, it is best to search for existing issues that might help you. In case you have found a suitable issue and still need clarification, you can write your question in this issue. It is also advisable to search the internet for answers first.
 
@@ -122,7 +145,7 @@ We will then take care of the issue as soon as possible.
 A good bug report shouldn't leave others needing to chase you up for more information. Therefore, we ask you to investigate carefully, collect information and describe the issue in detail in your report. Please complete the following steps in advance to help us fix any potential bug as fast as possible.
 
 - Make sure that you are using the latest version.
-- Determine if your bug is really a bug and not an error on your side e.g. using incompatible environment components/versions (Make sure that you have read the [documentation](). If you are looking for support, you might want to check [this section](#i-have-a-question)).
+- Determine if your bug is really a bug and not an error on your side e.g. using incompatible environment components/versions (Make sure that you have read the [documentation](https://gower-metric.readthedocs.io/en/latest/). If you are looking for support, you might want to check [this section](#i-have-a-question)).
 - Also make sure to search the internet (including Stack Overflow) to see if users outside of the GitHub community have discussed the issue.
 - Collect information about the bug:
 - Stack trace (Traceback)
@@ -160,7 +183,7 @@ This section guides you through submitting an enhancement suggestion for `CONTRI
 #### Before Submitting an Enhancement
 
 - Make sure that you are using the latest version.
-- Read the [documentation]() carefully and find out if the functionality is already covered, maybe by an individual configuration.
+- Read the [documentation](https://gower-metric.readthedocs.io/en/latest/) carefully and find out if the functionality is already covered, maybe by an individual configuration.
 - Perform a search among issues to see if the enhancement has already been suggested. If it has, add a comment to the existing issue instead of opening a new one.
 - Find out whether your idea fits with the scope and aims of the project. It's up to you to make a strong case to convince the project's developers of the merits of this feature. Keep in mind that we want features that will be useful to the majority of our users and not just a small subset. If you're just targeting a minority of users, consider writing an add-on/plugin library.
 
@@ -183,4 +206,4 @@ You are welcome to help us improve the documentation, be it fixing typos, improv
 
 ## Join The Project Team
 
-Just open an issue or contact one of the maintainers. We will then discuss your ideas and see how we can help each other :)
+Just open an issue or contact one of the maintainers. We will then discuss your ideas and see how we can help each other.

@@ -7,6 +7,7 @@ from gower_metric.utils import (
     missing,
     ranges,
     to_array,
+    transforms,
 )
 
 __all__ = [
@@ -18,6 +19,7 @@ __all__ = [
     "missing",
     "ranges",
     "to_array",
+    "transforms",
 ]
 
 __doc__ = """

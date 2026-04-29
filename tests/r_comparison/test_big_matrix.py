@@ -2,12 +2,14 @@ import warnings
 from typing import cast
 
 import numpy as np
-import pandas as pd
+import pytest
 from rpy2 import rinterface, robjects
 from rpy2.robjects import pandas2ri
 from rpy2.robjects.packages import importr
 
 from gower_metric import Config, Gower
+
+from .conftest import generate_mixed_df
 
 warnings.filterwarnings("ignore", category=UserWarning, module="rpy2")
 
@@ -15,8 +17,10 @@ if not rinterface.initr():
     rinterface.initr()
 
 
-def test_big_matrix() -> None:
-    df = pd.read_excel("data/files/artificially_generated.xlsx")
+@pytest.mark.parametrize("n", [50, 200, 500, 1000, 2000])
+def test_big_matrix(n: int, random_seed: int) -> None:
+    rng = np.random.default_rng(random_seed)
+    df = generate_mixed_df(n, rng)
 
     features: dict[int | str, str] = {
         "Age": "numeric",
@@ -85,24 +89,18 @@ def test_big_matrix() -> None:
         },
     )
 
-    weights = robjects.FloatVector([1.0, 2.0, 1.5, 1.2, 3.75, 2.72])
-    dist_matrix = daisy(r_df, metric="gower", type=type_list, weights=weights)
+    r_weights = robjects.FloatVector([1.0, 2.0, 1.5, 1.2, 3.75, 2.72])
+    dist_matrix = daisy(r_df, metric="gower", type=type_list, weights=r_weights)
 
     as_matrix = robjects.r["as.matrix"]
     r_matrix = as_matrix(dist_matrix)
     np_matrix = np.array(r_matrix)
 
-    diff = np.abs(gower_matrix - np_matrix)
-    max_diff = np.max(diff)
-
-    if max_diff > 1e-6:
-        rows, _cols = np.where(diff > 1e-6)
-        if len(rows) > 0:
-            pass
-
-    assert np_matrix.shape == (len(df), len(df))
+    assert np_matrix.shape == (n, n)
     assert np.allclose(
         cast("np.ndarray", np_matrix),
         cast("np.ndarray", gower_matrix),
         atol=1e-6,
-    ), "Matrices are not equal!"
+    ), (
+        f"Matrices differ (seed={random_seed}, n={n}), max diff={np.max(np.abs(gower_matrix - np_matrix))}"
+    )

@@ -22,6 +22,8 @@ def _load_data(dataset_id: int) -> pd.DataFrame:
         target=dataset.default_target_attribute,
         dataset_format="dataframe",
     )
+    if not isinstance(X, pd.DataFrame):
+        X = pd.DataFrame(X)
     return X.drop(columns=["workclass", "occupation", "native-country"])
 
 

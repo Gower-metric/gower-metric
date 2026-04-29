@@ -34,6 +34,8 @@ Implementation of Gower's Metric in Python.
 
 Legend: ✅ - supported and tested, 🚧 - work in progress
 
+Supported and tested numerical scalar types: `numpy.float16`, `np.float32`, `np.float64`.
+
 ## Documentation
 
 Documentation is available [here](https://gower-metric.readthedocs.io/en/latest/).
@@ -52,7 +54,7 @@ uv add gower-metric
 
 ## Quick start
 
-Gower metric, by definition, is being designed to work with mixed, non-changed data types. We provide simple, two methods to how user can use algorithm. First, on original data. Second, on transformed ones (numerically encoded).
+Gower metric, by definition, is being designed to work with mixed, non-changed data types. We provide two methods for using the algorithm. First, on original data. Second, on transformed ones (numerically encoded).
 
 ### Original data
 
@@ -83,7 +85,7 @@ distance = gower(data[0], data[1])
 
 ### Transformation
 
-We also provide a way to transform original data into it's numerical representation. It can be very useful when working with external libraries, 
+We also provide a way to transform original data into its numerical representation. It can be very useful when working with external libraries, 
 such as scikit-learn and scipy. More about how to use them with gower-metric can be found within [examples](examples) folder and documentation.
 
 ```python
@@ -133,13 +135,7 @@ Please refer to the [CONTRIBUTING](.github/CONTRIBUTING.md) file.
 
 ## History
 
-@TODO: add history of this project
-
-## Citation
-
-If you find this project useful in your research, please consider citing it as follows:
-
-@TODO: add citation
+Project started in 2023 as a project at AGH University of Krakow [Computer Science](https://www.informatyka.agh.edu.pl/en/) faculty. Within 2024-2026 it has been transformed into an open source library.
 
 ## References
 - [Distances with mixed type variables some modified Gower's coefficients (2021)](https://arxiv.org/abs/2101.02481)

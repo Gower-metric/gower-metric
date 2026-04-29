@@ -2,12 +2,14 @@ import warnings
 from typing import cast
 
 import numpy as np
-import pandas as pd
+import pytest
 from rpy2 import rinterface, robjects
 from rpy2.robjects import pandas2ri
 from rpy2.robjects.packages import importr
 
 from gower_metric import Config, Gower
+
+from .conftest import EDUCATION_LEVELS, generate_adult_like_df, generate_mixed_df
 
 warnings.filterwarnings("ignore", category=UserWarning, module="rpy2")
 
@@ -15,11 +17,10 @@ if not rinterface.initr():
     rinterface.initr()
 
 
-def test_r_daisy_no_weights() -> None:
-    n_rows = 100
-    df = pd.read_csv("data/files/adult_reduced.csv").head(n_rows)
-    df["race"] = df["race"].astype("category")
-    df["sex"] = df["sex"].astype("category")
+@pytest.mark.parametrize("n", [50, 100, 200, 500, 1000, 2000])
+def test_r_daisy_no_weights(n: int, random_seed: int) -> None:
+    rng = np.random.default_rng(random_seed)
+    df = generate_adult_like_df(n, rng)
 
     converter = robjects.default_converter + pandas2ri.converter
     with converter.context():
@@ -35,7 +36,7 @@ def test_r_daisy_no_weights() -> None:
     r_matrix = as_matrix(dist_matrix)
     np_matrix = np.array(r_matrix)
 
-    assert np_matrix.shape == (n_rows, n_rows)
+    assert np_matrix.shape == (n, n)
 
     # gower section
     feature_types: dict[int | str, str] = {
@@ -58,18 +59,24 @@ def test_r_daisy_no_weights() -> None:
         cast("np.ndarray", np_matrix),
         cast("np.ndarray", gower_matrix),
         atol=1e-6,
+    ), (
+        f"Matrices differ (seed={random_seed}, n={n}), max diff={np.max(np.abs(gower_matrix - np_matrix))}"
     )
 
 
-def test_r_daisy_weights() -> None:
-    df = pd.DataFrame(
-        {
-            "age": [23, 45, 23, 31],
-            "gender": ["Female", "Male", "Female", "Male"],
-            "income": [35000, 81000, 40000, 30000],
-            "education": ["high", "low", "medium", "low"],
-            "married": [0, 1, 1, 0],
-            "infected": [1, 1, 0, 0],
+@pytest.mark.parametrize("n", [20, 50, 100, 500, 1000, 2000])
+def test_r_daisy_weights(n: int, random_seed: int) -> None:
+    rng = np.random.default_rng(random_seed)
+    df = generate_mixed_df(n, rng)
+
+    df = df.rename(
+        columns={
+            "Age": "age",
+            "Salary": "income",
+            "Have_children": "married",
+            "Is_smoking": "infected",
+            "Birth": "gender",
+            "Education": "education",
         },
     )
 
@@ -83,7 +90,7 @@ def test_r_daisy_weights() -> None:
     }
 
     categorical_ordinal_values_order: dict[int | str, list[str]] | None = {
-        "education": ["low", "medium", "high"],
+        "education": EDUCATION_LEVELS,
     }
 
     feature_weights = {
@@ -103,7 +110,6 @@ def test_r_daisy_weights() -> None:
     )
     gower = Gower(cfg).fit(df)
 
-    n = len(df)
     matrix = gower.matrix(df)
 
     assert matrix.shape == (n, n)
@@ -120,7 +126,7 @@ def test_r_daisy_weights() -> None:
 
     r_df[colnames.index("education")] = robjects.r["ordered"](
         r_df[colnames.index("education")],
-        robjects.StrVector(["low", "medium", "high"]),
+        robjects.StrVector(EDUCATION_LEVELS),
     )
 
     r_df[colnames.index("married")] = robjects.r["factor"](
@@ -139,8 +145,15 @@ def test_r_daisy_weights() -> None:
     importr("cluster")
     daisy = robjects.r["daisy"]
 
-    weights = robjects.FloatVector([1, 2, 3, 4, 5, 6])
-    dist_matrix = daisy(r_df, metric="gower", weights=weights)
+    type_list = robjects.ListVector(
+        {
+            "asymm": robjects.StrVector(["infected"]),
+            "symm": robjects.StrVector(["married"]),
+        },
+    )
+
+    r_weights = robjects.FloatVector([1, 2, 3, 4, 5, 6])
+    dist_matrix = daisy(r_df, metric="gower", type=type_list, weights=r_weights)
 
     as_matrix = robjects.r["as.matrix"]
     r_matrix = as_matrix(dist_matrix)
@@ -151,4 +164,6 @@ def test_r_daisy_weights() -> None:
         cast("np.ndarray", np_matrix),
         cast("np.ndarray", matrix),
         atol=1e-6,
+    ), (
+        f"Matrices differ (seed={random_seed}, n={n}), max diff={np.max(np.abs(matrix - np_matrix))}"
     )

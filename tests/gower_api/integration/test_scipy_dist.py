@@ -1,33 +1,16 @@
 from typing import cast
 
 import numpy as np
-import pandas as pd
-from sklearn.metrics import pairwise_distances
+from scipy.spatial.distance import pdist, squareform
 
 from gower_metric import Config, Gower
-
-DTYPE = np.float64
+from tests.conftest import generate_adult_like_df
 
 
 def test_scikit_learn_paiwise_distances() -> None:
     n_rows = 500
-    df = pd.read_csv("data/files/adult.csv").head(n_rows)
-
-    df = df[
-        [
-            "age",
-            "educational-num",
-            "race",
-            "gender",
-            "hours-per-week",
-            "relationship",
-            "occupation",
-            "education",
-            "workclass",
-        ]
-    ]
-
-    df = df.replace(to_replace="?", value=np.nan)
+    rng = np.random.default_rng(seed=42)
+    df = generate_adult_like_df(n_rows, rng)
 
     feature_types: dict[int | str, str] = {
         "age": "ratio_scale_interval",
@@ -43,28 +26,28 @@ def test_scikit_learn_paiwise_distances() -> None:
 
     cfg = Config(
         feature_types=feature_types,
-        data_type=DTYPE,
     )
     gower = Gower(cfg).fit(df)
-    transformed_df = gower.transform(df)
 
-    matrix_scikit = pairwise_distances(
-        transformed_df,
-        metric=gower,
-        n_jobs=-1,
-        ensure_all_finite=False,
-    )
+    X = df.to_numpy()
 
-    matrix_gower = gower.matrix(transformed_df, backend="loky")
+    def _gower_distance(x, y):
+        """Compute Gower distance between two vectors."""
+        return gower(x, y)
 
-    assert matrix_scikit.shape == (n_rows, n_rows), (
+    array_scipy = pdist(X, metric=_gower_distance)
+    matrix_scipy = squareform(array_scipy)
+
+    matrix_gower = gower.matrix(X, backend="loky")
+
+    assert matrix_scipy.shape == (n_rows, n_rows), (
         "The shape of the pairwise distance matrix is incorrect."
     )
     assert matrix_gower.shape == (n_rows, n_rows), (
         "The shape of the custom pairwise distance matrix is incorrect."
     )
     assert np.allclose(
-        cast("np.ndarray", matrix_scikit),
+        cast("np.ndarray", matrix_scipy),
         cast("np.ndarray", matrix_gower),
         rtol=1e-5,
         atol=1e-8,

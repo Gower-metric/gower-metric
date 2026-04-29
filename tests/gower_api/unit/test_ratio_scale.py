@@ -1,6 +1,7 @@
 import itertools
 
 import numpy as np
+import pandas as pd
 import pytest
 
 from gower_metric import Config, Gower
@@ -16,15 +17,12 @@ def test_ratio_scale_range_ndarray() -> None:
     )
     gower = Gower(cfg).fit(data)
 
-    # Range: max - min = 3 - 1 = 2 -> so matematically it will be |x - y| / 2
-
-    # 1, 2, 3, 1
     expected = np.array(
         [
-            [0.0, 0.5, 1.0, 0.0],  # 1
-            [0.5, 0.0, 0.5, 0.5],  # 2
-            [1.0, 0.5, 0.0, 1.0],  # 3
-            [0.0, 0.5, 1.0, 0.0],  # 1
+            [0.0, 0.5, 1.0, 0.0],
+            [0.5, 0.0, 0.5, 0.5],
+            [1.0, 0.5, 0.0, 1.0],
+            [0.0, 0.5, 1.0, 0.0],
         ],
         dtype=float,
     )
@@ -33,6 +31,20 @@ def test_ratio_scale_range_ndarray() -> None:
         for j in range(data.shape[0]):
             dist = gower(data[i], data[j])
             assert pytest.approx(dist, rel=1e-6) == expected[i, j]
+
+
+def test_ratio_scale_range_pandas() -> None:
+    data = pd.DataFrame({"value": [1.0, 2.0, 3.0, 1.0]})
+
+    cfg = Config(
+        feature_types={"value": "ratio_scale_interval"},
+        scale_method="range",
+    )
+    gower = Gower(cfg).fit(data)
+
+    assert pytest.approx(gower(data.iloc[0], data.iloc[1]), rel=1e-6) == 0.5
+    assert pytest.approx(gower(data.iloc[0], data.iloc[2]), rel=1e-6) == 1.0
+    assert pytest.approx(gower(data.iloc[0], data.iloc[3]), rel=1e-6) == 0.0
 
 
 def test_ratio_scale_kde_window_h() -> None:

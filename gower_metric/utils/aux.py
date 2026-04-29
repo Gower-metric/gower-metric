@@ -16,15 +16,16 @@ def all_ones_off_diagonal(X: pd.DataFrame | np.ndarray) -> bool:
         TypeError: If X not a DataFrame or ndarray.
 
     Example:
+        >>> import pandas as pd
         >>> from sklearn.metrics import pairwise_distances
         >>> from gower_metric import Config, Gower
         >>> from gower_metric.utils.aux import all_ones_off_diagonal
         >>> data = pd.DataFrame({
-        ...     'feature1': [[1.0], [2.0], [3.0], [4.0]],
+        ...     'feature1': [1.0, 2.0, 3.0, 4.0],
         ...     'feature2': ['A', 'B', 'A', 'C'],
         ... })
         >>> cfg = Config(
-        ...     feature_types={0: 'numeric_interval', 1: 'categorical_nominal'},
+        ...     feature_types={0: 'numeric', 1: 'categorical_nominal'},
         ... )
         >>> gower = Gower(cfg).fit(data)
         >>> transformed_data = gower.transform(data)

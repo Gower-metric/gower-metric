@@ -1,0 +1,58 @@
+import numpy as np
+import pandas as pd
+import pytest
+
+from gower_metric import Config, Gower
+from tests.gower_api.precision.conftest import BaseTest
+
+
+class TestCategoricalNominal(BaseTest):
+    def test_categorical_nominal_ndarray(self) -> None:
+        data = np.array([["A"], ["B"], ["C"], ["A"]], dtype=object)
+        cfg = Config(
+            feature_types={0: "categorical_nominal"},
+            data_type=self.dtype,
+        )
+        gower = Gower(cfg).fit(data)
+
+        # A, B, C, A
+        expected = np.array(
+            [
+                [0.0, 1.0, 1.0, 0.0],  # A
+                [1.0, 0.0, 1.0, 1.0],  # B
+                [1.0, 1.0, 0.0, 1.0],  # C
+                [0.0, 1.0, 1.0, 0.0],  # A
+            ],
+            dtype=self.dtype,
+        )
+
+        for i in range(data.shape[0]):
+            for j in range(data.shape[0]):
+                xi = data[i]
+                xj = data[j]
+                dist = gower(xi, xj)
+                assert pytest.approx(dist, rel=1e-6) == expected[i, j]
+
+    def test_categorical_nominal_pandas(self) -> None:
+        df = pd.DataFrame({"color": ["red", "blue", "green", "red"]})
+        cfg = Config(
+            feature_types={"color": "categorical_nominal"},
+            data_type=self.dtype,
+        )
+        gower = Gower(cfg).fit(df)
+
+        # red, blue, green, red
+        expected = np.array(
+            [
+                [0.0, 1.0, 1.0, 0.0],  # red
+                [1.0, 0.0, 1.0, 1.0],  # blue
+                [1.0, 1.0, 0.0, 1.0],  # green
+                [0.0, 1.0, 1.0, 0.0],  # red
+            ],
+            dtype=self.dtype,
+        )
+
+        for i in df.index:
+            for j in df.index:
+                dist = gower(df.loc[i], df.loc[j])
+                assert pytest.approx(dist, rel=1e-6) == expected[i, j]

@@ -14,6 +14,7 @@ def knn_bandwidth(x: np.ndarray, k: int | None = None) -> float:
 
     """
     x = np.sort(np.asarray(x, dtype=float))
+    x = x[~np.isnan(x)]
     n = x.size
 
     if n <= 1:

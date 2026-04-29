@@ -1,31 +1,46 @@
-import math
 from collections import Counter
 from collections.abc import Sequence
 from typing import Any
 
 import numpy as np
+import pandas as pd
 
 
 def map_ordered_values(
     ordered_values: Sequence[Any] | np.ndarray,
+    data_type: type[np.floating] = np.float32,
 ) -> tuple[dict[Any, int], int | None, int | None]:
-    """Map consequtive integers to passed ordered values.
+    """Map consecutive integer ranks to passed ordered values.
+
+    The returned mapping is lookup-ready for both raw user values (e.g. strings)
+    and post-``Gower.transform`` numeric ranks — callers can feed either form
+    into ``categorical_ordinal_component`` without post-processing the map.
 
     Args:
-        ordered_values (Sequence[Any] | np.ndarray): A defined sequence of categorical values.
+        ordered_values (Sequence[Any] | np.ndarray): A defined sequence of
+            categorical values in raw form.
+        data_type (type[np.floating]): Floating dtype used by ``OrdinalEncoder``
+            in the Gower pipeline. Encoded-form keys are inserted with this
+            dtype so lookups with transformed columns succeed without casting.
 
     Returns:
         tuple[dict[Any, int], int | None, int | None]:
-            - ranks_mapping: A dictionary mapping each unique value to its rank.
-            - min_rank: The minimum rank (or None if no categories).
-            - max_rank: The maximum rank (or None if no categories).
+            - ranks_mapping: ``{raw_value: rank, data_type(rank): rank, int(rank): rank}``
+              for each position. Values are integer ranks.
+            - min_rank: 0, or None if ``ordered_values`` is empty.
+            - max_rank: ``len(ordered_values) - 1``, or None if empty.
 
     """
-    ranks_mapping = {value: rank for rank, value in enumerate(ordered_values)}
-    min_rank: int | None = 0
-    max_rank: int | None = len(ordered_values) - 1
+    if len(ordered_values) == 0:
+        return {}, None, None
 
-    return ranks_mapping, min_rank, max_rank
+    ranks_mapping: dict[Any, int] = {}
+    for rank, value in enumerate(ordered_values):
+        ranks_mapping[value] = rank
+        ranks_mapping[data_type(rank)] = rank
+        ranks_mapping[int(rank)] = rank
+
+    return ranks_mapping, 0, len(ordered_values) - 1
 
 
 def get_cardinalities_mapping(
@@ -43,31 +58,14 @@ def get_cardinalities_mapping(
             - counts_list: List of counts corresponding to each category value, ordered by sorted category values.
 
     """
-    cleaned = [v for v in column if not (isinstance(v, float) and math.isnan(v))]
+    cleaned = (
+        column[~pd.isna(column)]
+        if isinstance(column, np.ndarray)
+        else [v for v in column if not pd.isna(v)]
+    )
     counts_map: dict[Any, int] = Counter(cleaned)
 
     unique_vals = sorted(counts_map.keys())
     counts_list = [counts_map[val] for val in unique_vals]
 
     return counts_map, counts_list
-
-
-def collect_ordinal_cardinalities(data: np.ndarray) -> list[np.ndarray]:
-    """Process a 2D array of ordinal columns to get counts per level for each column.
-
-    Args:
-        data (np.ndarray): Two-dimensional array with shape (n_samples, n_ordinal_columns).
-            Each column may contain NaN and ordinal categorical values.
-
-    Returns:
-        list[np.ndarray]):
-            - ordinals_cardinality:
-                A list where each element is a 1D NumPy array of integer counts. Counts[i] is the number of occurrences of the i-th sorted category in that column.
-
-    """
-    ordinals_cardinality: list[np.ndarray] = []
-    for i in range(data.shape[1]):
-        column = data[:, i]
-        _, counts_list = get_cardinalities_mapping(column)
-        ordinals_cardinality.append(np.array(counts_list, dtype=int))
-    return ordinals_cardinality

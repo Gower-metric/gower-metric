@@ -1,7 +1,7 @@
 import sys
 from pathlib import Path
 
-sys.path.insert(0, Path("..").resolve())
+sys.path.insert(0, str(Path("..").resolve()))
 
 project = "Gower-metric"
 copyright = "2025 & 2026, gower-metric developers"  # noqa: A001
@@ -58,7 +58,7 @@ html_theme_options = {
     "navigation_with_keys": True,
 }
 
-html_sidebars = {
+html_sidebars: dict[str, list[str]] = {
     "metric_description": [],
 }
 
