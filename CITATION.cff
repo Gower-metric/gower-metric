@@ -1,0 +1,17 @@
+cff-version: 1.2.0
+title: gower-metric
+message: >-
+  If you use this software, please cite it using the
+  metadata from this file.
+type: software
+authors:
+  - given-names: Bartłomiej
+    family-names: Kruczek
+  - given-names: Marcin
+    family-names: Wardyński
+repository-code: 'https://github.com/Gower-metric/gower-metric'
+abstract: >-
+  Distance for mixed-type variables derived as the
+  complement of the Gower’s similarity coefficient
+license: MIT
+version: 0.1.0

@@ -2,6 +2,9 @@
 __pycache__/
 *.py[cod]
 *$py.class
+.pip_audit_cache/
+.ruff_cache/
+.tox
 
 # Ignore virtual environment directories
 .venv/
@@ -13,7 +16,10 @@ ENV/
 *.egg-info/
 .eggs/
 build/
+generated/
 dist/
+.pypirc
+.python-version
 
 # Ignore test coverage reports
 htmlcov/

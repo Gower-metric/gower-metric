@@ -1,51 +1,178 @@
-[tool.poetry]
-name = "gowermetric"
+[build-system]
+build-backend = "setuptools.build_meta"
+requires = ["setuptools", "wheel"]
+
+[project]
+name = "gower-metric"
 version = "0.1.0"
-description = ""
-authors = ["Arch4ngel21 <adammichal657@gmail.com>"]
+dependencies = [
+    "joblib>=1.5.1",
+    "numpy>=2.2.6",
+    "pandas>=2.3.0",
+    "pydantic>=2.12.5",
+    "scikit-learn>=1.7.2",
+    "scipy>=1.15.3",
+    "tqdm>=4.67.1",
+]
+requires-python = ">=3.10, <3.15"
+authors = [
+    {name = "Arch4ngel21", email = "adammichal657@gmail.com"},
+    {name = "Bartłomiej Kruczek", email = "kruczek.bartlomiej@gmail.com"},
+    {name = "Marcin Wardyński"},
+]
+maintainers = [
+    {name = "Bartłomiej Kruczek", email = "kruczek.bartlomiej@gmail.com"},
+]
+description = "A Python implementation of the Gower distance metric for mixed data types."
 readme = "README.md"
-license = "MIT"
-packages = [
-    { include = "gowermetric" }
+license-files = ["LICENSE.txt"]
+keywords = ["gower", "mixed-data", "machine-learning"]
+classifiers = [
+    "Intended Audience :: Information Technology",
+    "Intended Audience :: Science/Research",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3.14",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
+    "Topic :: Scientific/Engineering :: Information Analysis",
+    "Topic :: Software Development :: Libraries :: Python Modules",
+    "Typing :: Typed",
 ]
 
-[tool.poetry.dependencies]
-python = "^3.12"
+[project.urls]
+Documentation = "https://gower-metric.readthedocs.io/en/latest/"
+Repository = "https://github.com/Gower-metric/gower-metric"
+Issues = "https://github.com/Gower-metric/gower-metric/issues"
+Changelog = "https://github.com/Gower-metric/gower-metric/blob/master/CHANGELOG.md"
 
-numpy = "^2.0.1"
-scikit-learn = "^1.5.2"
-pandas = "^2.2.3"
-matplotlib = "^3.9.2"
-tqdm = "^4.66.6"
-Cython = "^3.0.10"
-ica = "^0.5"
-numba = "^0.60.0"
-KDEpy = "^1.1.11"
-optuna = "^4.1.0"
-hdbscan = "^0.8.39"
+[tool.setuptools.packages.find]
+include = ["gower_metric*"]
 
-[tool.poetry.dev-dependencies]
-black = "^22.8.0"
-unittest2 = "^1.1.0"
-pytest = "^8.3.3"
+[tool.setuptools]
+include-package-data = true
 
-[tool.black]
-line-length = 79
-include = '\.pyi?$'
-exclude = '''
-/(
-    \.git
-  | \.hg
-  | \.mypy_cache
-  | \.tox
-  | \.venv
-  | _build
-  | buck-out
-  | build
-  | dist
-)/
-'''
+[tool.uv.workspace]
+members = [
+    ".",
+]
 
-[build-system]
-requires = ["poetry-core"]
-build-backend = "poetry.core.masonry.api"
+[tool.uv.sources]
+gower-metric = { workspace = true }
+
+[tool.uv]
+override-dependencies = [
+    "urllib3>=2.6.3",
+    "filelock>=3.20.3",
+    "pip>=26.0",
+    "setuptools>=78.1.1",
+    "fonttools>=4.60.2",
+    "requests>=2.33.0", 
+]
+
+[dependency-groups]
+dev = [
+    "check-manifest>=0.50",
+    "gower-metric",
+    "ipykernel>=6.30.1",
+    "joblib>=1.5.1",
+    "matplotlib>=3.10.7",
+    "mypy>=1.17.0",
+    "numpy>=2.2.6",
+    "pandas>=2.3.1",
+    "pip>=25.2",
+    "pre-commit>=4.3.0",
+    "pydantic>=2.12.5",
+    "pytest-cov>=7.0.0",
+    "scikit-learn>=1.7.1",
+    "tqdm>=4.67.1",
+    "twine>=6.2.0",
+]
+
+tests = [
+    "scipy>=1.15.3",
+    "scikit-learn>=1.7.1",
+    "pytest>=8.4.1",
+    "pytest-cov>=7.0.0",
+    "setuptools>=80.9.0",
+    "mypy>=1.17.0",
+    "numpy>=2.2.6",
+    "pandas>=2.3.1",
+    "tqdm>=4.67.1",
+    "pydantic>=2.12.5",
+]
+
+r_env_tests = [
+    "mypy>=1.17.0",
+    "numpy>=2.2.6",
+    "openpyxl>=3.1.5",
+    "pandas>=2.3.1",
+    "pydantic>=2.12.5",
+    "pytest>=8.4.1",
+    "rpy2>=3.6.1",
+    "scikit-learn>=1.7.1",
+    "scipy>=1.15.3",
+    "setuptools>=80.9.0",
+    "tqdm>=4.67.1",
+]
+
+docs = [
+    "pydata-sphinx-theme>=0.16.1",
+    "sphinx>=8.1.3",
+    "sphinx-autobuild>=2024.10.3",
+    "sphinx-copybutton>=0.5.2",
+    "sphinx-new-tab-link>=0.8.1",
+    "sphinx-pydantic>=0.1.1",
+    "sphinx-rtd-theme>=3.0.2",
+]
+
+benchmark = [
+    "gower-metric",
+    "joblib>=1.5.2",
+    "matplotlib>=3.10.7",
+    "numpy>=2.2.6",
+    "openml>=0.15.1",
+    "openpyxl>=3.1.5",
+    "pandas>=2.3.3",
+    "pydantic>=2.12.5",
+    "scikit-learn>=1.7.2",
+    "seaborn>=0.13.2",
+    "tqdm>=4.67.1",
+]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = ["test_*.py"]
+python_classes = ["Test*"]
+python_functions = ["test_*"]
+addopts = [
+    "-v",
+    "--strict-markers",
+    "--tb=short",
+    "--cov",
+    "--cov-report=term-missing",
+]
+
+[tool.coverage.run]
+source = ["gower_metric"]
+omit = [
+    "*/tests/*",
+    "*/__pycache__/*",
+    "*/.*",
+]
+branch = true
+
+[tool.coverage.report]
+precision = 2
+show_missing = true
+skip_covered = false
+exclude_lines = [
+    "pragma: no cover",
+    "def __repr__",
+    "raise AssertionError",
+    "raise NotImplementedError",
+    "if __name__ == .__main__.:",
+    "if TYPE_CHECKING:",
+    "@abstractmethod",
+]

@@ -1,0 +1,82 @@
+include = [
+    "pyproject.toml",
+    "comparison/**/*.py",
+    "examples/**/*.py",
+    "examples/**/*.ipynb",
+    "gower_metric/**/*.py",
+    "tests/**/*.py",
+    "benchmarks/**/*.py",
+    "comparison/**/*.ipynb",
+    "comparison/**/**/*.ipynb",
+    ".github/README.md",
+    "MANIFEST.in",
+    "LICENSE.txt",
+    ".github/CONTRIBUTING.md",
+    "CHANGELOG.md",
+    ".github/CODE_OF_CONDUCT.md",
+    ".github/SECURITY.md",
+    ".github/SUPPORT.md",
+    "docs/**/*.rst",
+]
+
+[lint]
+select = ["ALL"]
+ignore = [
+    "N802",
+    "N803",
+    "N806",
+    "D100",
+    "D104",
+    "FBT001",
+    "FBT002",
+    "ANN401",
+]
+
+[lint.per-file-ignores]
+"examples/**" = [
+    "D101",
+    "D103",
+    "ERA001", # commented code sections
+]
+
+"tests/**" = [
+    "D101",
+    "D102",
+    "D103",
+    "S101",
+    "SLF001",
+    "PT011",
+    "PTH100",
+    "PTH118",
+    "PTH120",
+    "ANN001",
+    "ANN202",
+    "PLR2004",
+]
+
+"benchmarks/**" = [
+    "D101",
+    "D103",
+    "ANN001",
+    "ANN201",
+    "ANN202",
+    "FBT003",
+    "S110",
+    "PERF203",
+    "BLE001",
+]
+
+"comparison/**" = [
+    "ANN001",
+]
+
+[lint.pycodestyle]
+max-line-length = 200
+
+[lint.mccabe]
+max-complexity = 20
+
+[lint.pylint]
+max-branches = 20
+max-statements = 75
+max-args = 10

@@ -1,13 +1,17 @@
 name: Tests & checks
 
-on: [push, workflow_dispatch]
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
 
 jobs:
   ci:
     strategy:
       fail-fast: true
       matrix:
-        python-version: ["3.12"]
+        python-version: ["3.10", "3.11", "3.12", "3.13", "3.14"]
         os: [macos-latest, ubuntu-latest, windows-latest]
     runs-on: ${{ matrix.os }}
     steps:
@@ -18,20 +22,59 @@ jobs:
         with:
           python-version: ${{ matrix.python-version }}
 
-      - name: Install poetry
-        run: pipx install poetry --python python${{ matrix.python-version }}
+      - name: Install uv
+        uses: astral-sh/setup-uv@v6
 
-      - uses: actions/cache@v3
+      - uses: actions/cache@v4
         name: Define a venv cache
         with:
           path: ./.venv
-          key: ${{ matrix.os }}-venv-${{ hashFiles('**/poetry.lock') }}
+          key: ${{ matrix.os }}-venv-${{ hashFiles('**/uv.lock') }}
 
       - name: Install the project dependencies
-        run:  |
-            poetry sync
+        run: uv sync --group tests
 
+      - name: Run tests with pytest
+        run: uv run pytest tests/gower_api
+  
+  comparison_with_R:
+    strategy:
+      fail-fast: true
+      matrix:
+        python-version: ["3.10"]
+        os: [ubuntu-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v6
+  
+      - uses: actions/cache@v4
+        name: Define a venv cache
+        with:
+          path: ./.venv
+          key: ${{ matrix.os }}-venv-${{ hashFiles('**/uv.lock') }}
+
+      - uses: r-lib/actions/setup-r@v2
+        with:
+          r-version: '4.5.1'
+          
+      - name: Install R packages
+        run: |
+          Rscript -e "if(!require(cluster)) install.packages('cluster')"
+          Rscript -e "if(!require(drat)) install.packages('drat')"
+          Rscript -e "drat::addRepo('markvanderloo')"
+          Rscript -e "install.packages('gower',type='source')"
+
+      - name: Install the project dependencies
+        run: uv sync --group r_env_tests
 
       - name: Run tests with pytest
         run: |
-            poetry run pytest tests/UnitTestsGowerMetric.py tests/test_metrics.py
+            uv run pytest tests/r_comparison

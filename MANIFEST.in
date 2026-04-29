@@ -1,0 +1,27 @@
+include README.md
+include LICENSE.txt
+include pyproject.toml
+include uv.lock
+include requirements.txt
+
+recursive-include gower_metric *.py
+
+exclude MANIFEST.in
+exclude .github/CODE_OF_CONDUCT.md
+exclude CHANGELOG.md
+exclude .readthedocs.yaml
+exclude .github/CONTRIBUTING.md
+exclude .github/SECURITY.md
+exclude .github/SUPPORT.md
+exclude mypy.ini
+exclude tox.toml
+exclude ruff.toml
+exclude .pre-commit-config.yaml
+exclude CITATION.cff
+
+recursive-exclude benchmarks *
+recursive-exclude comparison *
+recursive-exclude examples *
+recursive-exclude docs *
+recursive-exclude tests *
+recursive-exclude data *

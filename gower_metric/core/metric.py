@@ -1,0 +1,900 @@
+import warnings
+from typing import TYPE_CHECKING, Any, cast
+
+import numpy as np
+import pandas as pd
+import scipy.sparse
+
+from gower_metric.core.config import (
+    Config,
+    OutOfRangeStrategy,
+    SkipOutOfRangeValidation,
+)
+from gower_metric.core.exceptions import IllegalStateError
+from gower_metric.distances.binary_asymmetric import (
+    binary_asymmetric_component,
+)
+from gower_metric.distances.binary_symmetric import binary_symmetric_component
+from gower_metric.distances.categorical_nominal import categorical_nominal_component
+from gower_metric.distances.categorical_ordinal import categorical_ordinal_component
+from gower_metric.distances.numeric_interval import numeric_component
+from gower_metric.distances.ratio_scale_interval import ratio_scale_component
+from gower_metric.utils.binary_ut import (
+    fit_binary_features,
+)
+from gower_metric.utils.cat_ord_ut import (
+    get_cardinalities_mapping,
+    map_ordered_values,
+)
+from gower_metric.utils.categorical_ut import (
+    fit_nominal_features,
+    fit_ordinal_features,
+)
+from gower_metric.utils.kde_types.silverman import silverman_bandwidth
+from gower_metric.utils.knn_bandwidth import knn_bandwidth
+from gower_metric.utils.matrix.calculate_matrix import get_full_matrix
+from gower_metric.utils.ranges import (
+    enforce_oor_policy,
+    get_numeric_bounds,
+    get_numeric_ranges,
+)
+from gower_metric.utils.to_array import to_array
+from gower_metric.utils.transforms import (
+    transform_binary_asymmetric,
+    transform_binary_symmetric,
+    transform_categorical_nominal,
+    transform_categorical_ordinal,
+)
+from gower_metric.weights.weights import get_weights
+
+if TYPE_CHECKING:
+    from sklearn.preprocessing import OrdinalEncoder
+
+
+class Gower:
+    """Compute Gower distance for mixed data types."""
+
+    def __init__(
+        self,
+        config: Config,
+    ) -> None:
+        """Initialize Gower with passed Config object.
+
+        Args:
+            config (Config): Configuration object containing all parameters needed for initialization.
+
+        Raises:
+            ValueError: If feature_types is not a non-empty dict.
+
+        Example:
+            >>> import pandas as pd
+            >>> from gower_metric import Config, Gower
+            >>> data = pd.DataFrame({
+            ...     'feature1': [1.0, 2.0, 3.0, 4.0],
+            ...     'feature2': ['A', 'B', 'A', 'C'],
+            ...     'feature3': [0, 1, 0, 1],
+            ... })
+            >>> feature_types = {
+            ...     'feature1': 'numeric',
+            ...     'feature2': 'categorical_nominal',
+            ...     'feature3': 'binary_symmetric',
+            ... }
+            >>> feature_weights = {
+            ...     0: 1.0,
+            ...     1: 2.0,
+            ...     2: 1.0,
+            ... }
+            >>> cfg = Config(
+            ...     feature_types=feature_types,
+            ...     feature_weights=feature_weights,
+            ... )
+            >>> gower = Gower(cfg)
+
+        """
+        self.feature_types = config.feature_types
+
+        self.feature_weights = config.feature_weights
+
+        self.data_type: type[np.floating] = (
+            config.data_type if config.data_type is not None else np.float32
+        )
+
+        self.numeric_indices: list[int] = []
+        self.categorical_nominal_indices: list[int] = []
+        self.categorical_ordinal_indices: list[int] = []
+        self.binary_asymmetric_indices: list[int] = []
+        self.binary_symmetric_indices: list[int] = []
+        self.ratio_scale_indices: list[int] = []
+        self.ratio_ranges: np.ndarray = np.array([])
+        self.numeric_ranges: np.ndarray = np.array([])
+        self.numeric_mins: np.ndarray = np.array([])
+        self.numeric_maxs: np.ndarray = np.array([])
+        self.ratio_mins: np.ndarray = np.array([])
+        self.ratio_maxs: np.ndarray = np.array([])
+
+        self.scale_method: str = config.scale_method
+
+        self.missing_strategy: str = config.missing_strategy
+        self.categorical_ordinal_values_order = config.categorical_ordinal_values_order
+
+        self.categorical_ordinal_calculation_type = (
+            config.categorical_ordinal_calculation_type
+        )
+
+        self.scale_window: str | None = config.scale_window
+        self.scale_window_type: str | None = config.scale_window_type
+
+        self.k_neighbors = config.k_neighbors
+
+        self.conditional_distances = config.conditional_distances
+
+        self.conditional_distances_threshold_coeff = (
+            config.conditional_distances_threshold_coeff
+        )
+
+        self.handle_unseen_binary_asymmetric = config.handle_unseen_binary_asymmetric
+        self.binary_asymmetric_value_order = config.binary_asymmetric_value_order
+
+        self.handle_unseen_binary_symmetric = config.handle_unseen_binary_symmetric
+        self.binary_symmetric_value_order = config.binary_symmetric_value_order
+
+        self.handle_unseen_categorical_nominal = (
+            config.handle_unseen_categorical_nominal
+        )
+        self.handle_unseen_categorical_ordinal = (
+            config.handle_unseen_categorical_ordinal
+        )
+
+        self.out_of_range: OutOfRangeStrategy = config.out_of_range
+        self.skip_oor: SkipOutOfRangeValidation = config.skip_out_of_range_validation
+
+        self._is_fitted: bool = False
+        self._skip_oor_check: bool = False
+        self.binary_symmetric_metadata: dict[int, dict[str, Any]] = {}
+        self.binary_asymmetric_metadata: dict[int, dict[str, Any]] = {}
+        self.nominal_metadata: dict[int, OrdinalEncoder] = {}
+        self.ordinal_metadata: dict[int, OrdinalEncoder] = {}
+
+    def fit(self, X: pd.DataFrame | np.ndarray) -> "Gower":  # noqa: PLR0912
+        """Fit the Gower model by computing numeric feature ranges.
+
+        Args:
+            X (np.ndarray | pd.DataFrame): shape of (n_samples, n_features).
+                For DataFrame inputs, column names in feature_types are converted to indices.
+                Sparse matrices are not supported as direct input.
+
+        Returns:
+            Gower: The fitted instance.
+
+        Raises:
+            ValueError: For incorrect input data and configuration parameters.
+            ValueError: If input data is already transformed.
+
+        Example:
+            >>> import pandas as pd
+            >>> from gower_metric import Config, Gower
+            >>> data = pd.DataFrame({
+            ...     'feature1': [1.0, 2.0, 3.0, 4.0],
+            ...     'feature2': ['A', 'B', 'A', 'C'],
+            ...     'feature3': [0, 1, 0, 1],
+            ... })
+            >>> feature_types = {
+            ...     'feature1': 'numeric',
+            ...     'feature2': 'categorical_nominal',
+            ...     'feature3': 'binary_symmetric',
+            ... }
+            >>> feature_weights = {
+            ...     0: 1.0,
+            ...     1: 2.0,
+            ...     2: 1.0,
+            ... }
+            >>> cfg = Config(
+            ...     feature_types=feature_types,
+            ...     feature_weights=feature_weights,
+            ... )
+            >>> gower = Gower(cfg).fit(data)
+
+        """
+        if scipy.sparse.issparse(X):
+            msg = "Sparse matrices are currently not supported as direct input. Please convert to dense."
+            raise ValueError(msg)
+
+        if isinstance(X, pd.DataFrame):
+            cols = list(X.columns)
+
+            ft: dict[int, str] = {}
+            for k, t in self.feature_types.items():
+                if isinstance(k, str):
+                    if k not in cols:
+                        msg = f"Column name '{k}' not found in DataFrame."
+                        raise ValueError(msg)
+                    ft[cols.index(k)] = t
+                else:
+                    ft[k] = t
+            self.feature_types = ft  # type: ignore[assignment]
+
+            for order_dict, order_name in [
+                (self.categorical_ordinal_values_order, "categorical ordinal"),
+                (self.binary_asymmetric_value_order, "binary asymmetric"),
+                (self.binary_symmetric_value_order, "binary symmetric"),
+            ]:
+                if order_dict:
+                    for k in list(order_dict.keys()):
+                        if isinstance(k, str):
+                            if k not in cols:  # pragma: no cover
+                                msg = f"Column name '{k}' specified for {order_name} values not found in DataFrame."
+                                raise ValueError(msg)
+                            order_dict[cols.index(k)] = order_dict.pop(k)
+
+        self.numeric_indices = [
+            i
+            for i, t in self.feature_types.items()
+            if isinstance(i, int) and t == "numeric"
+        ]
+        self.categorical_nominal_indices = [
+            i
+            for i, t in self.feature_types.items()
+            if isinstance(i, int) and t == "categorical_nominal"
+        ]
+        self.categorical_ordinal_indices = [
+            i
+            for i, t in self.feature_types.items()
+            if isinstance(i, int) and t == "categorical_ordinal"
+        ]
+        self.binary_asymmetric_indices = [
+            i
+            for i, t in self.feature_types.items()
+            if isinstance(i, int) and t == "binary_asymmetric"
+        ]
+        self.binary_symmetric_indices = [
+            i
+            for i, t in self.feature_types.items()
+            if isinstance(i, int) and t == "binary_symmetric"
+        ]
+        self.ratio_scale_indices = [
+            i
+            for i, t in self.feature_types.items()
+            if isinstance(i, int) and t == "ratio_scale_interval"
+        ]
+        arr = (
+            X.to_numpy(dtype=object)
+            if isinstance(X, pd.DataFrame)
+            else np.array(X, dtype=object)
+        )
+
+        self.n_feats = arr.shape[1]
+
+        int_keys = [k for k in self.feature_types if isinstance(k, int)]
+        if int_keys:
+            max_idx = max(int_keys)
+            if max_idx >= self.n_feats:
+                msg = (
+                    f"feature_types references column index {max_idx}, "
+                    f"but data has only {self.n_feats} columns."
+                )
+                raise ValueError(msg)
+
+        if self.conditional_distances:
+            self.p_cat = (
+                len(self.binary_symmetric_indices)
+                + len(self.binary_asymmetric_indices)
+                + len(self.categorical_nominal_indices)
+                + len(self.categorical_ordinal_indices)
+            )
+
+        if self.ratio_scale_indices:
+            self.ratio_ranges = get_numeric_ranges(
+                arr,
+                self.ratio_scale_indices,
+                self.scale_method,
+            )
+            self.ratio_mins, self.ratio_maxs = get_numeric_bounds(
+                arr,
+                self.ratio_scale_indices,
+            )
+        else:
+            self.ratio_ranges = np.array([])
+            self.ratio_mins = np.array([])
+            self.ratio_maxs = np.array([])
+
+        if self.numeric_indices:
+            self.numeric_ranges = get_numeric_ranges(
+                arr,
+                self.numeric_indices,
+                self.scale_method,
+            )
+            self.numeric_mins, self.numeric_maxs = get_numeric_bounds(
+                arr,
+                self.numeric_indices,
+            )
+        else:
+            self.numeric_ranges = np.array([])
+            self.numeric_mins = np.array([])
+            self.numeric_maxs = np.array([])
+
+        if self.scale_window == "kde" and self.scale_window_type == "silverman":
+            self._h_ratio = np.array(
+                [
+                    silverman_bandwidth(arr[:, j].astype(float))
+                    for j in self.ratio_scale_indices
+                ],
+                dtype=float,
+            )
+            self._h_numeric = np.array(
+                [
+                    silverman_bandwidth(arr[:, j].astype(float))
+                    for j in self.numeric_indices
+                ],
+                dtype=float,
+            )
+        elif self.scale_window == "kNN":
+            self._h_ratio = np.array(
+                [
+                    knn_bandwidth(arr[:, j].astype(float), k=self.k_neighbors)
+                    for j in self.ratio_scale_indices
+                ],
+                dtype=float,
+            )
+            self._h_numeric = np.array(
+                [
+                    knn_bandwidth(arr[:, j].astype(float), k=self.k_neighbors)
+                    for j in self.numeric_indices
+                ],
+                dtype=float,
+            )
+        else:
+            self._h_ratio = np.empty(0)
+            self._h_numeric = np.empty(0)
+
+        self.cat_ord_metadata: dict[int | str, dict[str, Any]] = {}
+        for j in self.categorical_ordinal_indices:
+            col = arr[:, j]
+            if self.categorical_ordinal_values_order is None:
+                msg = "Categorical ordinal values order is missing"
+                raise ValueError(msg)
+            ranks_map, mn, mx = map_ordered_values(
+                self.categorical_ordinal_values_order[j],
+                data_type=self.data_type,
+            )
+            counts_map, _ = get_cardinalities_mapping(col)
+            counts_arr = np.asarray(
+                [
+                    counts_map.get(v, 0)
+                    for v in self.categorical_ordinal_values_order[j]
+                ],
+                dtype=float,
+            )
+
+            self.cat_ord_metadata[j] = {
+                "ranks": ranks_map,
+                "denom": (mx - mn) if mn is not None and mx is not None else 0,
+                "counts": counts_arr,
+                "min": mn,
+                "max": mx,
+            }
+
+        self.weights = get_weights(
+            n_features=self.n_feats,
+            config=self.feature_weights,
+        )
+
+        self.binary_symmetric_metadata = fit_binary_features(
+            arr,
+            self.binary_symmetric_indices,
+            binary_value_order=self.binary_symmetric_value_order,  # type: ignore[arg-type]
+        )
+
+        self.binary_asymmetric_metadata = fit_binary_features(
+            arr,
+            self.binary_asymmetric_indices,
+            binary_value_order=self.binary_asymmetric_value_order,  # type: ignore[arg-type]
+        )
+
+        self.nominal_metadata = fit_nominal_features(
+            arr,
+            self.categorical_nominal_indices,
+            self.data_type,
+            handle_unseen=self.handle_unseen_categorical_nominal,
+        )
+
+        self.ordinal_metadata = fit_ordinal_features(
+            arr,
+            self.categorical_ordinal_indices,
+            self.categorical_ordinal_values_order,
+            self.data_type,
+            handle_unseen=self.handle_unseen_categorical_ordinal,
+        )
+
+        self._is_fitted = True
+        return self
+
+    def transform(self, X: pd.DataFrame | np.ndarray) -> pd.DataFrame | np.ndarray:
+        """Transform the input DataFrame or ndarray to contain only floats.
+
+        Useful when applying 'gower' distance metrics in scikit-learn methods
+        (e.g., KNN) requiring numeric input exclusively.
+
+        Note:
+            - Sparse matrices are not supported.
+            - Model ranges and parameters are NOT updated by this method (it is stateless).
+
+        Args:
+            X (np.ndarray | pd.DataFrame): shape of (n_samples, n_features).
+                For DataFrame inputs, column names in feature_types are converted to indices.
+
+        Returns:
+            X_new: Transformed input data.
+
+        Raises:
+            IllegalStateError: If fit(X) was not performed before calling transform(X).
+            ValueError: For incorrect input data and configuration parameters.
+
+        Example:
+            >>> import pandas as pd
+            >>> from gower_metric import Config, Gower
+            >>> data = pd.DataFrame({
+            ...     'feature1': [1.0, 2.0, 3.0, 4.0],
+            ...     'feature2': ['A', 'B', 'A', 'C'],
+            ...     'feature3': [0, 1, 0, 1],
+            ... })
+            >>> feature_types = {
+            ...     'feature1': 'numeric',
+            ...     'feature2': 'categorical_nominal',
+            ...     'feature3': 'binary_symmetric',
+            ... }
+            >>> cfg = Config(
+            ...     feature_types=feature_types,
+            ... )
+            >>> gower = Gower(cfg).fit(data)
+            >>> data_transformed = gower.transform(data)
+
+        """
+        if not self._is_fitted:
+            msg = "Operation not allowed: model is not fitted"
+            raise IllegalStateError(msg)
+
+        is_df = isinstance(X, pd.DataFrame)
+        if isinstance(X, pd.DataFrame):
+            df: pd.DataFrame = X
+            X_arr = df.to_numpy()
+        else:
+            arr: np.ndarray = X
+            X_arr = np.asarray(arr, dtype=object)
+
+        if not self.skip_oor and not self._skip_oor_check:
+            enforce_oor_policy(
+                np.asarray(X_arr, dtype=object),
+                strategy=self.out_of_range,
+                numeric_indices=self.numeric_indices,
+                numeric_mins=self.numeric_mins,
+                numeric_maxs=self.numeric_maxs,
+                ratio_scale_indices=self.ratio_scale_indices,
+                ratio_mins=self.ratio_mins,
+                ratio_maxs=self.ratio_maxs,
+                stacklevel=2,
+            )
+
+        transformed_columns: list[np.ndarray] = []
+
+        for col_idx_raw, ftype in sorted(self.feature_types.items()):
+            col_idx = int(col_idx_raw)
+
+            if is_df:
+                col_series = cast("pd.Series", df.iloc[:, col_idx])
+                col = col_series.to_numpy()
+            else:
+                col = X_arr[:, col_idx]
+
+            if ftype == "binary_asymmetric":
+                transformed_col = transform_binary_asymmetric(
+                    col=col,
+                    col_idx=col_idx,
+                    metadata=self.binary_asymmetric_metadata[col_idx],
+                    handle_unseen=self.handle_unseen_binary_asymmetric,
+                )
+
+            elif ftype == "binary_symmetric":
+                transformed_col = transform_binary_symmetric(
+                    col=col,
+                    col_idx=col_idx,
+                    metadata=self.binary_symmetric_metadata[col_idx],
+                    handle_unseen=self.handle_unseen_binary_symmetric,
+                )
+
+            elif ftype == "categorical_ordinal":
+                if col_idx not in self.ordinal_metadata:  # pragma: no cover
+                    msg = f"Ordinal metadata missing for column {col_idx}"
+                    raise ValueError(msg)
+
+                transformed_col = transform_categorical_ordinal(
+                    col=col,
+                    col_idx=col_idx,
+                    enc=self.ordinal_metadata[col_idx],
+                    handle_unseen=self.handle_unseen_categorical_ordinal,
+                    data_type=self.data_type,
+                )
+
+            elif ftype == "categorical_nominal":
+                if col_idx not in self.nominal_metadata:  # pragma: no cover
+                    msg = f"Nominal metadata missing for column {col_idx}"
+                    raise ValueError(msg)
+
+                transformed_col = transform_categorical_nominal(
+                    col=col,
+                    col_idx=col_idx,
+                    enc=self.nominal_metadata[col_idx],
+                    handle_unseen=self.handle_unseen_categorical_nominal,
+                    data_type=self.data_type,
+                )
+            else:
+                transformed_col = col.astype(self.data_type)
+
+            transformed_columns.append(transformed_col)
+
+        transformed_data: np.ndarray = np.column_stack(transformed_columns)
+
+        if is_df:
+            return pd.DataFrame(
+                transformed_data,
+                columns=df.columns,
+                index=df.index,
+                dtype=self.data_type,
+            )
+
+        return transformed_data.astype(self.data_type)
+
+    def fit_transform(self, X: pd.DataFrame | np.ndarray) -> pd.DataFrame | np.ndarray:
+        """Fit to data, then transform it.
+
+        Args:
+            X (np.ndarray | pd.DataFrame): shape of (n_samples, n_features).
+                For DataFrame inputs, column names in feature_types are converted to indices.
+
+        Returns:
+            X_new: Transformed input data.
+
+        """
+        self.fit(X)
+        return self.transform(X)
+
+    def __call__(self, a: Any, b: Any) -> np.floating:
+        """Compute the Gower distance between two records.
+
+        Args:
+            a (Any): First record of data.
+            b (Any): Second record of data.
+
+        Returns:
+            np.floating: Gower distance in [0,1], or np.nan if no features are comparable.
+
+        Raises:
+            IllegalStateError: If fit(X) was not called before computing distance.
+
+        Example:
+            >>> import pandas as pd
+            >>> from gower_metric import Config, Gower
+            >>> data = pd.DataFrame({
+            ...     'feature1': [1.0, 2.0, 3.0, 4.0],
+            ...     'feature2': ['A', 'B', 'A', 'C'],
+            ...     })
+            >>> feature_types = {
+            ...     'feature1': 'numeric',
+            ...     'feature2': 'categorical_nominal',
+            ... }
+            >>> cfg = Config(
+            ...     feature_types=feature_types,
+            ... )
+            >>> gower = Gower(cfg).fit(data)
+            >>> distance = gower(data.iloc[0], data.iloc[1])
+
+        """
+        if not self._is_fitted:
+            msg = "Must call .fit(X) before computing distances."
+            raise IllegalStateError(msg)
+
+        x = to_array(a)
+        y = to_array(b)
+        Xn = x.reshape(1, -1)
+        Yn = y.reshape(1, -1)
+
+        if not self.skip_oor and not self._skip_oor_check:
+            enforce_oor_policy(
+                Xn,
+                Yn,
+                strategy=self.out_of_range,
+                numeric_indices=self.numeric_indices,
+                numeric_mins=self.numeric_mins,
+                numeric_maxs=self.numeric_maxs,
+                ratio_scale_indices=self.ratio_scale_indices,
+                ratio_mins=self.ratio_mins,
+                ratio_maxs=self.ratio_maxs,
+            )
+
+        num_w = self.weights[self.numeric_indices]
+        cat_nom_w = self.weights[self.categorical_nominal_indices]
+        cat_ord_w = self.weights[self.categorical_ordinal_indices]
+        bin_asym_w = self.weights[self.binary_asymmetric_indices]
+        bin_sym_w = self.weights[self.binary_symmetric_indices]
+        ratio_w = self.weights[self.ratio_scale_indices]
+
+        bin_asym_sum, bin_asym_count = binary_asymmetric_component(
+            Xn,
+            Yn,
+            self.binary_asymmetric_indices,
+            missing_strategy=self.missing_strategy,
+            weights=bin_asym_w,
+            metadata=self.binary_asymmetric_metadata,
+        )
+
+        bin_sym_sum, bin_sym_count = binary_symmetric_component(
+            Xn,
+            Yn,
+            self.binary_symmetric_indices,
+            missing_strategy=self.missing_strategy,
+            weights=bin_sym_w,
+            metadata=self.binary_symmetric_metadata,
+        )
+
+        cat_nom_sum, cat_nom_count = categorical_nominal_component(
+            Xn,
+            Yn,
+            self.categorical_nominal_indices,
+            missing_strategy=self.missing_strategy,
+            weights=cat_nom_w,
+        )
+
+        cat_ord_sum, cat_ord_count = categorical_ordinal_component(
+            Xn,
+            Yn,
+            self.categorical_ordinal_indices,
+            metadata=self.cat_ord_metadata,
+            missing_strategy=self.missing_strategy,
+            calculation_type=self.categorical_ordinal_calculation_type,
+            weights=cat_ord_w,
+        )
+
+        if self.conditional_distances:
+            cat_sum = 0.0
+            cat_cnt = 0.0
+
+            if self.binary_asymmetric_indices:
+                cat_sum += bin_asym_sum[0, 0]
+                cat_cnt += bin_asym_count[0, 0]
+
+            if self.binary_symmetric_indices:
+                cat_sum += bin_sym_sum[0, 0]
+                cat_cnt += bin_sym_count[0, 0]
+
+            if self.categorical_nominal_indices:
+                cat_sum += cat_nom_sum[0, 0]
+                cat_cnt += cat_nom_count[0, 0]
+
+            if self.categorical_ordinal_indices:
+                cat_sum += cat_ord_sum[0, 0]
+                cat_cnt += cat_ord_count[0, 0]
+
+            if cat_cnt == 0:
+                return self.data_type(np.nan)
+
+            cat_dist = cat_sum / cat_cnt
+            threshold = self.conditional_distances_threshold_coeff / self.p_cat
+
+            if cat_dist > threshold:
+                return self.data_type(1.0)
+
+        num_sum, num_count = numeric_component(
+            Xn,
+            Yn,
+            self.numeric_indices,
+            ranges=self.numeric_ranges,
+            h=self._h_numeric,
+            missing_strategy=self.missing_strategy,
+            weights=num_w,
+            scale_window=self.scale_window,
+        )
+
+        ratio_sum, ratio_count = ratio_scale_component(
+            Xn,
+            Yn,
+            self.ratio_scale_indices,
+            ranges=self.ratio_ranges,
+            h=self._h_ratio,
+            missing_strategy=self.missing_strategy,
+            weights=ratio_w,
+            scale_window=self.scale_window,
+        )
+
+        if self.conditional_distances:
+            total_sum = num_sum + ratio_sum
+            total_count = num_count + ratio_count
+        else:
+            total_sum = (
+                num_sum
+                + cat_nom_sum
+                + cat_ord_sum
+                + bin_asym_sum
+                + bin_sym_sum
+                + ratio_sum
+            )
+            total_count = (
+                num_count
+                + cat_nom_count
+                + cat_ord_count
+                + bin_asym_count
+                + bin_sym_count
+                + ratio_count
+            )
+
+        if total_count[0, 0] == 0:
+            return self.data_type(np.nan)
+
+        return self.data_type(total_sum[0, 0] / total_count[0, 0])
+
+    def similarity(self, a: Any, b: Any) -> np.floating:
+        """Compute the Gower similarity between two records.
+
+        Args:
+            a (Any): First record of data.
+            b (Any): Second record of data.
+
+        Returns:
+            np.floating: Gower similarity in [0,1], defined as 1 - distance(a, b).
+
+        Example:
+            >>> import pandas as pd
+            >>> from gower_metric import Config, Gower
+            >>> data = pd.DataFrame({
+            ...     'feature1': [1.0, 2.0, 3.0, 4.0],
+            ...     'feature2': ['A', 'B', 'A', 'C'],
+            ... })
+            >>> feature_types = {
+            ...     'feature1': 'numeric',
+            ...     'feature2': 'categorical_nominal',
+            ... }
+            >>> cfg = Config(
+            ...     feature_types=feature_types,
+            ... )
+            >>> gower = Gower(cfg).fit(data)
+            >>> similarity = gower.similarity(data.iloc[0], data.iloc[1])
+
+        """
+        return self.data_type(1.0 - self(a, b))
+
+    def matrix(
+        self,
+        X: pd.DataFrame | np.ndarray,
+        data_type: type[np.floating] | None = None,
+        n_jobs: int = -1,
+        verbose: int = 0,
+        matrix_type: str = "distance",
+        convert_to_sparse: bool = False,
+        sparse_type: str = "csr",
+        backend: str = "loky",
+    ) -> (
+        np.ndarray
+        | scipy.sparse.csr_matrix
+        | scipy.sparse.csc_matrix
+        | scipy.sparse.coo_matrix
+    ):
+        """Return symmetric pairwise Gower distance matrix using joblib (parallel).
+
+        Scipy sparse matrices are not supported as direct input.
+
+        Args:
+            X (pd.DataFrame | np.ndarray): shape of (n_samples, n_features).
+            data_type (type[np.floating] | None): data type used for the output distance matrix.
+                If None, uses the data_type from the Gower instance configuration.
+            n_jobs (int): number of parallel jobs to run, -1 means using all processors. Default is -1.
+            verbose (int): whether to show tqdm progress bar. Default is 0 (no progress bar).
+            matrix_type (str): Type of matrix to compute, either 'distance' or 'similarity'.
+                Default is 'distance'.
+            convert_to_sparse (bool): Whether to convert the output dense matrix to a sparse format.
+                Default is False.
+            sparse_type (str): Type of sparse matrix to convert to, either 'csr', 'csc' or 'coo'.
+                Default is 'csr'.
+            backend (str): Backend to use for joblib parallelization. Default is 'loky'.
+
+        Returns:
+            np.ndarray | scipy.sparse.csr_matrix | scipy.sparse.csc_matrix | scipy.sparse.coo_matrix:
+                Pairwise Gower distance or similarity matrix of shape (n_samples, n_samples) or sparse matrix.
+
+        Note:
+            If fit(X) was not called before computing the matrix, the model will be
+            fitted automatically and a UserWarning will be emitted.
+
+        Examples:
+            Basic usage:
+                >>> import pandas as pd
+                >>> from gower_metric import Config, Gower
+                >>> data = pd.DataFrame({
+                ...     'feature1': [1.0, 2.0, 3.0, 4.0],
+                ...     'feature2': ['A', 'B', 'A', 'C'],
+                ...     'feature3': [0, 1, 0, 1],
+                ...})
+                >>> feature_types = {
+                ...     'feature1': 'numeric',
+                ...     'feature2': 'categorical_nominal',
+                ...     'feature3': 'binary_symmetric',
+                ... }
+                >>> cfg = Config(
+                ...     feature_types=feature_types,
+                ... )
+                >>> gower = Gower(cfg).fit(data)
+                >>> similarity_matrix = gower.matrix(
+                ...     data,
+                ...     matrix_type='similarity',
+                ...     convert_to_sparse=True,
+                ...     sparse_type='csr'
+                ... )
+
+            Using similarity matrix and sparse output:
+                >>> import pandas as pd
+                >>> from gower_metric import Config, Gower
+                >>> data = pd.DataFrame({
+                ...     'feature1': [1.0, 2.0, 3.0, 4.0],
+                ...     'feature2': ['A', 'B', 'A', 'C'],
+                ...     'feature3': [0, 1, 0, 1],
+                ... })
+                >>> feature_types = {
+                ...     'feature1': 'numeric',
+                ...     'feature2': 'categorical_nominal',
+                ...     'feature3': 'binary_symmetric',
+                ... }
+                >>> cfg = Config(
+                ...     feature_types=feature_types,
+                ... )
+                >>> gower = Gower(cfg).fit(data)
+                >>> similarity_matrix = gower.matrix(
+                ...     data,
+                ...     matrix_type='similarity',
+                ...     convert_to_sparse=True,
+                ...     sparse_type='csr'
+                ... )
+
+        """
+        if scipy.sparse.issparse(X):
+            msg = "Sparse matrices are currently not supported as direct input. Please provide a dense matrix."
+            raise ValueError(msg)
+
+        if not self._is_fitted:
+            self.fit(X)
+            msg = "Calling .fit(X) inside .matrix(X)."
+            warnings.warn(msg, UserWarning, stacklevel=2)
+
+        if data_type is None:
+            data_type = self.data_type
+
+        arr_check = (
+            X.to_numpy(dtype=object)
+            if isinstance(X, pd.DataFrame)
+            else np.asarray(X, dtype=object)
+        )
+
+        if not self.skip_oor:
+            enforce_oor_policy(
+                arr_check,
+                strategy=self.out_of_range,
+                numeric_indices=self.numeric_indices,
+                numeric_mins=self.numeric_mins,
+                numeric_maxs=self.numeric_maxs,
+                ratio_scale_indices=self.ratio_scale_indices,
+                ratio_mins=self.ratio_mins,
+                ratio_maxs=self.ratio_maxs,
+                stacklevel=2,
+            )
+
+        self._skip_oor_check = True
+        try:
+            return get_full_matrix(
+                self,
+                X,
+                data_type=data_type,
+                n_jobs=n_jobs,
+                verbose=verbose,
+                matrix_type=matrix_type,
+                convert_to_sparse=convert_to_sparse,
+                sparse_type=sparse_type,
+                backend=backend,
+            )
+        finally:
+            self._skip_oor_check = False

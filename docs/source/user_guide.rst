@@ -1,0 +1,15 @@
+===========
+User Guide
+===========
+
+In this section, you will find a quick start guide on how to use the package.
+We provide simple scripts to demonstrate the basic functionality of the package.
+
+.. toctree::
+   :maxdepth: 1
+
+   modules/user_guide/quick_start
+   modules/user_guide/basic_examples
+   modules/user_guide/transform
+   modules/user_guide/advanced_examples
+   modules/user_guide/matrix
