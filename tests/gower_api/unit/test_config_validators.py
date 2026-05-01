@@ -1,4 +1,4 @@
-"""Tests for Config field validators — covers every validation error branch."""
+"""Tests for Config field validators - covers every validation error branch."""
 
 import numpy as np
 import pytest
@@ -22,7 +22,7 @@ class TestFeatureTypeValidation:
 
 class TestScaleWindowTypeValidation:
     def test_scale_window_type_without_scale_window_raises(self) -> None:
-        """scale_window=None but scale_window_type='silverman' → ValueError."""
+        """scale_window=None but scale_window_type='silverman' raises ValueError."""
         with pytest.raises(ValidationError, match="scale_window_type must be None"):
             Config(
                 feature_types={0: "numeric"},
@@ -225,3 +225,58 @@ class TestSkipOutOfRangeConfigValidation:
     def test_default_is_false(self) -> None:
         cfg = Config(feature_types={0: "numeric"})
         assert cfg.skip_out_of_range_validation is False
+
+
+class TestSilvermanConstantConfigValidation:
+    """Config validation for silverman_constant parameter."""
+
+    def test_default_no_scale_window_passes(self) -> None:
+        cfg = Config(feature_types={0: "numeric"})
+        assert cfg.silverman_constant == 1.06
+
+    def test_default_with_knn_passes(self) -> None:
+        cfg = Config(feature_types={0: "numeric"}, scale_window="kNN")
+        assert cfg.silverman_constant == 1.06
+
+    @pytest.mark.parametrize("c", [0.9, 1.06, 0.5, 2.0, 1])
+    def test_valid_values_with_full_silverman_kde(self, c: float) -> None:
+        cfg = Config(
+            feature_types={0: "numeric"},
+            silverman_constant=c,
+            scale_window="kde",
+            scale_window_type="silverman",
+        )
+        assert cfg.silverman_constant == c
+
+    def test_set_constant_without_kde_raises(self) -> None:
+        with pytest.raises(ValidationError, match=r"requires scale_window='kde'"):
+            Config(feature_types={0: "numeric"}, silverman_constant=0.9)
+
+    def test_set_constant_with_knn_raises(self) -> None:
+        with pytest.raises(ValidationError, match=r"requires scale_window='kde'"):
+            Config(
+                feature_types={0: "numeric"},
+                silverman_constant=0.9,
+                scale_window="kNN",
+            )
+
+    def test_set_constant_kde_without_silverman_type_raises(self) -> None:
+        with pytest.raises(
+            ValidationError,
+            match=r"requires scale_window_type='silverman'",
+        ):
+            Config(
+                feature_types={0: "numeric"},
+                silverman_constant=0.9,
+                scale_window="kde",
+            )
+
+    @pytest.mark.parametrize("invalid_value", [0, -1.0, -0.001])
+    def test_non_positive_value_raises(self, invalid_value: float) -> None:
+        with pytest.raises(ValidationError, match=r"must be a positive number"):
+            Config(
+                feature_types={0: "numeric"},
+                silverman_constant=invalid_value,
+                scale_window="kde",
+                scale_window_type="silverman",
+            )
