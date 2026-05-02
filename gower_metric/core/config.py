@@ -1,7 +1,7 @@
 from typing import Any, Literal, get_args
 
 import numpy as np
-from pydantic import BaseModel, ValidationInfo, field_validator
+from pydantic import BaseModel, ValidationInfo, field_validator, model_validator
 from pydantic.types import StrictBool
 
 FeatureType = Literal[
@@ -17,6 +17,7 @@ DataType = type[np.floating]
 ScaleMethod = Literal["range", "iqr"]
 ScaleWindow = Literal["kde", "kNN"]
 ScaleWindowType = Literal["silverman"]
+SilvermanConstant = int | float
 MissingStrategy = Literal["ignore", "max_dist", "raise_error"]
 CategoricalOrdinalCalcType = Literal["kaufman", "podani"]
 K_NeighborsType = int | None
@@ -50,6 +51,9 @@ class Config(BaseModel):
             or 'kNN'. Default is None if omitted.
         scale_window_type (ScaleWindowType | None): Optional type of scaling window. Can be None or 'silverman'.
             Default is None if omitted, not recommended to use without scale_window.
+        silverman_constant (int | float): Optional flag to determine the value of parameter ``c`` during KDE
+            silverman calculations. Default to ``1.06`` if omitted. For more information, please refer to
+            references -> Distances with mixed type variables some modified Gower's coefficients (2021) p. 8-9.
         missing_strategy (MissingStrategy): Optional strategy for handling missing values. Can be 'ignore',
             'max_dist' or 'raise_error'. Default is 'ignore' if omitted.
         categorical_ordinal_values_order (dict[int | str, list[str]] | None): Optional dict defining the order of the values contained in
@@ -94,6 +98,7 @@ class Config(BaseModel):
     scale_method: ScaleMethod = "range"
     scale_window: ScaleWindow | None = None
     scale_window_type: ScaleWindowType | None = None
+    silverman_constant: int | float = 1.06
     missing_strategy: MissingStrategy = "ignore"
     categorical_ordinal_values_order: dict[int | str, list[str]] | None = {}
     categorical_ordinal_calculation_type: CategoricalOrdinalCalcType = "kaufman"
@@ -169,6 +174,42 @@ class Config(BaseModel):
             msg = "scale_window_type must be None when scale_window='kNN'; kNN windowing does not use a bandwidth type"
             raise ValueError(msg)
         return v
+
+    @model_validator(mode="after")
+    def check_silverman_constant(self) -> "Config":
+        """Validate the Silverman constant.
+
+        Verifies that the value is a positive number. If the user explicitly
+        set ``silverman_constant``, also verifies that ``scale_window='kde'``
+        and ``scale_window_type='silverman'``.
+
+        Returns:
+            Config: The validated config instance.
+
+        Raises:
+            ValueError: If the constant is not a positive number, or if it was
+                explicitly set without the required scale_window context.
+
+        """
+        v = self.silverman_constant
+        if isinstance(v, bool) or not isinstance(v, (int, float)) or v <= 0:
+            msg = f"silverman_constant must be a positive number (greater than 0), got {v!r}"
+            raise ValueError(msg)
+
+        if "silverman_constant" in self.model_fields_set:
+            if self.scale_window != "kde":
+                msg = (
+                    "silverman_constant requires scale_window='kde', "
+                    f"got scale_window={self.scale_window!r}"
+                )
+                raise ValueError(msg)
+            if self.scale_window_type != "silverman":
+                msg = (
+                    "silverman_constant requires scale_window_type='silverman', "
+                    f"got scale_window_type={self.scale_window_type!r}"
+                )
+                raise ValueError(msg)
+        return self
 
     @field_validator("k_neighbors")
     @classmethod

@@ -37,6 +37,7 @@ some of these configuration flags depend on one another. It will be clearly indi
 - ``scale_method (str)`` - Method used for scaling numerical features. Possible values are `range` and `iqr`. Defaults to `range`. If `range` is selected, numerical features will be scaled to the [0, 1] range. If `iqr` is selected, numerical features will be scaled using the interquartile range (IQR) method.
 - ``scale_window (str | None)`` - Scaling window implementation flag for numeric or ratio features. Can be `None`, `kde` or `kNN`. Default is `None` if omitted.
 - ``scale_window_type (str | None)`` - Type of scaling window to be used. Possible values are `None` or `silverman`. Default is `None`. This parameter is only relevant if `scale_window` is set to `kde`. In the future, more `kde` types might be added.
+- ``silverman_constant (int | float)`` - Constant used for Silverman's rule of thumb when using KDE scaling window. Default is ``1.06`` if omitted. This parameter is only relevant if `scale_window` is set to `kde` and `scale_window_type` is set to `silverman`.
 - ``missing_strategy (str)`` - Strategy for handling missing values. Unlike other libraries, Gower's metric can inherently handle missing values. This parameter allows you to specify how to treat them. Possible values are `ignore` (default), `max_dist` and `raise_error`. If set to `ignore`, missing values will be ignored in the distance calculation. If set to `max_dist`, missing values will be treated as having the maximum possible distance (1). If set to `raise_error`, an error will be raised if any missing values are encountered.
 - ``categorical_ordinal_values_order (dict[int | str, list[str]] | None)`` - Required field when using `categorical_ordinal` feature type. It is a dictionary where keys are either column indices (int) or column names (str),
   and values are lists of strings representing the ordered categories for that feature. For example, if you have an ordinal feature representing education levels with categories "low", "medium", and "high", you would specify it as follows:
@@ -110,9 +111,9 @@ clips normalized distances to [0, 1] — consistent with the original Gower (197
 
 The ``out_of_range`` parameter lets you control this behavior:
 
-- ``"warning"`` (default) – emit a ``UserWarning`` listing each offending column with its actual and fitted range, then clip.
+- ``"error"`` – (default) raise a ``ValueError`` so you can investigate before proceeding.
+- ``"warning"`` – emit a ``UserWarning`` listing each offending column with its actual and fitted range, then clip.
 - ``"clip"`` – silently clip without any notification.
-- ``"error"`` – raise a ``ValueError`` so you can investigate before proceeding.
 
 .. code-block:: python
 

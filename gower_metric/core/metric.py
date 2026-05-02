@@ -123,6 +123,7 @@ class Gower:
 
         self.scale_window: str | None = config.scale_window
         self.scale_window_type: str | None = config.scale_window_type
+        self.silverman_constant: int | float = config.silverman_constant
 
         self.k_neighbors = config.k_neighbors
 
@@ -315,14 +316,20 @@ class Gower:
         if self.scale_window == "kde" and self.scale_window_type == "silverman":
             self._h_ratio = np.array(
                 [
-                    silverman_bandwidth(arr[:, j].astype(float))
+                    silverman_bandwidth(
+                        arr[:, j].astype(float),
+                        c=self.silverman_constant,
+                    )
                     for j in self.ratio_scale_indices
                 ],
                 dtype=float,
             )
             self._h_numeric = np.array(
                 [
-                    silverman_bandwidth(arr[:, j].astype(float))
+                    silverman_bandwidth(
+                        arr[:, j].astype(float),
+                        c=self.silverman_constant,
+                    )
                     for j in self.numeric_indices
                 ],
                 dtype=float,

@@ -1,5 +1,5 @@
 from gower_metric.utils import (
-    aux,
+    auxiliary,
     binary_ut,
     cat_ord_ut,
     categorical_ut,
@@ -11,7 +11,7 @@ from gower_metric.utils import (
 )
 
 __all__ = [
-    "aux",
+    "auxiliary",
     "binary_ut",
     "cat_ord_ut",
     "categorical_ut",

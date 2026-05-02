@@ -4,7 +4,7 @@ import numpy as np
 import pandas as pd
 import pytest
 
-from gower_metric.utils.aux import all_ones_off_diagonal
+from gower_metric.utils.auxiliary import all_ones_off_diagonal
 from gower_metric.utils.kde_types.silverman import silverman_bandwidth
 from gower_metric.utils.knn_bandwidth import knn_bandwidth
 from gower_metric.utils.ranges import scale_method
