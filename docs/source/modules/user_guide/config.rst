@@ -111,9 +111,9 @@ clips normalized distances to [0, 1] — consistent with the original Gower (197
 
 The ``out_of_range`` parameter lets you control this behavior:
 
-- ``"warning"`` (default) – emit a ``UserWarning`` listing each offending column with its actual and fitted range, then clip.
+- ``"error"`` – (default) raise a ``ValueError`` so you can investigate before proceeding.
+- ``"warning"`` – emit a ``UserWarning`` listing each offending column with its actual and fitted range, then clip.
 - ``"clip"`` – silently clip without any notification.
-- ``"error"`` – raise a ``ValueError`` so you can investigate before proceeding.
 
 .. code-block:: python
 

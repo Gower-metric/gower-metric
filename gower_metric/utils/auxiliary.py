@@ -19,7 +19,7 @@ def all_ones_off_diagonal(X: pd.DataFrame | np.ndarray) -> bool:
         >>> import pandas as pd
         >>> from sklearn.metrics import pairwise_distances
         >>> from gower_metric import Config, Gower
-        >>> from gower_metric.utils.aux import all_ones_off_diagonal
+        >>> from gower_metric.utils.auxiliary import all_ones_off_diagonal
         >>> data = pd.DataFrame({
         ...     'feature1': [1.0, 2.0, 3.0, 4.0],
         ...     'feature2': ['A', 'B', 'A', 'C'],

@@ -179,10 +179,17 @@ class Config(BaseModel):
     def check_silverman_constant(self) -> "Config":
         """Validate the Silverman constant.
 
-        Checks:
-        1. Value is a positive number (greater than 0).
-        2. If the user explicitly set the value, scale_window must be 'kde'
-           and scale_window_type must be 'silverman'.
+        Verifies that the value is a positive number. If the user explicitly
+        set ``silverman_constant``, also verifies that ``scale_window='kde'``
+        and ``scale_window_type='silverman'``.
+
+        Returns:
+            Config: The validated config instance.
+
+        Raises:
+            ValueError: If the constant is not a positive number, or if it was
+                explicitly set without the required scale_window context.
+
         """
         v = self.silverman_constant
         if isinstance(v, bool) or not isinstance(v, (int, float)) or v <= 0:
