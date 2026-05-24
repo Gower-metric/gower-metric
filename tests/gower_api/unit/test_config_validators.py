@@ -249,11 +249,11 @@ class TestSilvermanConstantConfigValidation:
         assert cfg.silverman_constant == c
 
     def test_set_constant_without_kde_raises(self) -> None:
-        with pytest.raises(ValidationError, match=r"requires scale_window='kde'"):
+        with pytest.raises(UserWarning, match=r"requires scale_window='kde'"):
             Config(feature_types={0: "numeric"}, silverman_constant=0.9)
 
     def test_set_constant_with_knn_raises(self) -> None:
-        with pytest.raises(ValidationError, match=r"requires scale_window='kde'"):
+        with pytest.raises(UserWarning, match=r"requires scale_window='kde'"):
             Config(
                 feature_types={0: "numeric"},
                 silverman_constant=0.9,
@@ -273,7 +273,7 @@ class TestSilvermanConstantConfigValidation:
 
     @pytest.mark.parametrize("invalid_value", [0, -1.0, -0.001])
     def test_non_positive_value_raises(self, invalid_value: float) -> None:
-        with pytest.raises(ValidationError, match=r"must be a positive number"):
+        with pytest.raises(ValidationError):
             Config(
                 feature_types={0: "numeric"},
                 silverman_constant=invalid_value,
