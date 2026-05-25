@@ -2,7 +2,7 @@
 Auxiliary Functions
 ====================
 
-.. automodule:: gower_metric.utils.aux
+.. automodule:: gower_metric.utils.auxiliary
    :members:
    :undoc-members:
    :show-inheritance:

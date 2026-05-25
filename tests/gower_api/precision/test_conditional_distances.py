@@ -4,7 +4,7 @@ import pytest
 from sklearn.metrics import pairwise_distances
 
 from gower_metric import Config, Gower
-from gower_metric.utils.aux import all_ones_off_diagonal
+from gower_metric.utils.auxiliary import all_ones_off_diagonal
 from tests.gower_api.precision.conftest import BaseTest
 
 

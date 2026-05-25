@@ -5,7 +5,7 @@ Utils submodule
 .. toctree::
    :maxdepth: 4
 
-   utils/aux
+   utils/auxiliary
    utils/binary_ut
    utils/cat_ord_ut
    utils/categorical_ut
