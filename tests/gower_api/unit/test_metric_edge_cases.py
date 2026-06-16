@@ -1,7 +1,5 @@
 """Tests for Gower metric edge cases — error branches, call-before-fit, conditional distances."""
 
-import warnings
-
 import numpy as np
 import pandas as pd
 import pytest
@@ -10,6 +8,7 @@ from pydantic import ValidationError
 
 from gower_metric import Config, Gower
 from gower_metric.core.exceptions import IllegalStateError
+from gower_metric.utils.matrix.distance import calculate_matrix
 
 
 class TestFitErrors:
@@ -45,68 +44,12 @@ class TestCallBeforeFit:
             gower.transform(np.array([[1.0]]))
 
 
-class TestMatrixAutoFit:
-    def test_matrix_without_fit_raises_warning(self) -> None:
-        data = np.array([[1.0, 0], [2.0, 1], [3.0, 0]])
-        cfg = Config(feature_types={0: "numeric", 1: "binary_symmetric"})
-        gower = Gower(cfg)
-        with pytest.warns(UserWarning, match=r"Calling .fit"):
-            gower.matrix(data)
-
-    def test_matrix_without_fit_raises_warning_pandas(self) -> None:
-        data = pd.DataFrame({"val": [1.0, 2.0, 3.0], "flag": [0, 1, 0]})
-        cfg = Config(feature_types={"val": "numeric", "flag": "binary_symmetric"})
-        gower = Gower(cfg)
-        with pytest.warns(UserWarning, match=r"Calling .fit"):
-            gower.matrix(data)
-
-
-class TestMatrixWithoutFitIntegration:
-    """BUG 1: matrix() without fit() should warn, not crash."""
-
-    def test_matrix_without_fit_warns(self) -> None:
-        data = np.array(
-            [["A", 1.0], ["B", 2.0], ["A", 3.0]],
-            dtype=object,
-        )
-        cfg = Config(
-            feature_types={0: "categorical_nominal", 1: "numeric"},
-        )
-        gower = Gower(cfg)
-
-        with warnings.catch_warnings(record=True) as w:
-            warnings.simplefilter("always")
-            result = gower.matrix(data)
-            user_warnings = [x for x in w if issubclass(x.category, UserWarning)]
-            assert any("fit" in str(x.message).lower() for x in user_warnings)
-
-        assert result.shape == (3, 3)
-        assert np.allclose(np.diag(result), 0.0)
-
-    def test_matrix_without_fit_produces_valid_distances(self) -> None:
-        data = np.array(
-            [["A", 1.0], ["B", 2.0]],
-            dtype=object,
-        )
-        cfg = Config(
-            feature_types={0: "categorical_nominal", 1: "numeric"},
-        )
-        gower = Gower(cfg)
-
-        with warnings.catch_warnings():
-            warnings.simplefilter("ignore", UserWarning)
-            result = gower.matrix(data)
-
-        assert result[0, 1] == result[1, 0]
-        assert 0.0 <= result[0, 1] <= 1.0
-
-
 class TestMatrixWithDataType:
     def test_matrix_with_explicit_data_type(self) -> None:
         data = np.array([[1.0, 0], [2.0, 1], [3.0, 0]])
         cfg = Config(feature_types={0: "numeric", 1: "binary_symmetric"})
         gower = Gower(cfg).fit(data)
-        result = gower.matrix(data, data_type=np.float64)
+        result = calculate_matrix(gower, data, data_type=np.float64)
         assert result.dtype == np.float64
 
     def test_matrix_with_n_jobs_1(self) -> None:
@@ -114,7 +57,7 @@ class TestMatrixWithDataType:
         data = np.array([[1.0, 0], [2.0, 1], [3.0, 0]])
         cfg = Config(feature_types={0: "numeric", 1: "binary_symmetric"})
         gower = Gower(cfg).fit(data)
-        result = gower.matrix(data, n_jobs=1)
+        result = calculate_matrix(gower, data, n_jobs=1)
         assert result.shape == (3, 3)
         np.testing.assert_almost_equal(result[0, 0], 0.0)
 
@@ -123,7 +66,7 @@ class TestMatrixWithDataType:
         data = np.array([[1.0], [5.0], [10.0]])
         cfg = Config(feature_types={0: "numeric"})
         gower = Gower(cfg).fit(data)
-        mat = gower.matrix(data, n_jobs=1, matrix_type="similarity")
+        mat = calculate_matrix(gower, data, n_jobs=1, matrix_type="similarity")
         np.testing.assert_array_almost_equal(np.diag(mat), [1.0, 1.0, 1.0])
 
     def test_matrix_with_n_jobs_1_pandas(self) -> None:
@@ -131,7 +74,7 @@ class TestMatrixWithDataType:
         data = pd.DataFrame({"val": [1.0, 2.0, 3.0], "flag": [0, 1, 0]})
         cfg = Config(feature_types={"val": "numeric", "flag": "binary_symmetric"})
         gower = Gower(cfg).fit(data)
-        result = gower.matrix(data, n_jobs=1)
+        result = calculate_matrix(gower, data, n_jobs=1)
         assert result.shape == (3, 3)
 
     def test_matrix_similarity_n_jobs_1_pandas(self) -> None:
@@ -139,7 +82,7 @@ class TestMatrixWithDataType:
         data = pd.DataFrame({"x": [1.0, 5.0, 10.0]})
         cfg = Config(feature_types={"x": "numeric"})
         gower = Gower(cfg).fit(data)
-        mat = gower.matrix(data, n_jobs=1, matrix_type="similarity")
+        mat = calculate_matrix(gower, data, n_jobs=1, matrix_type="similarity")
         np.testing.assert_array_almost_equal(np.diag(mat), [1.0, 1.0, 1.0])
 
 
@@ -280,14 +223,14 @@ class TestMatrixSimilarity:
         data = np.array([[1.0], [2.0], [3.0]])
         cfg = Config(feature_types={0: "numeric"})
         gower = Gower(cfg).fit(data)
-        mat = gower.matrix(data, matrix_type="similarity")
+        mat = calculate_matrix(gower, data, matrix_type="similarity")
         np.testing.assert_array_almost_equal(np.diag(mat), [1.0, 1.0, 1.0])
 
     def test_similarity_matrix_diagonal_pandas(self) -> None:
         data = pd.DataFrame({"x": [1.0, 2.0, 3.0]})
         cfg = Config(feature_types={"x": "numeric"})
         gower = Gower(cfg).fit(data)
-        mat = gower.matrix(data, matrix_type="similarity")
+        mat = calculate_matrix(gower, data, matrix_type="similarity")
         np.testing.assert_array_almost_equal(np.diag(mat), [1.0, 1.0, 1.0])
 
 
@@ -318,7 +261,7 @@ class TestDtypeEdgeCases:
         data = np.array([[1.0], [5.0], [10.0]])
         cfg = Config(feature_types={0: "numeric"}, data_type=np.float64)
         gower = Gower(cfg).fit(data)
-        mat = gower.matrix(data, n_jobs=1)
+        mat = calculate_matrix(gower, data, n_jobs=1)
         assert mat.dtype == np.float64
 
 

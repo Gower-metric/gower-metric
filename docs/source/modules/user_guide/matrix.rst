@@ -2,7 +2,7 @@
 Matrix support
 ===============
 
-We also provide endpoint support for calculating various types of matrices. We use `joblib <https://github.com/joblib/joblib>`_ library to parallelize computations and speed up the whole process.
+We also provide utility function for calculating various types of matrices. We use `joblib <https://github.com/joblib/joblib>`_ library to parallelize computations and speed up the whole process.
 By default, *backend* is set to *loky*.
 
 .. code-block:: python
@@ -10,6 +10,7 @@ By default, *backend* is set to *loky*.
    import numpy as np
 
    from gower_metric import Config, Gower
+   from gower_metric.utils.matrix.distance import calculate_matrix
 
    data = np.array([[1, 'a'], [2, 'b'], [3, 'a'], [4, 'c']], dtype=object)
 

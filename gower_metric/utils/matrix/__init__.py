@@ -1,6 +1,6 @@
-from gower_metric.utils.matrix import calculate_matrix, convert_matrix
+from gower_metric.utils.matrix import convert_matrix, distance
 
-__all__ = ["calculate_matrix", "convert_matrix"]
+__all__ = ["convert_matrix", "distance"]
 
 __doc__ = """
 This module provides utility functions for matrix operations in the Gower metric package.

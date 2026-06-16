@@ -4,6 +4,7 @@ import numpy as np
 from sklearn.metrics import pairwise_distances
 
 from gower_metric import Config, Gower
+from gower_metric.utils.matrix.distance import calculate_matrix
 from tests.conftest import generate_adult_like_df
 
 DTYPE = np.float64
@@ -40,7 +41,7 @@ def test_scikit_learn_paiwise_distances() -> None:
         ensure_all_finite=False,
     )
 
-    matrix_gower = gower.matrix(transformed_df, backend="loky")
+    matrix_gower = calculate_matrix(gower, transformed_df, backend="loky")
 
     assert matrix_scikit.shape == (n_rows, n_rows), (
         "The shape of the pairwise distance matrix is incorrect."
