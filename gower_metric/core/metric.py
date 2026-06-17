@@ -153,6 +153,17 @@ class Gower:
         self.nominal_metadata: dict[int, OrdinalEncoder] = {}
         self.ordinal_metadata: dict[int, OrdinalEncoder] = {}
 
+    @property
+    def is_fitted(self) -> bool:
+        """Whether the Gower instance has been fitted.
+
+        Returns
+        -------
+        bool: True if the instance has been fitted and is ready for use; otherwise False.
+
+        """
+        return getattr(self, "_is_fitted", False)
+
     def fit(self, X: pd.DataFrame | np.ndarray) -> "Gower":  # noqa: PLR0912
         """Fit the Gower model by computing numeric feature ranges.
 

@@ -1,14 +1,16 @@
+import warnings
+from collections.abc import Iterator
+from contextlib import contextmanager
 from typing import TYPE_CHECKING
 
 import numpy as np
 import pandas as pd
 import scipy.sparse
-from contextlib import contextmanager
-from gower_metric.utils.ranges import enforce_oor_policy
 from joblib import Parallel, delayed
 from tqdm.auto import tqdm
 
 from gower_metric.utils.matrix.convert_matrix import get_scipy_sparse_matrix
+from gower_metric.utils.ranges import enforce_oor_policy
 
 if TYPE_CHECKING:
     from gower_metric import Gower
@@ -182,27 +184,23 @@ def _get_full_matrix(
 
 
 @contextmanager
-def temporary_skip_oor(gower: "Gower"):
-    """
-    Temporarily disable out-of-range (OOR) checking on a Gower instance.
+def temporary_skip_oor(gower: "Gower") -> Iterator[None]:
+    """Temporarily disable out-of-range (OOR) checking on a Gower instance.
 
     This context manager sets `gower.skip_oor` to True for the duration of the
     context and restores its previous value afterward, even if an exception
     occurs.
 
-    Parameters
-    ----------
-    gower (gower_metric.Gower): Fitted Gower instance.
+    Args:
+        gower (gower_metric.Gower): Fitted Gower instance.
 
-    Yields
-    ------
-    None
+    Yields:
+        None
 
-    Notes
-    -----
-    This mutates shared state on the provided `gower` object. It is not
-    thread-safe if the same instance is used concurrently in multiple
-    computations.
+    Notes:
+        This mutates shared state on the provided `gower` object. It is not
+            thread-safe if the same instance is used concurrently in multiple computations.
+
     """
     old = gower.skip_oor
     gower.skip_oor = True
@@ -210,6 +208,7 @@ def temporary_skip_oor(gower: "Gower"):
         yield
     finally:
         gower.skip_oor = old
+
 
 def calculate_matrix(
     gower: "Gower",
@@ -249,6 +248,11 @@ def calculate_matrix(
     Returns:
         np.ndarray | scipy.sparse.csr_matrix | scipy.sparse.csc_matrix | scipy.sparse.coo_matrix:
             Pairwise Gower distance or similarity matrix of shape (n_samples, n_samples) or sparse matrix.
+
+    Note:
+        If fit(X) was not called before computing the matrix, the model will be
+            fitted automatically and a UserWarning will be emitted.
+
 
     Examples:
         Basic usage:
@@ -307,6 +311,11 @@ def calculate_matrix(
     if scipy.sparse.issparse(X):
         msg = "Sparse matrices are currently not supported as direct input. Please provide a dense matrix."
         raise ValueError(msg)
+
+    if not gower.is_fitted:
+        gower.fit(X)
+        msg = "Calling .fit(X) inside .matrix(X)."
+        warnings.warn(msg, UserWarning, stacklevel=2)
 
     if data_type is None:
         data_type = gower.data_type
