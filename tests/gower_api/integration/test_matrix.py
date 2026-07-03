@@ -4,6 +4,7 @@ import numpy as np
 import scipy.sparse as sp
 
 from gower_metric import Config, Gower
+from gower_metric.utils.matrix.distance import calculate_matrix
 from tests.conftest import generate_adult_like_df
 
 
@@ -31,7 +32,7 @@ def test_gower_matrix_endpoint_with_custom_created_matrix() -> None:
 
     X = df.to_numpy()
 
-    dist_matrix = gower.matrix(cast("np.ndarray", X), backend="loky")
+    dist_matrix = calculate_matrix(gower, cast("np.ndarray", X), backend="loky")
 
     assert dist_matrix.shape == (n_rows, n_rows), (
         f"Unexpected shape: {dist_matrix.shape}"
@@ -73,7 +74,8 @@ def test_gower_matrix_endpoint_similarity() -> None:
 
     X = df.to_numpy()
 
-    similarity_matrix = gower.matrix(
+    similarity_matrix = calculate_matrix(
+        gower,
         X,
         matrix_type="similarity",
         backend="loky",
@@ -138,7 +140,7 @@ def test_gower_matrix_endpoint_if_it_symmetrical() -> None:
 
     X = df.to_numpy()
 
-    dist_matrix = gower.matrix(df, backend="loky")
+    dist_matrix = calculate_matrix(gower, df, backend="loky")
 
     assert dist_matrix.shape == (n_rows, n_rows), (
         f"Unexpected shape: {dist_matrix.shape}"
@@ -180,7 +182,7 @@ def test_matrix_endpoint_podani_if_symmetrical_distance() -> None:
     )
     gower = Gower(cfg).fit(data)
 
-    dist_matrix = gower.matrix(data, backend="loky")
+    dist_matrix = calculate_matrix(gower, data, backend="loky")
 
     n = data.shape[0]
     custom_matrix = np.zeros((n, n), dtype=np.float32)
@@ -220,7 +222,8 @@ def test_matrix_endpoint_podani_if_symmetrical_similarity() -> None:
     )
     gower = Gower(cfg).fit(data)
 
-    dist_matrix = gower.matrix(
+    dist_matrix = calculate_matrix(
+        gower,
         data,
         matrix_type="similarity",
         backend="loky",
@@ -264,7 +267,8 @@ def test_sparse_matrix_convertion_csr() -> None:
     )
     gower = Gower(cfg).fit(data)
 
-    dist_matrix = gower.matrix(
+    dist_matrix = calculate_matrix(
+        gower,
         data,
         convert_to_sparse=True,
         sparse_type="csr",
@@ -291,7 +295,8 @@ def test_sparse_matrix_convertion_csc() -> None:
     )
     gower = Gower(cfg).fit(data)
 
-    dist_matrix = gower.matrix(
+    dist_matrix = calculate_matrix(
+        gower,
         data,
         convert_to_sparse=True,
         sparse_type="csc",
@@ -318,7 +323,8 @@ def test_sparse_matrix_convertion_c00() -> None:
     )
     gower = Gower(cfg).fit(data)
 
-    dist_matrix = gower.matrix(
+    dist_matrix = calculate_matrix(
+        gower,
         data,
         convert_to_sparse=True,
         sparse_type="coo",

@@ -4,6 +4,7 @@ import numpy as np
 from scipy.spatial.distance import pdist, squareform
 
 from gower_metric import Config, Gower
+from gower_metric.utils.matrix.distance import calculate_matrix
 from tests.conftest import generate_adult_like_df
 
 
@@ -38,7 +39,7 @@ def test_scikit_learn_paiwise_distances() -> None:
     array_scipy = pdist(X, metric=_gower_distance)
     matrix_scipy = squareform(array_scipy)
 
-    matrix_gower = gower.matrix(X, backend="loky")
+    matrix_gower = calculate_matrix(gower, X, backend="loky")
 
     assert matrix_scipy.shape == (n_rows, n_rows), (
         "The shape of the pairwise distance matrix is incorrect."

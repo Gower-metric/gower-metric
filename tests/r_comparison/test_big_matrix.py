@@ -8,6 +8,7 @@ from rpy2.robjects import pandas2ri
 from rpy2.robjects.packages import importr
 
 from gower_metric import Config, Gower
+from gower_metric.utils.matrix.distance import calculate_matrix
 
 from .conftest import generate_mixed_df
 
@@ -43,7 +44,7 @@ def test_big_matrix(n: int, random_seed: int) -> None:
     )
     gower = Gower(cfg).fit(df)
 
-    gower_matrix = gower.matrix(df)
+    gower_matrix = calculate_matrix(gower, df)
 
     # R section
     converter = robjects.default_converter + pandas2ri.converter

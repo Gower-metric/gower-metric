@@ -9,6 +9,7 @@ import pytest
 
 from gower_metric import Config, Gower
 from gower_metric.core.config import FeatureType, OutOfRangeStrategy
+from gower_metric.utils.matrix.distance import calculate_matrix
 
 NUMERIC_TYPES = ["numeric", "ratio_scale_interval"]
 
@@ -145,7 +146,7 @@ class TestOutOfRangeMatrix:
         gower = Gower(cfg).fit(train)
 
         with pytest.warns(UserWarning, match=r"Out-of-range"):
-            gower.matrix(test)
+            calculate_matrix(gower, test)
 
     def test_error_on_matrix(self) -> None:
         train = np.array([[1.0], [5.0]], dtype=object)
@@ -154,7 +155,7 @@ class TestOutOfRangeMatrix:
         gower = Gower(cfg).fit(train)
 
         with pytest.raises(ValueError, match=r"Out-of-range"):
-            gower.matrix(test)
+            calculate_matrix(gower, test)
 
     def test_clip_on_matrix(self) -> None:
         train = np.array([[1.0], [5.0]], dtype=object)
@@ -162,5 +163,5 @@ class TestOutOfRangeMatrix:
         cfg = Config(feature_types={0: "numeric"}, out_of_range="clip")
         gower = Gower(cfg).fit(train)
 
-        result = gower.matrix(test)
+        result = calculate_matrix(gower, test)
         assert result.shape == (3, 3)

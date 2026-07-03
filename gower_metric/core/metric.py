@@ -1,4 +1,3 @@
-import warnings
 from typing import TYPE_CHECKING, Any, cast
 
 import numpy as np
@@ -32,7 +31,6 @@ from gower_metric.utils.categorical_ut import (
 )
 from gower_metric.utils.kde_types.silverman import silverman_bandwidth
 from gower_metric.utils.knn_bandwidth import knn_bandwidth
-from gower_metric.utils.matrix.calculate_matrix import get_full_matrix
 from gower_metric.utils.ranges import (
     enforce_oor_policy,
     get_numeric_bounds,
@@ -150,11 +148,21 @@ class Gower:
         self.skip_oor: SkipOutOfRangeValidation = config.skip_out_of_range_validation
 
         self._is_fitted: bool = False
-        self._skip_oor_check: bool = False
         self.binary_symmetric_metadata: dict[int, dict[str, Any]] = {}
         self.binary_asymmetric_metadata: dict[int, dict[str, Any]] = {}
         self.nominal_metadata: dict[int, OrdinalEncoder] = {}
         self.ordinal_metadata: dict[int, OrdinalEncoder] = {}
+
+    @property
+    def is_fitted(self) -> bool:
+        """Whether the Gower instance has been fitted.
+
+        Returns
+        -------
+        bool: True if the instance has been fitted and is ready for use; otherwise False.
+
+        """
+        return getattr(self, "_is_fitted", False)
 
     def fit(self, X: pd.DataFrame | np.ndarray) -> "Gower":  # noqa: PLR0912
         """Fit the Gower model by computing numeric feature ranges.
@@ -468,7 +476,7 @@ class Gower:
             arr: np.ndarray = X
             X_arr = np.asarray(arr, dtype=object)
 
-        if not self.skip_oor and not self._skip_oor_check:
+        if not self.skip_oor:
             enforce_oor_policy(
                 np.asarray(X_arr, dtype=object),
                 strategy=self.out_of_range,
@@ -604,7 +612,7 @@ class Gower:
         Xn = x.reshape(1, -1)
         Yn = y.reshape(1, -1)
 
-        if not self.skip_oor and not self._skip_oor_check:
+        if not self.skip_oor:
             enforce_oor_policy(
                 Xn,
                 Yn,
@@ -766,142 +774,3 @@ class Gower:
 
         """
         return self.data_type(1.0 - self(a, b))
-
-    def matrix(
-        self,
-        X: pd.DataFrame | np.ndarray,
-        data_type: type[np.floating] | None = None,
-        n_jobs: int = -1,
-        verbose: int = 0,
-        matrix_type: str = "distance",
-        convert_to_sparse: bool = False,
-        sparse_type: str = "csr",
-        backend: str = "loky",
-    ) -> (
-        np.ndarray
-        | scipy.sparse.csr_matrix
-        | scipy.sparse.csc_matrix
-        | scipy.sparse.coo_matrix
-    ):
-        """Return symmetric pairwise Gower distance matrix using joblib (parallel).
-
-        Scipy sparse matrices are not supported as direct input.
-
-        Args:
-            X (pd.DataFrame | np.ndarray): shape of (n_samples, n_features).
-            data_type (type[np.floating] | None): data type used for the output distance matrix.
-                If None, uses the data_type from the Gower instance configuration.
-            n_jobs (int): number of parallel jobs to run, -1 means using all processors. Default is -1.
-            verbose (int): whether to show tqdm progress bar. Default is 0 (no progress bar).
-            matrix_type (str): Type of matrix to compute, either 'distance' or 'similarity'.
-                Default is 'distance'.
-            convert_to_sparse (bool): Whether to convert the output dense matrix to a sparse format.
-                Default is False.
-            sparse_type (str): Type of sparse matrix to convert to, either 'csr', 'csc' or 'coo'.
-                Default is 'csr'.
-            backend (str): Backend to use for joblib parallelization. Default is 'loky'.
-
-        Returns:
-            np.ndarray | scipy.sparse.csr_matrix | scipy.sparse.csc_matrix | scipy.sparse.coo_matrix:
-                Pairwise Gower distance or similarity matrix of shape (n_samples, n_samples) or sparse matrix.
-
-        Note:
-            If fit(X) was not called before computing the matrix, the model will be
-            fitted automatically and a UserWarning will be emitted.
-
-        Examples:
-            Basic usage:
-                >>> import pandas as pd
-                >>> from gower_metric import Config, Gower
-                >>> data = pd.DataFrame({
-                ...     'feature1': [1.0, 2.0, 3.0, 4.0],
-                ...     'feature2': ['A', 'B', 'A', 'C'],
-                ...     'feature3': [0, 1, 0, 1],
-                ...})
-                >>> feature_types = {
-                ...     'feature1': 'numeric',
-                ...     'feature2': 'categorical_nominal',
-                ...     'feature3': 'binary_symmetric',
-                ... }
-                >>> cfg = Config(
-                ...     feature_types=feature_types,
-                ... )
-                >>> gower = Gower(cfg).fit(data)
-                >>> similarity_matrix = gower.matrix(
-                ...     data,
-                ...     matrix_type='similarity',
-                ...     convert_to_sparse=True,
-                ...     sparse_type='csr'
-                ... )
-
-            Using similarity matrix and sparse output:
-                >>> import pandas as pd
-                >>> from gower_metric import Config, Gower
-                >>> data = pd.DataFrame({
-                ...     'feature1': [1.0, 2.0, 3.0, 4.0],
-                ...     'feature2': ['A', 'B', 'A', 'C'],
-                ...     'feature3': [0, 1, 0, 1],
-                ... })
-                >>> feature_types = {
-                ...     'feature1': 'numeric',
-                ...     'feature2': 'categorical_nominal',
-                ...     'feature3': 'binary_symmetric',
-                ... }
-                >>> cfg = Config(
-                ...     feature_types=feature_types,
-                ... )
-                >>> gower = Gower(cfg).fit(data)
-                >>> similarity_matrix = gower.matrix(
-                ...     data,
-                ...     matrix_type='similarity',
-                ...     convert_to_sparse=True,
-                ...     sparse_type='csr'
-                ... )
-
-        """
-        if scipy.sparse.issparse(X):
-            msg = "Sparse matrices are currently not supported as direct input. Please provide a dense matrix."
-            raise ValueError(msg)
-
-        if not self._is_fitted:
-            self.fit(X)
-            msg = "Calling .fit(X) inside .matrix(X)."
-            warnings.warn(msg, UserWarning, stacklevel=2)
-
-        if data_type is None:
-            data_type = self.data_type
-
-        arr_check = (
-            X.to_numpy(dtype=object)
-            if isinstance(X, pd.DataFrame)
-            else np.asarray(X, dtype=object)
-        )
-
-        if not self.skip_oor:
-            enforce_oor_policy(
-                arr_check,
-                strategy=self.out_of_range,
-                numeric_indices=self.numeric_indices,
-                numeric_mins=self.numeric_mins,
-                numeric_maxs=self.numeric_maxs,
-                ratio_scale_indices=self.ratio_scale_indices,
-                ratio_mins=self.ratio_mins,
-                ratio_maxs=self.ratio_maxs,
-                stacklevel=2,
-            )
-
-        self._skip_oor_check = True
-        try:
-            return get_full_matrix(
-                self,
-                X,
-                data_type=data_type,
-                n_jobs=n_jobs,
-                verbose=verbose,
-                matrix_type=matrix_type,
-                convert_to_sparse=convert_to_sparse,
-                sparse_type=sparse_type,
-                backend=backend,
-            )
-        finally:
-            self._skip_oor_check = False

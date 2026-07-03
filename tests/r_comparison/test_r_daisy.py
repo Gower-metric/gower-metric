@@ -8,6 +8,7 @@ from rpy2.robjects import pandas2ri
 from rpy2.robjects.packages import importr
 
 from gower_metric import Config, Gower
+from gower_metric.utils.matrix.distance import calculate_matrix
 
 from .conftest import EDUCATION_LEVELS, generate_adult_like_df, generate_mixed_df
 
@@ -53,7 +54,7 @@ def test_r_daisy_no_weights(n: int, random_seed: int) -> None:
     gower = Gower(cfg).fit(df)
 
     X = df.to_numpy()
-    gower_matrix = gower.matrix(X)
+    gower_matrix = calculate_matrix(gower, X)
 
     assert np.allclose(
         cast("np.ndarray", np_matrix),
@@ -110,7 +111,7 @@ def test_r_daisy_weights(n: int, random_seed: int) -> None:
     )
     gower = Gower(cfg).fit(df)
 
-    matrix = gower.matrix(df)
+    matrix = calculate_matrix(gower, df)
 
     assert matrix.shape == (n, n)
 
