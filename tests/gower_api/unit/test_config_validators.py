@@ -20,49 +20,13 @@ class TestFeatureTypeValidation:
         assert cfg.feature_types[0] == "numeric"
 
 
-class TestScaleWindowTypeValidation:
-    def test_scale_window_type_without_scale_window_raises(self) -> None:
-        """scale_window=None but scale_window_type='silverman' raises ValueError."""
-        with pytest.raises(ValidationError, match="scale_window_type must be None"):
-            Config(
-                feature_types={0: "numeric"},
-                scale_window=None,
-                scale_window_type="silverman",
-                data_type=DEFAULT_DTYPE,
-            )
-
-    def test_valid_scale_window_type_with_kde(self) -> None:
-        cfg = Config(
-            feature_types={0: "numeric"},
-            scale_window="kde",
-            scale_window_type="silverman",
-            data_type=DEFAULT_DTYPE,
-        )
-        assert cfg.scale_window_type == "silverman"
-
-    def test_kde_with_none_scale_window_type_passes(self) -> None:
-        cfg = Config(
-            feature_types={0: "numeric"},
-            scale_window="kde",
-            scale_window_type=None,
-            data_type=DEFAULT_DTYPE,
-        )
-        assert cfg.scale_window_type is None
-
-
 class TestKNeighborsValidation:
     def test_zero_raises(self) -> None:
-        with pytest.raises(
-            ValidationError,
-            match="k_neighbors must be None or a positive integer",
-        ):
+        with pytest.raises(ValidationError):
             Config(feature_types={0: "numeric"}, k_neighbors=0, data_type=DEFAULT_DTYPE)
 
     def test_negative_raises(self) -> None:
-        with pytest.raises(
-            ValidationError,
-            match="k_neighbors must be None or a positive integer",
-        ):
+        with pytest.raises(ValidationError):
             Config(
                 feature_types={0: "numeric"},
                 k_neighbors=-5,
@@ -230,45 +194,45 @@ class TestSkipOutOfRangeConfigValidation:
 class TestSilvermanConstantConfigValidation:
     """Config validation for silverman_constant parameter."""
 
-    def test_default_no_scale_window_passes(self) -> None:
+    def test_default_no_discretization_passes(self) -> None:
         cfg = Config(feature_types={0: "numeric"})
         assert cfg.silverman_constant == 1.06
 
     def test_default_with_knn_passes(self) -> None:
-        cfg = Config(feature_types={0: "numeric"}, scale_window="kNN")
+        cfg = Config(feature_types={0: "numeric"}, discretization="knn")
         assert cfg.silverman_constant == 1.06
 
     @pytest.mark.parametrize("c", [0.9, 1.06, 0.5, 2.0, 1])
-    def test_valid_values_with_full_silverman_kde(self, c: float) -> None:
+    def test_valid_values_with_full_silverman(self, c: float) -> None:
         cfg = Config(
             feature_types={0: "numeric"},
             silverman_constant=c,
-            scale_window="kde",
-            scale_window_type="silverman",
+            discretization="silverman",
         )
         assert cfg.silverman_constant == c
 
-    def test_set_constant_without_kde_raises(self) -> None:
+    def test_set_silverman_constant_without_discretization_raises(self) -> None:
         with pytest.raises(UserWarning):
             Config(feature_types={0: "numeric"}, silverman_constant=0.9)
 
-    def test_set_constant_with_knn_raises(self) -> None:
+    def test_set_silverman_constant_with_discretization_knn_raises(self) -> None:
         with pytest.raises(UserWarning):
             Config(
                 feature_types={0: "numeric"},
                 silverman_constant=0.9,
-                scale_window="kNN",
+                discretization="knn",
             )
 
-    def test_set_constant_kde_without_silverman_type_raises(self) -> None:
-        with pytest.raises(
-            ValidationError,
-            match=r"requires scale_window_type='silverman'",
-        ):
+    def test_set_knn_constant_without_discretization_raises(self) -> None:
+        with pytest.raises(UserWarning):
+            Config(feature_types={0: "numeric"}, k_neighbors=3)
+
+    def test_set_knn_constant_with_discretization_silverman_raises(self) -> None:
+        with pytest.raises(UserWarning):
             Config(
                 feature_types={0: "numeric"},
-                silverman_constant=0.9,
-                scale_window="kde",
+                k_neighbors=3,
+                discretization="silverman",
             )
 
     @pytest.mark.parametrize("invalid_value", [0, -1.0, -0.001])
@@ -277,6 +241,5 @@ class TestSilvermanConstantConfigValidation:
             Config(
                 feature_types={0: "numeric"},
                 silverman_constant=invalid_value,
-                scale_window="kde",
-                scale_window_type="silverman",
+                discretization="silverman",
             )

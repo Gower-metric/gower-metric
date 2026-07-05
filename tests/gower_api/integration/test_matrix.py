@@ -134,7 +134,7 @@ def test_gower_matrix_endpoint_if_it_symmetrical() -> None:
         feature_types=feature_types,
         feature_weights=feature_weights,
         scale_method="iqr",
-        scale_window="kde",
+        discretization="silverman",
     )
     gower = Gower(cfg).fit(df)
 

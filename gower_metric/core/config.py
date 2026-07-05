@@ -1,4 +1,4 @@
-from typing import Any, Literal, get_args
+from typing import Annotated, Any, Literal, get_args
 
 import numpy as np
 from pydantic import BaseModel, Field, ValidationInfo, field_validator, model_validator
@@ -15,12 +15,11 @@ FeatureType = Literal[
 WeightsType = Literal["uniform"] | dict[int, float]
 DataType = type[np.floating]
 ScaleMethod = Literal["range", "iqr"]
-ScaleWindow = Literal["kde", "kNN"]
-ScaleWindowType = Literal["silverman"]
+Discretization = Literal["silverman", "knn"]
 SilvermanConstant = float
 MissingStrategy = Literal["ignore", "max_dist", "raise_error"]
 CategoricalOrdinalCalcType = Literal["kaufman", "podani"]
-K_NeighborsType = int | None
+KNeighborsType = Annotated[int, Field(ge=1)]
 ConditionalDistancesFlag = bool
 ConditionalDistancesThresholdCoeffType = int
 HandleUnseenBinaryAsymmetric = Literal["warning", "error", "missing"]
@@ -47,10 +46,8 @@ class Config(BaseModel):
             If omitted, np.float32 will be used.
         scale_method (ScaleMethod): Optional scaling method for numeric features. Can be 'range' or 'iqr'.
             Default is 'range' if omitted.
-        scale_window (ScaleWindow | None): Optional scaling window for numeric or ratio features. Can be None, 'kde'
-            or 'kNN'. Default is None if omitted.
-        scale_window_type (ScaleWindowType | None): Optional type of scaling window. Can be None or 'silverman'.
-            Default is None if omitted, not recommended to use without scale_window.
+        discretization (Discretization | None): Optional type of adaptive discretization. Can be None, 'silverman' or 'knn'.
+            Default is None if omitted.
         silverman_constant (SilvermanConstant): Optional flag to determine the value of parameter ``c`` during KDE
             silverman calculations. Default to ``1.06`` if omitted. For more information, please refer to
             references -> Distances with mixed type variables some modified Gower's coefficients (2021) p. 8-9.
@@ -60,7 +57,7 @@ class Config(BaseModel):
             the columns of type 'categorical_ordinal'. Must contain values for all such columns.
         categorical_ordinal_calculation_type (CategoricalOrdinalCalcType): Optional calculation type for categorical
             ordinal features. Can be 'kaufman' or 'podani'. Default is 'kaufman' if omitted.
-        k_neighbors (int | None): Optional number of nearest neighbors for 'kNN' scaling window.
+        k_neighbors (int | None): Optional number of nearest neighbors for 'knn' scaling window.
             Default is None if omitted. If k_neighbors is None, it will be set to the square root of the number of points.
         conditional_distances (bool): Default to False. If set to True, two-step approach will be
             triggered to calculate formula. More information in `references year 2021 -> chapter 3 <https://arxiv.org/abs/2101.02481>`_.
@@ -96,13 +93,12 @@ class Config(BaseModel):
     feature_weights: WeightsType | None = {}
     data_type: DataType | None = np.float32
     scale_method: ScaleMethod = "range"
-    scale_window: ScaleWindow | None = None
-    scale_window_type: ScaleWindowType | None = None
+    discretization: Discretization | None = None
     silverman_constant: SilvermanConstant = Field(default=1.06, gt=0)
     missing_strategy: MissingStrategy = "ignore"
     categorical_ordinal_values_order: dict[int | str, list[str]] | None = {}
     categorical_ordinal_calculation_type: CategoricalOrdinalCalcType = "kaufman"
-    k_neighbors: int | None = None
+    k_neighbors: KNeighborsType | None = None
     conditional_distances: ConditionalDistancesFlag = False
     conditional_distances_threshold_coeff: int = 1
     handle_unseen_binary_asymmetric: HandleUnseenBinaryAsymmetric = "error"
@@ -139,95 +135,36 @@ class Config(BaseModel):
                 raise ValueError(msg)
         return v
 
-    @field_validator("scale_window_type")
-    @classmethod
-    def check_scale_window_type(
-        cls,
-        v: ScaleWindowType | None,
-        info: ValidationInfo,
-    ) -> ScaleWindowType | None:
-        """Validate compatibility between scale_window_type and scale_window.
-
-        Args:
-            v (ScaleWindowType | None): The window type to check.
-            info (ValidationInfo): Validation context containing other fields.
-
-        Returns:
-            v (ScaleWindowType | None): The validated window type.
-
-        Raises:
-            ValueError: If the window type is incompatible with the selected scale_window.
-
-        """
-        if not info.data:  # pragma: no cover
-            return v
-
-        scale_window = info.data.get("scale_window")
-        if scale_window is None:
-            if v is not None:  # pragma: no branch
-                msg = "scale_window_type must be None when scale_window is None"
-                raise ValueError(msg)
-        elif scale_window == "kde" and v not in (None, "silverman"):  # pragma: no cover
-            msg = "scale_window_type must be one of [None, 'silverman'] when scale_window='kde'"
-            raise ValueError(msg)
-        elif scale_window == "kNN" and v is not None:
-            msg = "scale_window_type must be None when scale_window='kNN'; kNN windowing does not use a bandwidth type"
-            raise ValueError(msg)
-        return v
-
     @model_validator(mode="after")
     def check_silverman_constant(self) -> "Config":
         """Validate the Silverman constant.
 
-        Verifies that the value is a positive number. If the user explicitly
-        set ``silverman_constant``, also verifies that ``scale_window='kde'``
-        and ``scale_window_type='silverman'``.
+        If the user explicitly sets ``silverman_constant`` verify that ``discretization='silverman'``.
+        Also if the user explicitly sets ``k_neighbors`` verify that ``discretization='knn'``.
 
         Returns:
             Config: The validated config instance.
 
         Raises:
-            ValueError: If the constant is not a positive number, or if it was
-                explicitly set without the required scale_window context.
+            UserWarning: If a constant was explicitly set without the required discretization method.
 
         """
-        if "silverman_constant" in self.model_fields_set:
-            if self.scale_window != "kde":
-                msg = (
-                    "silverman_constant requires scale_window='kde', "
-                    f"got scale_window={self.scale_window!r}"
-                )
-                raise UserWarning(msg)
-            if self.scale_window_type != "silverman":
-                msg = (
-                    "silverman_constant requires scale_window_type='silverman', "
-                    f"got scale_window_type={self.scale_window_type!r}"
-                )
-                raise ValueError(msg)
+        if (
+            "silverman_constant" in self.model_fields_set
+            and self.discretization != "silverman"
+        ):
+            msg = (
+                "silverman_constant requires discretization='silverman', "
+                f"got discretization={self.discretization!r}"
+            )
+            raise UserWarning(msg)
+        if "k_neighbors" in self.model_fields_set and self.discretization != "knn":
+            msg = (
+                "k_neighbors require discretization='knn', "
+                f"got discretization={self.discretization!r}"
+            )
+            raise UserWarning(msg)
         return self
-
-    @field_validator("k_neighbors")
-    @classmethod
-    def check_k_neighbors(
-        cls,
-        v: K_NeighborsType,
-    ) -> K_NeighborsType:
-        """Validate the number of nearest neighbors (k).
-
-        Args:
-            v (K_NeighborsType): The value of k to check.
-
-        Returns:
-            v (K_NeighborsType): The validated value.
-
-        Raises:
-            ValueError: If k is not a positive integer or None.
-
-        """
-        if v is not None and (not isinstance(v, int) or v < 1):
-            msg = f"k_neighbors must be None or a positive integer, got {v!r}"
-            raise ValueError(msg)
-        return v
 
     @field_validator("categorical_ordinal_values_order")
     @classmethod

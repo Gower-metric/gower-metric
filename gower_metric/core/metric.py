@@ -29,8 +29,8 @@ from gower_metric.utils.categorical_ut import (
     fit_nominal_features,
     fit_ordinal_features,
 )
-from gower_metric.utils.kde_types.silverman import silverman_bandwidth
-from gower_metric.utils.knn_bandwidth import knn_bandwidth
+from gower_metric.utils.discretization_types.knn import knn_bandwidth
+from gower_metric.utils.discretization_types.silverman import silverman_bandwidth
 from gower_metric.utils.ranges import (
     enforce_oor_policy,
     get_numeric_bounds,
@@ -119,8 +119,7 @@ class Gower:
             config.categorical_ordinal_calculation_type
         )
 
-        self.scale_window: str | None = config.scale_window
-        self.scale_window_type: str | None = config.scale_window_type
+        self.discretization: str | None = config.discretization
         self.silverman_constant: int | float = config.silverman_constant
 
         self.k_neighbors = config.k_neighbors
@@ -321,7 +320,7 @@ class Gower:
             self.numeric_mins = np.array([])
             self.numeric_maxs = np.array([])
 
-        if self.scale_window == "kde" and self.scale_window_type == "silverman":
+        if self.discretization == "silverman":
             self._h_ratio = np.array(
                 [
                     silverman_bandwidth(
@@ -342,7 +341,7 @@ class Gower:
                 ],
                 dtype=float,
             )
-        elif self.scale_window == "kNN":
+        elif self.discretization == "knn":
             self._h_ratio = np.array(
                 [
                     knn_bandwidth(arr[:, j].astype(float), k=self.k_neighbors)
@@ -705,7 +704,7 @@ class Gower:
             h=self._h_numeric,
             missing_strategy=self.missing_strategy,
             weights=num_w,
-            scale_window=self.scale_window,
+            discretization=self.discretization,
         )
 
         ratio_sum, ratio_count = ratio_scale_component(
@@ -716,7 +715,7 @@ class Gower:
             h=self._h_ratio,
             missing_strategy=self.missing_strategy,
             weights=ratio_w,
-            scale_window=self.scale_window,
+            discretization=self.discretization,
         )
 
         if self.conditional_distances:

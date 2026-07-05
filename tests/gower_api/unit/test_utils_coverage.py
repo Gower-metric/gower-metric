@@ -5,8 +5,8 @@ import pandas as pd
 import pytest
 
 from gower_metric.utils.auxiliary import all_ones_off_diagonal
-from gower_metric.utils.kde_types.silverman import silverman_bandwidth
-from gower_metric.utils.knn_bandwidth import knn_bandwidth
+from gower_metric.utils.discretization_types.knn import knn_bandwidth
+from gower_metric.utils.discretization_types.silverman import silverman_bandwidth
 from gower_metric.utils.ranges import scale_span
 from gower_metric.utils.to_array import to_array
 
