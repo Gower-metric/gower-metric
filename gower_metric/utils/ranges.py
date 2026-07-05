@@ -5,7 +5,7 @@ import numpy as np
 from gower_metric.core.config import OutOfRangeStrategy
 
 
-def scale_method(valid: np.ndarray, method: str) -> float:
+def scale_span(valid: np.ndarray, method: str) -> float:
     """Compute the scaling span for a 1D array of valid (non-NaN) values.
 
     Args:
@@ -58,7 +58,7 @@ def get_numeric_ranges(
     for pos, j in enumerate(indices):
         col = X[:, j].astype(float)
         valid = col[~np.isnan(col)]
-        ranges[pos] = scale_method(valid, method)
+        ranges[pos] = scale_span(valid, method)
     return ranges
 
 

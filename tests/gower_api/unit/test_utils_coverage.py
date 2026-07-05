@@ -7,7 +7,7 @@ import pytest
 from gower_metric.utils.auxiliary import all_ones_off_diagonal
 from gower_metric.utils.kde_types.silverman import silverman_bandwidth
 from gower_metric.utils.knn_bandwidth import knn_bandwidth
-from gower_metric.utils.ranges import scale_method
+from gower_metric.utils.ranges import scale_span
 from gower_metric.utils.to_array import to_array
 
 
@@ -41,19 +41,19 @@ class TestAllOnesOffDiagonal:
 
 class TestScaleMethod:
     def test_empty_array_returns_zero(self) -> None:
-        assert scale_method(np.array([]), "range") == 0.0
+        assert scale_span(np.array([]), "range") == 0.0
 
     def test_iqr_method(self) -> None:
         arr = np.array([1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0])
-        result = scale_method(arr, "iqr")
+        result = scale_span(arr, "iqr")
         assert result > 0
 
     def test_unknown_method_raises(self) -> None:
         with pytest.raises(ValueError, match="Unknown method"):
-            scale_method(np.array([1.0, 2.0]), "bad_method")
+            scale_span(np.array([1.0, 2.0]), "bad_method")
 
     def test_constant_values_returns_zero(self) -> None:
-        assert scale_method(np.array([5.0, 5.0, 5.0]), "range") == 0.0
+        assert scale_span(np.array([5.0, 5.0, 5.0]), "range") == 0.0
 
 
 class TestSilvermanBandwidth:
