@@ -6,6 +6,7 @@ from pydantic import ValidationError
 
 from gower_metric import Config
 from gower_metric.core.config import OutOfRangeStrategy, SkipOutOfRangeValidation
+from gower_metric.utils.discretization_types import knn, silverman
 
 DEFAULT_DTYPE = np.float64
 
@@ -199,7 +200,7 @@ class TestSilvermanConstantConfigValidation:
         assert cfg.silverman_constant == 1.06
 
     def test_default_with_knn_passes(self) -> None:
-        cfg = Config(feature_types={0: "numeric"}, discretization="knn")
+        cfg = Config(feature_types={0: "numeric"}, discretization=knn.NAME)
         assert cfg.silverman_constant == 1.06
 
     @pytest.mark.parametrize("c", [0.9, 1.06, 0.5, 2.0, 1])
@@ -207,7 +208,7 @@ class TestSilvermanConstantConfigValidation:
         cfg = Config(
             feature_types={0: "numeric"},
             silverman_constant=c,
-            discretization="silverman",
+            discretization=silverman.NAME,
         )
         assert cfg.silverman_constant == c
 
@@ -220,7 +221,7 @@ class TestSilvermanConstantConfigValidation:
             Config(
                 feature_types={0: "numeric"},
                 silverman_constant=0.9,
-                discretization="knn",
+                discretization=knn.NAME,
             )
 
     def test_set_knn_constant_without_discretization_raises(self) -> None:
@@ -232,7 +233,7 @@ class TestSilvermanConstantConfigValidation:
             Config(
                 feature_types={0: "numeric"},
                 k_neighbors=3,
-                discretization="silverman",
+                discretization=silverman.NAME,
             )
 
     @pytest.mark.parametrize("invalid_value", [0, -1.0, -0.001])
@@ -241,5 +242,5 @@ class TestSilvermanConstantConfigValidation:
             Config(
                 feature_types={0: "numeric"},
                 silverman_constant=invalid_value,
-                discretization="silverman",
+                discretization=silverman.NAME,
             )

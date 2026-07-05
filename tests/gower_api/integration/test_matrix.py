@@ -4,6 +4,7 @@ import numpy as np
 import scipy.sparse as sp
 
 from gower_metric import Config, Gower
+from gower_metric.utils.discretization_types import silverman
 from gower_metric.utils.matrix.distance import calculate_matrix
 from tests.conftest import generate_adult_like_df
 
@@ -134,7 +135,7 @@ def test_gower_matrix_endpoint_if_it_symmetrical() -> None:
         feature_types=feature_types,
         feature_weights=feature_weights,
         scale_method="iqr",
-        discretization="silverman",
+        discretization=silverman.NAME,
     )
     gower = Gower(cfg).fit(df)
 

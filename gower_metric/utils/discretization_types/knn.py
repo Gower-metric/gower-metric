@@ -1,7 +1,11 @@
+from typing import Final
+
 import numpy as np
 
+NAME: Final = "knn"
 
-def knn_bandwidth(x: np.ndarray, k: int | None = None) -> float:
+
+def bandwidth(x: np.ndarray, k: int | None = None) -> float:
     """Compute the k-nearest neighbor bandwidth for a 1D array.
 
     Args:

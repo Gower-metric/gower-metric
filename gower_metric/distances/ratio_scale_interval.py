@@ -1,5 +1,6 @@
 import numpy as np
 
+from gower_metric.utils.discretization_types import knn, silverman
 from gower_metric.utils.missing import apply_missing_strategy
 
 
@@ -53,7 +54,7 @@ def ratio_scale_component(
         else:
             diff = np.zeros_like(raw)
 
-        if discretization in ("silverman", "knn") and h.size > 0:
+        if discretization in (silverman.NAME, knn.NAME) and h.size > 0:
             diff[raw <= h[pos]] = 0.0
 
         diff, mask = apply_missing_strategy(diff, present, missing_strategy)

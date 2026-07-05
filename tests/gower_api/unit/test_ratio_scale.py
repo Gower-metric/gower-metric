@@ -5,7 +5,7 @@ import pandas as pd
 import pytest
 
 from gower_metric import Config, Gower
-from gower_metric.utils.discretization_types.silverman import silverman_bandwidth
+from gower_metric.utils.discretization_types import silverman
 
 
 def test_ratio_scale_range_ndarray() -> None:
@@ -52,12 +52,12 @@ def test_ratio_scale_discretization() -> None:
     data = np.array([[0.0], [100.0], [200.0]], dtype=float)
 
     col = data[:, 0]
-    manual_h = silverman_bandwidth(col)
+    manual_h = silverman.bandwidth(col)
 
     cfg = Config(
         feature_types={0: "ratio_scale_interval"},
         scale_method="range",
-        discretization="silverman",
+        discretization=silverman.NAME,
     )
     gs_discret = Gower(cfg).fit(data)
 

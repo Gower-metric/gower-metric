@@ -5,8 +5,7 @@ import pandas as pd
 import pytest
 
 from gower_metric.utils.auxiliary import all_ones_off_diagonal
-from gower_metric.utils.discretization_types.knn import knn_bandwidth
-from gower_metric.utils.discretization_types.silverman import silverman_bandwidth
+from gower_metric.utils.discretization_types import knn, silverman
 from gower_metric.utils.ranges import scale_span
 from gower_metric.utils.to_array import to_array
 
@@ -58,31 +57,31 @@ class TestScaleMethod:
 
 class TestSilvermanBandwidth:
     def test_less_than_two_samples_returns_zero(self) -> None:
-        assert silverman_bandwidth(np.array([1.0])) == 0.0
+        assert silverman.bandwidth(np.array([1.0])) == 0.0
 
     def test_empty_after_nan_removal(self) -> None:
-        assert silverman_bandwidth(np.array([np.nan])) == 0.0
+        assert silverman.bandwidth(np.array([np.nan])) == 0.0
 
     def test_normal_data(self) -> None:
         rng = np.random.default_rng(42)
         data = rng.normal(0, 1, 100)
-        h = silverman_bandwidth(data)
+        h = silverman.bandwidth(data)
         assert h > 0
 
 
 class TestKnnBandwidth:
     def test_single_point_returns_zero(self) -> None:
-        assert knn_bandwidth(np.array([5.0])) == 0.0
+        assert knn.bandwidth(np.array([5.0])) == 0.0
 
     def test_empty_returns_zero(self) -> None:
-        assert knn_bandwidth(np.array([])) == 0.0
+        assert knn.bandwidth(np.array([])) == 0.0
 
     def test_normal_data(self) -> None:
         data = np.arange(100, dtype=float)
-        h = knn_bandwidth(data)
+        h = knn.bandwidth(data)
         assert h > 0
 
     def test_with_explicit_k(self) -> None:
         data = np.arange(20, dtype=float)
-        h = knn_bandwidth(data, k=3)
+        h = knn.bandwidth(data, k=3)
         assert h > 0

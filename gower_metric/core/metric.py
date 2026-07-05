@@ -29,8 +29,10 @@ from gower_metric.utils.categorical_ut import (
     fit_nominal_features,
     fit_ordinal_features,
 )
-from gower_metric.utils.discretization_types.knn import knn_bandwidth
-from gower_metric.utils.discretization_types.silverman import silverman_bandwidth
+from gower_metric.utils.discretization_types import (
+    knn,
+    silverman,
+)
 from gower_metric.utils.ranges import (
     enforce_oor_policy,
     get_numeric_bounds,
@@ -320,10 +322,10 @@ class Gower:
             self.numeric_mins = np.array([])
             self.numeric_maxs = np.array([])
 
-        if self.discretization == "silverman":
+        if self.discretization == silverman.NAME:
             self._h_ratio = np.array(
                 [
-                    silverman_bandwidth(
+                    silverman.bandwidth(
                         arr[:, j].astype(float),
                         c=self.silverman_constant,
                     )
@@ -333,7 +335,7 @@ class Gower:
             )
             self._h_numeric = np.array(
                 [
-                    silverman_bandwidth(
+                    silverman.bandwidth(
                         arr[:, j].astype(float),
                         c=self.silverman_constant,
                     )
@@ -341,17 +343,17 @@ class Gower:
                 ],
                 dtype=float,
             )
-        elif self.discretization == "knn":
+        elif self.discretization == knn.NAME:
             self._h_ratio = np.array(
                 [
-                    knn_bandwidth(arr[:, j].astype(float), k=self.k_neighbors)
+                    knn.bandwidth(arr[:, j].astype(float), k=self.k_neighbors)
                     for j in self.ratio_scale_indices
                 ],
                 dtype=float,
             )
             self._h_numeric = np.array(
                 [
-                    knn_bandwidth(arr[:, j].astype(float), k=self.k_neighbors)
+                    knn.bandwidth(arr[:, j].astype(float), k=self.k_neighbors)
                     for j in self.numeric_indices
                 ],
                 dtype=float,
