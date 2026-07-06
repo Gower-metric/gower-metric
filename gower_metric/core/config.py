@@ -47,7 +47,7 @@ class Config(BaseModel):
         scale_method (ScaleMethod): Optional scaling method for numeric features. Can be 'range' or 'iqr'.
             Default is 'range' if omitted.
         discretization (Discretization | None): Optional type of adaptive discretization. Can be None, 'silverman' or 'knn'.
-            Default is None if omitted.
+            Default is None if omitted. When enabled, it reduces the disproportionate influence of categorical variables on the final result.
         silverman_constant (SilvermanConstant): Optional flag to determine the value of parameter ``c`` during KDE
             silverman calculations. Default to ``1.06`` if omitted. For more information, please refer to
             references -> Distances with mixed type variables some modified Gower's coefficients (2021) p. 8-9.
@@ -57,7 +57,7 @@ class Config(BaseModel):
             the columns of type 'categorical_ordinal'. Must contain values for all such columns.
         categorical_ordinal_calculation_type (CategoricalOrdinalCalcType): Optional calculation type for categorical
             ordinal features. Can be 'kaufman' or 'podani'. Default is 'kaufman' if omitted.
-        k_neighbors (int | None): Optional number of nearest neighbors for 'knn' scaling window.
+        k_neighbors (int | None): Optional number of nearest neighbors for 'knn' discretization.
             Default is None if omitted. If k_neighbors is None, it will be set to the square root of the number of points.
         conditional_distances (bool): Default to False. If set to True, two-step approach will be
             triggered to calculate formula. More information in `references year 2021 -> chapter 3 <https://arxiv.org/abs/2101.02481>`_.
