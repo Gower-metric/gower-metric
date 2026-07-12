@@ -1,7 +1,11 @@
+from typing import Final
+
 import numpy as np
 
+NAME: Final = "knn"
 
-def knn_bandwidth(x: np.ndarray, k: int | None = None) -> float:
+
+def bandwidth(x: np.ndarray, k: int | None = None) -> float:
     """Compute the k-nearest neighbor bandwidth for a 1D array.
 
     Args:
@@ -22,6 +26,6 @@ def knn_bandwidth(x: np.ndarray, k: int | None = None) -> float:
 
     k = int(np.sqrt(n)) if (k is None or k < 1) else k
     k = min(k, n - 1)
-    diffs = np.abs(x[k:] - x[:-k])
+    diffs = x[k:] - x[:-k]
 
     return float(np.median(diffs))

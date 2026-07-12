@@ -9,8 +9,7 @@ Utils submodule
    utils/binary_ut
    utils/cat_ord_ut
    utils/categorical_ut
-   utils/kde_types
-   utils/knn_bandwidth
+   utils/discretization_types
    utils/matrix
    utils/missing
    utils/ranges

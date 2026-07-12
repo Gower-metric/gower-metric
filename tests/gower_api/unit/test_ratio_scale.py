@@ -5,7 +5,7 @@ import pandas as pd
 import pytest
 
 from gower_metric import Config, Gower
-from gower_metric.utils.kde_types.silverman import silverman_bandwidth
+from gower_metric.utils.discretization_types import silverman
 
 
 def test_ratio_scale_range_ndarray() -> None:
@@ -47,24 +47,23 @@ def test_ratio_scale_range_pandas() -> None:
     assert pytest.approx(gower(data.iloc[0], data.iloc[3]), rel=1e-6) == 0.0
 
 
-def test_ratio_scale_kde_window_h() -> None:
+def test_ratio_scale_discretization() -> None:
     # result >> h
     data = np.array([[0.0], [100.0], [200.0]], dtype=float)
 
     col = data[:, 0]
-    manual_h = silverman_bandwidth(col)
+    manual_h = silverman.bandwidth(col)
 
     cfg = Config(
         feature_types={0: "ratio_scale_interval"},
         scale_method="range",
-        scale_window="kde",
-        scale_window_type="silverman",
+        discretization=silverman.NAME,
     )
-    gs_kde = Gower(cfg).fit(data)
+    gs_discret = Gower(cfg).fit(data)
 
-    assert isinstance(gs_kde._h_ratio, np.ndarray)
-    assert gs_kde._h_ratio.shape == (1,)
-    assert pytest.approx(gs_kde._h_ratio[0], rel=1e-6) == manual_h
+    assert isinstance(gs_discret._h_ratio, np.ndarray)
+    assert gs_discret._h_ratio.shape == (1,)
+    assert pytest.approx(gs_discret._h_ratio[0], rel=1e-6) == manual_h
 
     cfg2 = Config(
         feature_types={0: "ratio_scale_interval"},
@@ -74,5 +73,5 @@ def test_ratio_scale_kde_window_h() -> None:
 
     for xi, xj in itertools.product(data, data):
         d1 = gs_plain(xi, xj)
-        d2 = gs_kde(xi, xj)
+        d2 = gs_discret(xi, xj)
         assert pytest.approx(d2, rel=1e-6) == d1

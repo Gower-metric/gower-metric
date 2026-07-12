@@ -3,8 +3,7 @@ import pandas as pd
 import pytest
 
 from gower_metric import Config, Gower
-from gower_metric.utils.kde_types.silverman import silverman_bandwidth
-from gower_metric.utils.knn_bandwidth import knn_bandwidth
+from gower_metric.utils.discretization_types import knn, silverman
 from tests.gower_api.precision.conftest import BaseTest
 
 
@@ -15,7 +14,7 @@ class TestComputeBandwidth(BaseTest):
 
         cfg = Config(
             feature_types={0: "ratio_scale_interval", 1: "numeric"},
-            scale_window="kNN",
+            discretization=knn.NAME,
             scale_method="range",
             data_type=self.dtype,
         )
@@ -32,7 +31,7 @@ class TestComputeBandwidth(BaseTest):
 
         cfg = Config(
             feature_types={"ratio_col": "ratio_scale_interval", "num_col": "numeric"},
-            scale_window="kNN",
+            discretization=knn.NAME,
             scale_method="range",
             data_type=self.dtype,
         )
@@ -42,29 +41,28 @@ class TestComputeBandwidth(BaseTest):
         assert (np.asarray(gs_knn._h_ratio) > 0).all()
         assert (np.asarray(gs_knn._h_numeric) > 0).all()
 
-    def test_ratio_scale_kde_window_h_multi(self) -> None:
+    def test_ratio_scale_discretization_multi(self) -> None:
         rng = np.random.default_rng(seed=123)
         data = rng.normal(size=(80, 2))
 
         cfg = Config(
             feature_types={0: "ratio_scale_interval", 1: "numeric"},
-            scale_window="kde",
-            scale_window_type="silverman",
+            discretization=silverman.NAME,
             scale_method="range",
             data_type=self.dtype,
         )
-        gs_kde = Gower(cfg).fit(data)
+        gs_discret = Gower(cfg).fit(data)
 
-        assert isinstance(gs_kde._h_ratio, np.ndarray)
-        assert gs_kde._h_ratio.shape == (1,)
-        assert isinstance(gs_kde._h_numeric, np.ndarray)
-        assert gs_kde._h_numeric.shape == (1,)
+        assert isinstance(gs_discret._h_ratio, np.ndarray)
+        assert gs_discret._h_ratio.shape == (1,)
+        assert isinstance(gs_discret._h_numeric, np.ndarray)
+        assert gs_discret._h_numeric.shape == (1,)
 
-        manual_h_ratio = silverman_bandwidth(data[:, 0])
-        manual_h_numeric = silverman_bandwidth(data[:, 1])
+        manual_h_ratio = silverman.bandwidth(data[:, 0])
+        manual_h_numeric = silverman.bandwidth(data[:, 1])
 
-        assert pytest.approx(gs_kde._h_ratio[0], rel=1e-12) == manual_h_ratio
-        assert pytest.approx(gs_kde._h_numeric[0], rel=1e-12) == manual_h_numeric
+        assert pytest.approx(gs_discret._h_ratio[0], rel=1e-12) == manual_h_ratio
+        assert pytest.approx(gs_discret._h_numeric[0], rel=1e-12) == manual_h_numeric
 
     def test_knn_bandwidth_values_and_effect(self) -> None:
         data = np.array(
@@ -79,15 +77,15 @@ class TestComputeBandwidth(BaseTest):
         k = 1
         cfg = Config(
             feature_types={0: "ratio_scale_interval", 1: "numeric"},
-            scale_window="kNN",
+            discretization=knn.NAME,
             k_neighbors=k,
             scale_method="range",
             data_type=self.dtype,
         )
         gower = Gower(cfg).fit(data)
 
-        expected_h_ratio = knn_bandwidth(data[:, 0], k=k)
-        expected_h_numeric = knn_bandwidth(data[:, 1], k=k)
+        expected_h_ratio = knn.bandwidth(data[:, 0], k=k)
+        expected_h_numeric = knn.bandwidth(data[:, 1], k=k)
 
         assert pytest.approx(gower._h_ratio[0], rel=1e-12) == expected_h_ratio
         assert pytest.approx(gower._h_numeric[0], rel=1e-12) == expected_h_numeric

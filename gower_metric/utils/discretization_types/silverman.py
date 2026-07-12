@@ -1,9 +1,12 @@
+from typing import Final
+
 import numpy as np
 
-MIN_SAMPLES = 2
+MIN_SAMPLES: int = 2
+NAME: Final = "silverman"
 
 
-def silverman_bandwidth(x: np.ndarray, c: float = 1.06) -> float:
+def bandwidth(x: np.ndarray, c: float = 1.06) -> float:
     """Calculate Silverman's rule of thumb bandwidth for kernel density estimation.
 
     Args:

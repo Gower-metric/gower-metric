@@ -1,5 +1,6 @@
 import numpy as np
 
+from gower_metric.utils.discretization_types import knn, silverman
 from gower_metric.utils.missing import apply_missing_strategy
 
 
@@ -11,7 +12,7 @@ def numeric_component(
     h: np.ndarray,
     missing_strategy: str = "ignore",
     weights: np.ndarray | None = None,
-    scale_window: str | None = None,
+    discretization: str | None = None,
 ) -> tuple[np.ndarray, np.ndarray]:
     """Compute range-scaled Gower component for interval-scale (numeric) features.
 
@@ -25,7 +26,7 @@ def numeric_component(
         h (np.ndarray): optional 1D array of bandwidths for KDE scaling
         missing_strategy (str): one of "ignore", "max_dist", "raise_error"
         weights (Optional[np.ndarray]): optional 1D array of same length as numeric_indices
-        scale_window (Optional[str]): optional scaling window method
+        discretization (Optional[str]): optional discretization method
 
     Returns:
         tuple[np.ndarray, np.ndarray]:
@@ -56,7 +57,7 @@ def numeric_component(
         else:
             diff = np.zeros_like(raw)
 
-        if scale_window in ("kde", "kNN") and h.size > 0:
+        if discretization in (silverman.NAME, knn.NAME) and h.size > 0:
             diff[raw <= h[pos]] = 0.0
 
         diff, mask = apply_missing_strategy(diff, present, missing_strategy)

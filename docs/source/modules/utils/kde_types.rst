@@ -2,7 +2,7 @@
 KDE Types
 ==========
 
-.. automodule:: gower_metric.utils.kde_types
+.. automodule:: gower_metric.utils.discretization_types
    :members:
    :undoc-members:
    :show-inheritance:
@@ -10,4 +10,5 @@ KDE Types
 .. toctree::
    :maxdepth: 1
    
-   kde_types/silverman
+   discretization_types/silverman
+   discretization_types/knn

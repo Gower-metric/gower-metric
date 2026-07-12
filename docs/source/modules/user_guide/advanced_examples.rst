@@ -111,8 +111,7 @@ On top of the examples before, we can also play with other class functionalities
         categorical_ordinal_calculation_type="podani",
         scale_method="iqr",
         missing_strategy="max_dist",
-        scale_window="kde",
-        scale_window_type="silverman",
+        discretization="silverman",
         conditional_distances=True,
     )
     gower = Gower(cfg)
