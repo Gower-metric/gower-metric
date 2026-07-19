@@ -1,20 +1,17 @@
+[tox]
+requires = ["tox>=4.22"]
+
 [env_run_base]
 description = "Run tests"
-requires = ["tox>=4"]
-deps = ["pytest", "pytest-cov", "check-manifest", "rpy2", "setuptools", "scipy", "scikit-learn", "numpy", "pandas", "mypy", "tqdm", "pydantic", "openpyxl"]
-allowlist_externals = ["pytest", "python", "check-manifest"]
-commands = [
-    ["pytest", "{posargs:tests}"],
-    ["python", "-m", "build"],
-    ["check-manifest"],
-    ]
+dependency_groups = ["tests", "r_env_tests"]
+commands = [["pytest", "{posargs:tests}"]]
 
 [env.py310]
 description = "Run tests with Python 3.10"
 base_python = ["python3.10"]
 
 [env.py311]
-description = "Run tests with Python 3.11" 
+description = "Run tests with Python 3.11"
 base_python = ["python3.11"]
 
 [env.py312]
@@ -29,5 +26,18 @@ base_python = ["python3.13"]
 description = "Run tests with Python 3.14"
 base_python = ["python3.14"]
 
+[env.py314t]
+description = "Run tests with Python 3.14-freethread"
+base_python = ["python3.14t"]
+
 [env.py]
 description = "Run tests with current Python"
+
+[env.package]
+description = "Build sdist + wheel and validate the sdist manifest"
+skip_install = true
+deps = ["build", "check-manifest"]
+commands = [
+    ["python", "-m", "build"],
+    ["check-manifest"],
+]

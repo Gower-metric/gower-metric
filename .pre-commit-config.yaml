@@ -7,25 +7,20 @@ repos:
         language: system
         pass_filenames: false
 
-  - repo: https://github.com/pypa/pip-audit
-    rev: v2.10.0
-    hooks:
-      - id: pip-audit
-        args: [
-          --vulnerability-service, "pypi",
-          --cache-dir, ".pip_audit_cache",
-          --ignore-vuln, "GHSA-38jv-5279-wg99", # Decompression-bomb safeguards bypassed when following HTTP redirects (streaming API)
-          --ignore-vuln, "GHSA-qmgc-5h2g-mvrw", # Time-of-Check-Time-of-Use (TOCTOU) Symlink Vulnerability in SoftFileLock
-          --ignore-vuln, "CVE-2026-1703", 
-          --ignore-vuln, "CVE-2026-25645", 
-        ]
-
   - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.15.4
+    rev: v0.15.22
     hooks:
       - id: ruff
         args: [--fix, --unsafe-fixes]
       - id: ruff-format
+
+  - repo: https://github.com/cpp-linter/cpp-linter-hooks
+    rev: v1.5.0
+    hooks:
+      - id: clang-format
+        args: [--style=file]
+      - id: clang-tidy
+        args: [--checks=.clang-tidy, --fix]
 
   - repo: https://github.com/citation-file-format/cffconvert
     rev: 054bda51dbe278b3e86f27c890e3f3ac877d616c

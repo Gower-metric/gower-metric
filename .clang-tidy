@@ -1,0 +1,9 @@
+Checks: >
+  clang-analyzer-*,
+  bugprone-*,
+  modernize-*,
+  performance-*,
+HeaderFilterRegex: 'src/gower_metric/cpp/'
+HeaderFileExtensions: ['hpp']
+ImplementationFileExtensions: ['cpp']
+WarningsAsErrors: ''
