@@ -3,7 +3,7 @@ Checks: >
   bugprone-*,
   modernize-*,
   performance-*,
-HeaderFilterRegex: 'src/gower_metric/cpp/'
+HeaderFilterRegex: 'gower_metric/cpp/'
 HeaderFileExtensions: ['hpp']
 ImplementationFileExtensions: ['cpp']
 WarningsAsErrors: ''

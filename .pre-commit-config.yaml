@@ -20,7 +20,7 @@ repos:
       - id: clang-format
         args: [--style=file]
       - id: clang-tidy
-        args: [--checks=.clang-tidy, --fix]
+        args: [-p, build, --fix]
 
   - repo: https://github.com/citation-file-format/cffconvert
     rev: 054bda51dbe278b3e86f27c890e3f3ac877d616c
