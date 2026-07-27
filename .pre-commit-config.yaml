@@ -7,6 +7,14 @@ repos:
         language: system
         pass_filenames: false
 
+      - id: clang-tidy
+        name: clang-tidy
+        entry: clang-tidy -p build --fix
+        args: [gower_metric/cpp/bindings.cpp, gower_metric/cpp/config/gower_config.cpp]
+        language: system
+        pass_filenames: false
+        files: ^gower_metric/cpp/.*\.(cpp|hpp)$
+
   - repo: https://github.com/astral-sh/ruff-pre-commit
     rev: v0.15.22
     hooks:
@@ -19,8 +27,6 @@ repos:
     hooks:
       - id: clang-format
         args: [--style=file]
-      - id: clang-tidy
-        args: [-p, build, --fix]
 
   - repo: https://github.com/citation-file-format/cffconvert
     rev: 054bda51dbe278b3e86f27c890e3f3ac877d616c

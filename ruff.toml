@@ -19,6 +19,9 @@ include = [
     "docs/**/*.rst",
 ]
 
+exclude = ["gower_metric/cpp/cpp_engine.pyi"]
+force-exclude = true
+
 [lint]
 select = ["ALL"]
 ignore = [
