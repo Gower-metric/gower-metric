@@ -28,13 +28,19 @@ find_package(nanobind CONFIG REQUIRED)
 
 find_package(OpenMP)
 
-nanobind_add_module(cpp_engine
+set(GOWER_NB_OPTIONS
   STABLE_ABI
   NB_STATIC
   FREE_THREADED
   LTO
   NOMINSIZE
-  MUSL_DYNAMIC_LIBCPP
+  MUSL_DYNAMIC_LIBCPP)
+if(CMAKE_BUILD_TYPE STREQUAL "RelWithDebInfo")
+  list(APPEND GOWER_NB_OPTIONS NOSTRIP)
+endif()
+
+nanobind_add_module(cpp_engine
+  ${GOWER_NB_OPTIONS}
   gower_metric/cpp/bindings.cpp
   gower_metric/cpp/config/gower_config.cpp)
 
