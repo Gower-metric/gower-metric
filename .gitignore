@@ -58,3 +58,4 @@ poetry.lock
 
 # Other
 results/
+scripts/
