@@ -7,6 +7,7 @@
 #include <vector>
 
 #include "../config/gower_config.hpp"
+#include "../utils/nan.hpp"
 
 namespace gower_blocked {
 
@@ -24,7 +25,7 @@ auto supports_blocked(const CppConfig<T>& cfg) -> bool {
 template <typename T>
 inline auto has_missing(const T* data, const std::size_t count) -> bool {
   for (std::size_t i = 0; i < count; ++i) {
-    if (data[i] != data[i]) return true;
+    if (!gower_detail::is_present(data[i])) return true;
   }
   return false;
 }
@@ -99,10 +100,10 @@ inline void block(const CppConfig<T>& cfg, const BlockParams<T>& params) {
     const T xv = x_soa[static_cast<std::size_t>(f) * x_stride + xi];
     const T* col = y_soa + static_cast<std::size_t>(f) * y_stride + j0;
     const T wf = uniform ? T(1) : weights[f];
-    const bool x_ok = xv == xv;
+    const bool x_ok = gower_detail::is_present(xv);
     for (std::size_t b = 0; b < len; ++b) {
       const T yv = col[b];
-      const bool ok = NanFree || (x_ok && yv == yv);
+      const bool ok = NanFree || (x_ok && gower_detail::is_present(yv));
       const T w = (ok || max_dist) ? wf : T(0);
       cat_diff[b] += w * (ok ? (xv == yv ? T(0) : T(1)) : T(1));
       if constexpr (!ConstDenom) cat_w[b] += w;
@@ -116,10 +117,10 @@ inline void block(const CppConfig<T>& cfg, const BlockParams<T>& params) {
     const T denom = cfg.ordinal_meta[f].denom;
     const T denom_safe = denom > T(0) ? denom : T(1);
     const bool scaled = denom > T(0);
-    const bool x_ok = xv == xv;
+    const bool x_ok = gower_detail::is_present(xv);
     for (std::size_t b = 0; b < len; ++b) {
       const T yv = col[b];
-      const bool ok = NanFree || (x_ok && yv == yv);
+      const bool ok = NanFree || (x_ok && gower_detail::is_present(yv));
       const T w = (ok || max_dist) ? wf : T(0);
       const T raw = xv < yv ? yv - xv : xv - yv;
       const T d = scaled ? raw / denom_safe : T(0);
@@ -132,11 +133,11 @@ inline void block(const CppConfig<T>& cfg, const BlockParams<T>& params) {
     const T xv = x_soa[static_cast<std::size_t>(f) * x_stride + xi];
     const T* col = y_soa + static_cast<std::size_t>(f) * y_stride + j0;
     const T wf = uniform ? T(1) : weights[f];
-    const bool x_ok = xv == xv;
+    const bool x_ok = gower_detail::is_present(xv);
     const bool x_pos = xv == T(1);
     for (std::size_t b = 0; b < len; ++b) {
       const T yv = col[b];
-      const bool ok = NanFree || (x_ok && yv == yv);
+      const bool ok = NanFree || (x_ok && gower_detail::is_present(yv));
       const T w = (ok || max_dist) ? wf : T(0);
       cat_diff[b] += w * (ok ? (x_pos == (yv == T(1)) ? T(0) : T(1)) : T(1));
       if constexpr (!ConstDenom) cat_w[b] += w;
@@ -147,11 +148,11 @@ inline void block(const CppConfig<T>& cfg, const BlockParams<T>& params) {
     const T xv = x_soa[static_cast<std::size_t>(f) * x_stride + xi];
     const T* col = y_soa + static_cast<std::size_t>(f) * y_stride + j0;
     const T wf = uniform ? T(1) : weights[f];
-    const bool x_ok = xv == xv;
+    const bool x_ok = gower_detail::is_present(xv);
     const bool x_pos = xv == T(1);
     for (std::size_t b = 0; b < len; ++b) {
       const T yv = col[b];
-      const bool ok = NanFree || (x_ok && yv == yv);
+      const bool ok = NanFree || (x_ok && gower_detail::is_present(yv));
       const bool y_pos = yv == T(1);
       const bool counted = ok ? (x_pos || y_pos) : max_dist;
       const T w = counted ? wf : T(0);
@@ -168,10 +169,10 @@ inline void block(const CppConfig<T>& cfg, const BlockParams<T>& params) {
     const T range_safe = range > T(0) ? range : T(1);
     const bool scaled = range > T(0);
     const T band = cfg.bandwidths[f];
-    const bool x_ok = xv == xv;
+    const bool x_ok = gower_detail::is_present(xv);
     for (std::size_t b = 0; b < len; ++b) {
       const T yv = col[b];
-      const bool ok = NanFree || (x_ok && yv == yv);
+      const bool ok = NanFree || (x_ok && gower_detail::is_present(yv));
       const T w = (ok || max_dist) ? wf : T(0);
       const T raw = xv < yv ? yv - xv : xv - yv;
       T d = raw / range_safe;
