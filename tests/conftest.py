@@ -1,15 +1,5 @@
-import os
-import sys
-
 import numpy as np
 import pandas as pd
-
-# assuming all main files and imports are one level above "tests" subfolder
-main_repo_root: str = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
-
-# if not present, add it
-if main_repo_root not in sys.path:
-    sys.path.insert(0, main_repo_root)
 
 TYPES_TO_CHECK = [
     "float16",
@@ -97,7 +87,7 @@ def generate_mixed_df(n: int, rng: np.random.Generator) -> pd.DataFrame:
     return pd.DataFrame(
         {
             "Age": np.clip(rng.normal(35, 12, n), 18, 80).astype(int),
-            "Salary": np.round(rng.exponential(45000, n), 2),
+            "Salary": np.round(np.clip(rng.exponential(45000, n), 0, 60000), 2),
             "Have_children": have_children,
             "Is_smoking": is_smoking,
             "Birth": rng.choice(COUNTRIES, n),
