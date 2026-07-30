@@ -1,6 +1,7 @@
 import warnings
 
 import numpy as np
+import pandas as pd
 
 from gower_metric.core.config import OutOfRangeStrategy
 
@@ -90,8 +91,19 @@ def get_numeric_bounds(
     return mins, maxs
 
 
+def _extract_float_columns(
+    X: pd.DataFrame | np.ndarray,
+    indices: list[int],
+) -> np.ndarray:
+    """Return the selected columns as a (n_samples, len(indices)) float64 array."""
+    if isinstance(X, pd.DataFrame):
+        return np.asarray(X.iloc[:, indices].to_numpy(dtype=np.float64))
+    arr = np.asarray(X)
+    return arr[:, indices].astype(np.float64)
+
+
 def check_out_of_range(
-    X: np.ndarray,
+    X: pd.DataFrame | np.ndarray,
     indices: list[int],
     mins: np.ndarray,
     maxs: np.ndarray,
@@ -100,7 +112,7 @@ def check_out_of_range(
     """Check which columns have values outside the fitted [min, max].
 
     Args:
-        X (np.ndarray): array of shape (n_samples, n_features).
+        X (pd.DataFrame | np.ndarray): input of shape (n_samples, n_features).
         indices (list[int]): column indices to check.
         mins (np.ndarray): fitted minimums, length len(indices).
         maxs (np.ndarray): fitted maximums, length len(indices).
@@ -110,26 +122,27 @@ def check_out_of_range(
         list[str]: detail strings for offending columns (empty if all in range).
 
     """
-    details: list[str] = []
-    for pos, j in enumerate(indices):
-        if np.isnan(mins[pos]):
-            continue
-        col = X[:, j].astype(float)
-        valid = col[~np.isnan(col)]
-        if valid.size == 0:
-            continue
-        col_min, col_max = valid.min(), valid.max()
-        if col_min < mins[pos] or col_max > maxs[pos]:
-            details.append(
-                f"{feature_label} column {j}: "
-                f"values in [{col_min}, {col_max}], "
-                f"fitted range [{mins[pos]}, {maxs[pos]}]",
-            )
-    return details
+    sub = _extract_float_columns(X, indices)
+    if sub.shape[0] == 0:
+        return []
+
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore", RuntimeWarning)
+        col_mins = np.nanmin(sub, axis=0)
+        col_maxs = np.nanmax(sub, axis=0)
+
+    violated = (col_mins < mins) | (col_maxs > maxs)
+    return [
+        f"{feature_label} column {j}: "
+        f"values in [{col_mins[pos]}, {col_maxs[pos]}], "
+        f"fitted range [{mins[pos]}, {maxs[pos]}]"
+        for pos, j in enumerate(indices)
+        if violated[pos]
+    ]
 
 
 def enforce_oor_policy(
-    *arrays: np.ndarray,
+    *arrays: pd.DataFrame | np.ndarray,
     strategy: OutOfRangeStrategy,
     numeric_indices: list[int],
     numeric_mins: np.ndarray,
@@ -147,7 +160,7 @@ def enforce_oor_policy(
     Does nothing when strategy is 'clip'.
 
     Args:
-        *arrays (np.ndarray): one or more object arrays of shape (n_samples, n_features).
+        *arrays (pd.DataFrame | np.ndarray): one or more inputs of shape (n_samples, n_features).
         strategy (OutOfRangeStrategy): 'clip', 'warning', or 'error'.
         numeric_indices (list[int]): fitted numeric column indices.
         numeric_mins (np.ndarray): fitted minimums for numeric columns.

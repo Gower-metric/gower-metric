@@ -14,7 +14,7 @@ def map_ordered_values(
 
     The returned mapping is lookup-ready for both raw user values (e.g. strings)
     and post-``Gower.transform`` numeric ranks — callers can feed either form
-    into ``categorical_ordinal_component`` without post-processing the map.
+    into the ordinal distance calculation without post-processing the map.
 
     Args:
         ordered_values (Sequence[Any] | np.ndarray): A defined sequence of

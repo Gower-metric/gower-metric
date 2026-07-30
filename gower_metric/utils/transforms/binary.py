@@ -38,12 +38,12 @@ def _transform_binary(
             ``"error"``, or if an explicit value order is violated.
 
     """
-    transformed_col = np.zeros(col.shape[0], dtype=float)
     mapping = metadata["mapping"]
     is_explicit = metadata.get("is_explicit_order", False)
 
+    non_null_mask = ~pd.isna(col)
+
     if not is_explicit:
-        non_null_mask = ~pd.isna(col)
         unique_transform_vals = set(np.unique(col[non_null_mask]))
         fitted_vals = set(mapping.keys())
         unseen_vals = unique_transform_vals - fitted_vals
@@ -60,10 +60,15 @@ def _transform_binary(
             )
             raise ValueError(msg)
 
-    for i, v in enumerate(col):
-        if pd.isna(v):
-            transformed_col[i] = np.nan
-        elif v not in mapping:
+    transformed_col = np.full(col.shape[0], np.nan, dtype=float)
+    matched = ~non_null_mask
+    for v, code in mapping.items():
+        value_mask = non_null_mask & (col == v)
+        transformed_col[value_mask] = code
+        matched |= value_mask
+
+    if not matched.all():
+        for v in pd.unique(col[~matched]):
             if is_explicit:
                 unseen_msg = (
                     f"Value '{v}' in column {col_idx} violates {binary_type}_value_order. "
@@ -82,9 +87,6 @@ def _transform_binary(
                     UserWarning,
                     stacklevel=3,
                 )
-            transformed_col[i] = np.nan
-        else:
-            transformed_col[i] = mapping[v]
 
     return transformed_col
 
