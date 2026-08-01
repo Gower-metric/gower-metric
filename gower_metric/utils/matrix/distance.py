@@ -15,7 +15,10 @@ from gower_metric.utils.ranges import enforce_oor_policy
 if TYPE_CHECKING:
     from gower_metric import Gower
 
-_RETIRED_PARAMS_REASON = "no longer has any effect."
+_RETIRED_PARAMS_REASON = (
+    "no longer has any effect. Thread count is controlled by the OMP_NUM_THREADS "
+    "environment variable."
+)
 
 
 def _as_native_matrix(model: "Gower", X: pd.DataFrame | np.ndarray) -> np.ndarray:

@@ -4,6 +4,8 @@ import numpy as np
 import pandas as pd
 from sklearn.preprocessing import OrdinalEncoder
 
+from gower_metric.utils.transforms.encoding import encode_categories
+
 
 def transform_categorical_nominal(
     col: np.ndarray,
@@ -30,12 +32,11 @@ def transform_categorical_nominal(
     transformed_col = np.full(col_arr.shape[0], np.nan, dtype=data_type)
 
     if non_null_mask.any():
-        encoded = (
-            enc.transform(col_arr[non_null_mask].reshape(-1, 1))
-            .astype(data_type)
-            .ravel()
+        transformed_col[non_null_mask] = encode_categories(
+            col_arr[non_null_mask],
+            enc,
+            data_type,
         )
-        transformed_col[non_null_mask] = encoded
 
     if handle_unseen == "warning":
         nan_output = np.isnan(transformed_col)
@@ -77,12 +78,11 @@ def transform_categorical_ordinal(
     transformed_col = np.full(col_arr.shape[0], np.nan, dtype=data_type)
 
     if non_null_mask.any():
-        encoded = (
-            enc.transform(col_arr[non_null_mask].reshape(-1, 1))
-            .astype(data_type)
-            .ravel()
+        transformed_col[non_null_mask] = encode_categories(
+            col_arr[non_null_mask],
+            enc,
+            data_type,
         )
-        transformed_col[non_null_mask] = encoded
 
     if handle_unseen == "warning":
         nan_output = np.isnan(transformed_col)
