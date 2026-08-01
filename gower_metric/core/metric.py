@@ -10,14 +10,6 @@ from gower_metric.core.config import (
     SkipOutOfRangeValidation,
 )
 from gower_metric.core.exceptions import IllegalStateError
-from gower_metric.distances.binary_asymmetric import (
-    binary_asymmetric_component,
-)
-from gower_metric.distances.binary_symmetric import binary_symmetric_component
-from gower_metric.distances.categorical_nominal import categorical_nominal_component
-from gower_metric.distances.categorical_ordinal import categorical_ordinal_component
-from gower_metric.distances.numeric_interval import numeric_component
-from gower_metric.distances.ratio_scale_interval import ratio_scale_component
 from gower_metric.utils.binary_ut import (
     fit_binary_features,
 )
@@ -29,6 +21,7 @@ from gower_metric.utils.categorical_ut import (
     fit_nominal_features,
     fit_ordinal_features,
 )
+from gower_metric.utils.cpp_middleware.config_builder import build_cpp_config
 from gower_metric.utils.discretization_types import (
     knn,
     silverman,
@@ -38,7 +31,7 @@ from gower_metric.utils.ranges import (
     get_numeric_bounds,
     get_numeric_ranges,
 )
-from gower_metric.utils.to_array import to_array
+from gower_metric.utils.row_cache import RowEncodeCache
 from gower_metric.utils.transforms import (
     transform_binary_asymmetric,
     transform_binary_symmetric,
@@ -49,6 +42,11 @@ from gower_metric.weights.weights import get_weights
 
 if TYPE_CHECKING:
     from sklearn.preprocessing import OrdinalEncoder
+
+    from gower_metric.cpp import CppConfig, CppConfigF, CppConfigH
+
+_NUMERIC_DTYPE_KINDS = "iufcm"
+"""Dtype kind codes that ``np.issubdtype(dtype, np.number)`` accepts."""
 
 
 class Gower:
@@ -149,6 +147,8 @@ class Gower:
         self.skip_oor: SkipOutOfRangeValidation = config.skip_out_of_range_validation
 
         self._is_fitted: bool = False
+        self._row_cache = RowEncodeCache()
+        self.cpp_config: CppConfig | CppConfigF | CppConfigH | None = None
         self.binary_symmetric_metadata: dict[int, dict[str, Any]] = {}
         self.binary_asymmetric_metadata: dict[int, dict[str, Any]] = {}
         self.nominal_metadata: dict[int, OrdinalEncoder] = {}
@@ -165,7 +165,29 @@ class Gower:
         """
         return getattr(self, "_is_fitted", False)
 
-    def fit(self, X: pd.DataFrame | np.ndarray) -> "Gower":  # noqa: PLR0912
+    def __getstate__(self) -> dict[str, Any]:
+        """Return picklable state, dropping the native config handle.
+
+        Returns:
+            dict[str, Any]: Instance ``__dict__`` with ``cpp_config`` set to None.
+
+        """
+        state = self.__dict__.copy()
+        state["cpp_config"] = None
+        return state
+
+    def __setstate__(self, state: dict[str, Any]) -> None:
+        """Restore instance state, re-seeding the fields a pickle may predate.
+
+        Args:
+            state (dict[str, Any]): State produced by ``__getstate__``.
+
+        """
+        self.__dict__.update(state)
+        self.__dict__.setdefault("cpp_config", None)
+        self.__dict__.setdefault("_row_cache", RowEncodeCache())
+
+    def fit(self, X: pd.DataFrame | np.ndarray) -> "Gower":  # noqa: PLR0912, PLR0915
         """Fit the Gower model by computing numeric feature ranges.
 
         Args:
@@ -421,6 +443,9 @@ class Gower:
             handle_unseen=self.handle_unseen_categorical_ordinal,
         )
 
+        self.cpp_config = build_cpp_config(self)
+        self._row_cache.clear()
+
         self._is_fitted = True
         return self
 
@@ -479,7 +504,7 @@ class Gower:
 
         if not self.skip_oor:
             enforce_oor_policy(
-                np.asarray(X_arr, dtype=object),
+                X,
                 strategy=self.out_of_range,
                 numeric_indices=self.numeric_indices,
                 numeric_mins=self.numeric_mins,
@@ -490,7 +515,11 @@ class Gower:
                 stacklevel=2,
             )
 
-        transformed_columns: list[np.ndarray] = []
+        n_rows = df.shape[0] if is_df else X_arr.shape[0]
+        transformed_data: np.ndarray = np.empty(
+            (n_rows, self.n_feats),
+            dtype=self.data_type,
+        )
 
         for col_idx_raw, ftype in sorted(self.feature_types.items()):
             col_idx = int(col_idx_raw)
@@ -545,19 +574,17 @@ class Gower:
             else:
                 transformed_col = col.astype(self.data_type)
 
-            transformed_columns.append(transformed_col)
-
-        transformed_data: np.ndarray = np.column_stack(transformed_columns)
+            transformed_data[:, col_idx] = transformed_col
 
         if is_df:
             return pd.DataFrame(
                 transformed_data,
                 columns=df.columns,
                 index=df.index,
-                dtype=self.data_type,
+                copy=False,
             )
 
-        return transformed_data.astype(self.data_type)
+        return transformed_data
 
     def fit_transform(self, X: pd.DataFrame | np.ndarray) -> pd.DataFrame | np.ndarray:
         """Fit to data, then transform it.
@@ -608,143 +635,22 @@ class Gower:
             msg = "Must call .fit(X) before computing distances."
             raise IllegalStateError(msg)
 
-        x = to_array(a)
-        y = to_array(b)
-        Xn = x.reshape(1, -1)
-        Yn = y.reshape(1, -1)
+        if self.cpp_config is None:
+            self.cpp_config = build_cpp_config(self)
 
-        if not self.skip_oor:
-            enforce_oor_policy(
-                Xn,
-                Yn,
-                strategy=self.out_of_range,
-                numeric_indices=self.numeric_indices,
-                numeric_mins=self.numeric_mins,
-                numeric_maxs=self.numeric_maxs,
-                ratio_scale_indices=self.ratio_scale_indices,
-                ratio_mins=self.ratio_mins,
-                ratio_maxs=self.ratio_maxs,
-            )
+        a_arr = np.asarray(a)
+        b_arr = np.asarray(b)
 
-        num_w = self.weights[self.numeric_indices]
-        cat_nom_w = self.weights[self.categorical_nominal_indices]
-        cat_ord_w = self.weights[self.categorical_ordinal_indices]
-        bin_asym_w = self.weights[self.binary_asymmetric_indices]
-        bin_sym_w = self.weights[self.binary_symmetric_indices]
-        ratio_w = self.weights[self.ratio_scale_indices]
-
-        bin_asym_sum, bin_asym_count = binary_asymmetric_component(
-            Xn,
-            Yn,
-            self.binary_asymmetric_indices,
-            missing_strategy=self.missing_strategy,
-            weights=bin_asym_w,
-            metadata=self.binary_asymmetric_metadata,
-        )
-
-        bin_sym_sum, bin_sym_count = binary_symmetric_component(
-            Xn,
-            Yn,
-            self.binary_symmetric_indices,
-            missing_strategy=self.missing_strategy,
-            weights=bin_sym_w,
-            metadata=self.binary_symmetric_metadata,
-        )
-
-        cat_nom_sum, cat_nom_count = categorical_nominal_component(
-            Xn,
-            Yn,
-            self.categorical_nominal_indices,
-            missing_strategy=self.missing_strategy,
-            weights=cat_nom_w,
-        )
-
-        cat_ord_sum, cat_ord_count = categorical_ordinal_component(
-            Xn,
-            Yn,
-            self.categorical_ordinal_indices,
-            metadata=self.cat_ord_metadata,
-            missing_strategy=self.missing_strategy,
-            calculation_type=self.categorical_ordinal_calculation_type,
-            weights=cat_ord_w,
-        )
-
-        if self.conditional_distances:
-            cat_sum = 0.0
-            cat_cnt = 0.0
-
-            if self.binary_asymmetric_indices:
-                cat_sum += bin_asym_sum[0, 0]
-                cat_cnt += bin_asym_count[0, 0]
-
-            if self.binary_symmetric_indices:
-                cat_sum += bin_sym_sum[0, 0]
-                cat_cnt += bin_sym_count[0, 0]
-
-            if self.categorical_nominal_indices:
-                cat_sum += cat_nom_sum[0, 0]
-                cat_cnt += cat_nom_count[0, 0]
-
-            if self.categorical_ordinal_indices:
-                cat_sum += cat_ord_sum[0, 0]
-                cat_cnt += cat_ord_count[0, 0]
-
-            if cat_cnt == 0:
-                return self.data_type(np.nan)
-
-            cat_dist = cat_sum / cat_cnt
-            threshold = self.conditional_distances_threshold_coeff / self.p_cat
-
-            if cat_dist > threshold:
-                return self.data_type(1.0)
-
-        num_sum, num_count = numeric_component(
-            Xn,
-            Yn,
-            self.numeric_indices,
-            ranges=self.numeric_ranges,
-            h=self._h_numeric,
-            missing_strategy=self.missing_strategy,
-            weights=num_w,
-            discretization=self.discretization,
-        )
-
-        ratio_sum, ratio_count = ratio_scale_component(
-            Xn,
-            Yn,
-            self.ratio_scale_indices,
-            ranges=self.ratio_ranges,
-            h=self._h_ratio,
-            missing_strategy=self.missing_strategy,
-            weights=ratio_w,
-            discretization=self.discretization,
-        )
-
-        if self.conditional_distances:
-            total_sum = num_sum + ratio_sum
-            total_count = num_count + ratio_count
+        if (
+            a_arr.dtype.kind in _NUMERIC_DTYPE_KINDS
+            and b_arr.dtype.kind in _NUMERIC_DTYPE_KINDS
+        ):
+            x = np.ascontiguousarray(a_arr, dtype=self.data_type).reshape(-1)
+            y = np.ascontiguousarray(b_arr, dtype=self.data_type).reshape(-1)
         else:
-            total_sum = (
-                num_sum
-                + cat_nom_sum
-                + cat_ord_sum
-                + bin_asym_sum
-                + bin_sym_sum
-                + ratio_sum
-            )
-            total_count = (
-                num_count
-                + cat_nom_count
-                + cat_ord_count
-                + bin_asym_count
-                + bin_sym_count
-                + ratio_count
-            )
+            x, y = self._row_cache.encode_pair(a, b, self.transform, self.data_type)
 
-        if total_count[0, 0] == 0:
-            return self.data_type(np.nan)
-
-        return self.data_type(total_sum[0, 0] / total_count[0, 0])
+        return self.data_type(self.cpp_config.calculate_distance(x, y))
 
     def similarity(self, a: Any, b: Any) -> np.floating:
         """Compute the Gower similarity between two records.
