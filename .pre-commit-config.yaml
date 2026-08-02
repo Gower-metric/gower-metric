@@ -32,6 +32,7 @@ repos:
     rev: v1.5.6
     hooks:
       - id: insert-license
+        name: insert license (Python)
         files: \.py$
         args:
           - --license-filepath
@@ -39,6 +40,17 @@ repos:
           - --use-current-year
           - --comment-style
           - "#"
+
+      - id: insert-license
+        alias: insert-license-cpp
+        name: insert license (C++)
+        files: ^gower_metric/cpp/.*\.(cpp|hpp)$
+        args:
+          - --license-filepath
+          - .license-header.generated.txt
+          - --use-current-year
+          - --comment-style
+          - "//"
 
   - repo: https://github.com/astral-sh/ruff-pre-commit
     rev: v0.16.1
