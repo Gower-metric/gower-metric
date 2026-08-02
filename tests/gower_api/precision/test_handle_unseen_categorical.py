@@ -1,8 +1,13 @@
+# Copyright (c) 2025 - 2026 the gower-metric developers
+# SPDX-License-Identifier: MIT
+
 """Tests for handle_unseen_categorical_nominal and handle_unseen_categorical_ordinal parameters."""
 
+from types import EllipsisType
 from typing import Any
 
 import numpy as np
+import numpy.typing as npt
 import pandas as pd
 import pytest
 from pydantic import ValidationError
@@ -26,7 +31,11 @@ _TYPE_DATA: dict[str, dict[str, Any]] = {
 }
 
 
-def _config(cat_type: str, strategy: str | None = ..., **extra: Any) -> Config:  # type: ignore[assignment]
+def _config(
+    cat_type: str,
+    strategy: str | EllipsisType | None = ...,
+    **extra: Any,
+) -> Config:
     """Build a Config for a single categorical column with the given unseen strategy."""
     kw: dict[str, Any] = {"feature_types": extra.pop("feature_types", {0: cat_type})}
     if cat_type == "categorical_ordinal":
@@ -51,7 +60,7 @@ class TestHandleUnseenCategorical:
         self.unseen_value: str = data["unseen_value"]
         self.warning_match: str = data["warning_match"]
 
-    def _train(self, values: list[str] | None = None) -> np.ndarray:
+    def _train(self, values: list[str] | None = None) -> npt.NDArray[np.generic]:
         vals = values or self.train_values[:2]
         return np.array([[v] for v in vals], dtype=object)
 
@@ -99,7 +108,7 @@ class TestHandleUnseenCategorical:
             ValidationError,
             match=r"Input should be 'warning', 'error' or 'missing'",
         ):
-            _config(self.cat_type, "invalid")  # type: ignore[arg-type]
+            _config(self.cat_type, "invalid")
 
     def test_strategy_with_pandas_dataframe(self) -> None:
         """Strategy works with pandas DataFrame input."""
@@ -115,7 +124,7 @@ class TestHandleUnseenCategorical:
         gower = Gower(cfg).fit(X_train)
 
         result = gower.transform(X_test)
-        assert np.isnan(result.iloc[0, 0])  # type: ignore[union-attr]
+        assert np.isnan(result.to_numpy()[0, 0])
 
     def test_all_seen_values_work_fine(self) -> None:
         """All seen values produce no NaN with default error strategy."""

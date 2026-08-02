@@ -1,5 +1,9 @@
+# Copyright (c) 2025 - 2026 the gower-metric developers
+# SPDX-License-Identifier: MIT
+
 """Tests for binary_*_value_order parameters (asymmetric + symmetric, parametrized)."""
 
+from types import EllipsisType
 from typing import Any
 
 import numpy as np
@@ -8,7 +12,7 @@ import pytest
 from pydantic import ValidationError
 
 from gower_metric import Config, Gower
-from tests.gower_api.precision.conftest import BaseTest
+from tests.gower_api.precision.base import BaseTest
 
 BINARY_TYPES = ["binary_asymmetric", "binary_symmetric"]
 
@@ -17,13 +21,13 @@ class TestBinaryValueOrder(BaseTest):
     """Value-order tests parametrized by binary type and float dtype."""
 
     @pytest.fixture(autouse=True, params=BINARY_TYPES)
-    def setup_binary_type(self, request) -> None:
+    def setup_binary_type(self, request: pytest.FixtureRequest) -> None:
         self.binary_type: str = request.param
 
     def _config(
         self,
         feature_types: dict[int | str, str] | None = None,
-        value_order: dict[int, list[Any]] | None = ...,  # type: ignore[assignment]
+        value_order: dict[int, list[Any]] | EllipsisType | None = ...,
         handle_unseen: str | None = None,
     ) -> Config:
         kw: dict[str, Any] = {"data_type": self.dtype}
@@ -118,7 +122,7 @@ class TestBinaryValueOrder(BaseTest):
         gower = Gower(self._config(value_order={0: ["No", "Yes"]})).fit(X_train)
         result = gower.transform(X_test)
 
-        assert result.iloc[0, 0] == 1.0  # type: ignore[union-attr]
+        assert result.iloc[0, 0] == 1.0
 
     def test_auto_detect_without_explicit_order(self) -> None:
         """Auto-detection works when no explicit order provided."""
@@ -160,7 +164,7 @@ class TestBinaryValueOrderValidation(BaseTest):
     """Config validation tests parametrized by binary type and float dtype."""
 
     @pytest.fixture(autouse=True, params=BINARY_TYPES)
-    def setup_binary_type(self, request) -> None:
+    def setup_binary_type(self, request: pytest.FixtureRequest) -> None:
         self.binary_type: str = request.param
 
     def _config(self, **kw: Any) -> Config:

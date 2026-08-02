@@ -1,3 +1,6 @@
+# Copyright (c) 2025 - 2026 the gower-metric developers
+# SPDX-License-Identifier: MIT
+
 import numpy as np
 import pandas as pd
 import pytest
@@ -5,7 +8,7 @@ from sklearn.metrics import pairwise_distances
 
 from gower_metric import Config, Gower
 from gower_metric.utils.auxiliary import all_ones_off_diagonal
-from tests.gower_api.precision.conftest import BaseTest
+from tests.gower_api.precision.base import BaseTest
 
 
 class TestConditionalDistances(BaseTest):
@@ -33,7 +36,7 @@ class TestConditionalDistances(BaseTest):
         r_max_min = 7 - 0
 
         # Manhattan distance, normalized by range
-        def d(x, y):
+        def d(x: float, y: float) -> float:
             return abs(x - y) / r_max_min
 
         expected = np.array(
@@ -68,7 +71,7 @@ class TestConditionalDistances(BaseTest):
 
         r_max_min = 7 - 0
 
-        def d(x, y):
+        def d(x: float, y: float) -> float:
             return abs(x - y) / r_max_min
 
         assert pytest.approx(gower(raw.iloc[0], raw.iloc[1]), rel=1e-6) == d(0, 2)
@@ -110,7 +113,7 @@ class TestConditionalDistances(BaseTest):
         r = 7 - 0
 
         # Manhattan distance, normalized by range
-        def d(x, y):
+        def d(x: float, y: float) -> float:
             return abs(x - y) / r
 
         expected = np.array(

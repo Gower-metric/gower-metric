@@ -1,8 +1,11 @@
+# Copyright (c) 2025 - 2026 the gower-metric developers
+# SPDX-License-Identifier: MIT
+
 """Shared fixtures for the native (C++/nanobind) test suite."""
 
 import zlib
 from collections.abc import Callable
-from typing import Any, cast
+from typing import Literal, TypeAlias, cast
 
 import numpy as np
 import pytest
@@ -18,12 +21,18 @@ from gower_metric.cpp import (
 )
 from tests.conftest import EDUCATION_LEVELS, NUMPY_NUMERIC_TYPES, generate_mixed_df
 
-DTYPE_TO_CONFIG: dict[type[np.floating], type] = {
+NativeConfig: TypeAlias = CppConfig | CppConfigF | CppConfigH
+"""The three per-precision native config classes, one per supported dtype."""
+
+NativeConfigData: TypeAlias = CppConfigData | CppConfigDataF | CppConfigDataH
+"""Their matching payload classes, populated before ``configure_arguments``."""
+
+DTYPE_TO_CONFIG: dict[type[np.floating], type[NativeConfig]] = {
     np.float16: CppConfigH,
     np.float32: CppConfigF,
     np.float64: CppConfig,
 }
-DTYPE_TO_CONFIG_DATA: dict[type[np.floating], type] = {
+DTYPE_TO_CONFIG_DATA: dict[type[np.floating], type[NativeConfigData]] = {
     np.float16: CppConfigDataH,
     np.float32: CppConfigDataF,
     np.float64: CppConfigData,
@@ -58,7 +67,7 @@ def dtype(request: pytest.FixtureRequest) -> type[np.floating]:
 
 
 @pytest.fixture
-def expected_config_cls(dtype: type[np.floating]) -> type:
+def expected_config_cls(dtype: type[np.floating]) -> type[NativeConfig]:
     """Native CppConfig class build_cpp_config should pick for ``dtype``."""
     return DTYPE_TO_CONFIG[dtype]
 
@@ -76,7 +85,11 @@ def make_gower(
 ) -> Callable[..., Gower]:
     """Return a factory building a real Gower instance."""
 
-    def _make(*, n: int = 32, discretization=None) -> Gower:
+    def _make(
+        *,
+        n: int = 32,
+        discretization: Literal["silverman", "knn"] | None = None,
+    ) -> Gower:
         df = generate_mixed_df(n, rng)
         cfg = Config(
             feature_types=dict(MIXED_FEATURE_TYPES),
@@ -91,7 +104,7 @@ def make_gower(
 
 
 @pytest.fixture
-def make_config_data(dtype: type[np.floating]) -> Callable[..., Any]:
+def make_config_data(dtype: type[np.floating]) -> Callable[..., NativeConfigData]:
     """Return a factory for a valid native CppConfigData to populate by hand."""
 
     def _make(
@@ -103,7 +116,7 @@ def make_config_data(dtype: type[np.floating]) -> Callable[..., Any]:
         conditional_distances: bool = False,
         conditional_distances_threshold_coeff: int = 1,
         feature_weights: list[float] | None = None,
-    ) -> Any:
+    ) -> NativeConfigData:
         data = DTYPE_TO_CONFIG_DATA[dtype]()
         n = len(feature_types)
         data.feature_types = list(feature_types)

@@ -1,5 +1,7 @@
+# Copyright (c) 2025 - 2026 the gower-metric developers
+# SPDX-License-Identifier: MIT
+
 import warnings
-from typing import cast
 
 import numpy as np
 import pytest
@@ -57,8 +59,8 @@ def test_r_daisy_no_weights(n: int, random_seed: int) -> None:
     gower_matrix = calculate_matrix(gower, X)
 
     assert np.allclose(
-        cast("np.ndarray", np_matrix),
-        cast("np.ndarray", gower_matrix),
+        np_matrix,
+        gower_matrix,
         atol=1e-6,
     ), (
         f"Matrices differ (seed={random_seed}, n={n}), max diff={np.max(np.abs(gower_matrix - np_matrix))}"
@@ -162,8 +164,8 @@ def test_r_daisy_weights(n: int, random_seed: int) -> None:
 
     assert np_matrix.shape == (n, n)
     assert np.allclose(
-        cast("np.ndarray", np_matrix),
-        cast("np.ndarray", matrix),
+        np_matrix,
+        matrix,
         atol=1e-6,
     ), (
         f"Matrices differ (seed={random_seed}, n={n}), max diff={np.max(np.abs(matrix - np_matrix))}"

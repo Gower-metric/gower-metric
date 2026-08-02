@@ -1,5 +1,9 @@
+# Copyright (c) 2025 - 2026 the gower-metric developers
+# SPDX-License-Identifier: MIT
+
 """Tests for handle_unseen_binary_asymmetric and handle_unseen_binary_symmetric parameters."""
 
+from types import EllipsisType
 from typing import Any
 
 import numpy as np
@@ -12,7 +16,11 @@ from gower_metric import Config, Gower
 BINARY_TYPES = ["binary_asymmetric", "binary_symmetric"]
 
 
-def _config(binary_type: str, strategy: str | None = ..., **extra: Any) -> Config:  # type: ignore[assignment]
+def _config(
+    binary_type: str,
+    strategy: str | EllipsisType | None = ...,
+    **extra: Any,
+) -> Config:
     """Build a Config for a single binary column with the given unseen strategy."""
     kw: dict[str, Any] = {"feature_types": extra.pop("feature_types", {0: binary_type})}
     if strategy is not ...:
@@ -107,7 +115,7 @@ class TestHandleUnseenBinary:
             ValidationError,
             match=r"Input should be 'warning', 'error' or 'missing'",
         ):
-            _config(self.binary_type, "invalid")  # type: ignore[arg-type]
+            _config(self.binary_type, "invalid")
 
     def test_strategy_with_pandas_dataframe(self) -> None:
         """Strategy works with pandas DataFrame input."""
@@ -122,7 +130,7 @@ class TestHandleUnseenBinary:
         gower = Gower(cfg).fit(X_train)
 
         result = gower.transform(X_test)
-        assert np.isnan(result.iloc[0, 0])  # type: ignore[union-attr]
+        assert np.isnan(result.to_numpy()[0, 0])
 
     def test_strategy_with_multiple_unseen_values(self) -> None:
         """Multiple unseen values violate binary constraint (4 total)."""

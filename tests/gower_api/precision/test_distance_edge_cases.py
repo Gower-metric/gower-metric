@@ -1,3 +1,6 @@
+# Copyright (c) 2025 - 2026 the gower-metric developers
+# SPDX-License-Identifier: MIT
+
 """Tests for distance component edge cases — ordinal metadata, ratio zero range, podani fallback."""
 
 import warnings
@@ -7,7 +10,7 @@ import pandas as pd
 import pytest
 
 from gower_metric import Config, Gower
-from tests.gower_api.precision.conftest import BaseTest
+from tests.gower_api.precision.base import BaseTest
 
 
 class TestCategoricalOrdinalEdgeCases(BaseTest):
@@ -28,9 +31,11 @@ class TestCategoricalOrdinalEdgeCases(BaseTest):
             categorical_ordinal_calculation_type="podani",
             data_type=self.dtype,
         )
-        gower = Gower(cfg).fit(data)
+
         with pytest.warns(UserWarning, match=r"Podani denominator"):
-            dist = gower(data[0], data[3])
+            gower = Gower(cfg).fit(data)
+
+        dist = gower(data[0], data[3])
         assert 0.0 <= self.dtype(dist) <= 1.0
 
     def test_podani_fallback_pandas(self) -> None:
@@ -47,9 +52,10 @@ class TestCategoricalOrdinalEdgeCases(BaseTest):
             categorical_ordinal_calculation_type="podani",
             data_type=self.dtype,
         )
-        gower = Gower(cfg).fit(data)
         with pytest.warns(UserWarning, match=r"Podani denominator"):
-            dist = gower(data.iloc[0], data.iloc[3])
+            gower = Gower(cfg).fit(data)
+
+        dist = gower(data.iloc[0], data.iloc[3])
         assert 0.0 <= self.dtype(dist) <= 1.0
 
     def test_kaufman_zero_denom_returns_zero_dist(self) -> None:
@@ -274,10 +280,9 @@ class TestPodaniFallbackWarning(BaseTest):
             categorical_ordinal_calculation_type="podani",
             data_type=self.dtype,
         )
-        gower = Gower(cfg).fit(data)
-
         with warnings.catch_warnings(record=True) as w:
             warnings.simplefilter("always")
+            gower = Gower(cfg).fit(data)
             dist = gower(data[0], data[1])
             podani_warnings = [
                 x

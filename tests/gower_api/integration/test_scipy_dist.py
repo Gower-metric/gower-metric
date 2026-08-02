@@ -1,6 +1,10 @@
+# Copyright (c) 2025 - 2026 the gower-metric developers
+# SPDX-License-Identifier: MIT
+
 from typing import cast
 
 import numpy as np
+import numpy.typing as npt
 from scipy.spatial.distance import pdist, squareform
 
 from gower_metric import Config, Gower
@@ -32,14 +36,17 @@ def test_scikit_learn_paiwise_distances() -> None:
 
     X = df.to_numpy()
 
-    def _gower_distance(x, y):
+    def _gower_distance(
+        x: npt.NDArray[np.generic],
+        y: npt.NDArray[np.generic],
+    ) -> np.floating:
         """Compute Gower distance between two vectors."""
         return gower(x, y)
 
     array_scipy = pdist(X, metric=_gower_distance)
     matrix_scipy = squareform(array_scipy)
 
-    matrix_gower = calculate_matrix(gower, X, backend="loky")
+    matrix_gower = calculate_matrix(gower, X)
 
     assert matrix_scipy.shape == (n_rows, n_rows), (
         "The shape of the pairwise distance matrix is incorrect."
@@ -48,8 +55,8 @@ def test_scikit_learn_paiwise_distances() -> None:
         "The shape of the custom pairwise distance matrix is incorrect."
     )
     assert np.allclose(
-        cast("np.ndarray", matrix_scipy),
-        cast("np.ndarray", matrix_gower),
+        cast("npt.NDArray[np.generic]", matrix_scipy),
+        cast("npt.NDArray[np.generic]", matrix_gower),
         rtol=1e-5,
         atol=1e-8,
     ), "The pairwise distance matrices do not match."
