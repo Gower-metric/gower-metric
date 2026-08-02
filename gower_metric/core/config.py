@@ -1,4 +1,7 @@
-from typing import Annotated, Any, Literal, get_args
+# Copyright (c) 2025 - 2026 the gower-metric developers
+# SPDX-License-Identifier: MIT
+
+from typing import Annotated, Literal, get_args
 
 import numpy as np
 from pydantic import BaseModel, Field, ValidationInfo, field_validator, model_validator
@@ -23,9 +26,9 @@ KNeighborsType = Annotated[int, Field(ge=1)]
 ConditionalDistancesFlag = bool
 ConditionalDistancesThresholdCoeffType = int
 HandleUnseenBinaryAsymmetric = Literal["warning", "error", "missing"]
-BinaryAsymmetricValueOrderType = dict[int | str, list[Any]] | None
+BinaryAsymmetricValueOrderType = dict[int | str, list[object]] | None
 HandleUnseenBinarySymmetric = Literal["warning", "error", "missing"]
-BinarySymmetricValueOrderType = dict[int | str, list[Any]] | None
+BinarySymmetricValueOrderType = dict[int | str, list[object]] | None
 HandleUnseenCategoricalNominal = Literal["warning", "error", "missing"]
 HandleUnseenCategoricalOrdinal = Literal["warning", "error", "missing"]
 OutOfRangeStrategy = Literal["clip", "warning", "error"]
@@ -65,13 +68,13 @@ class Config(BaseModel):
             that defines the threshold above which the distance will be set to 1. More information in reference from year 2021 -> chapter 3.
         handle_unseen_binary_asymmetric (HandleUnseenBinaryAsymmetric): Strategy for handling unseen categories in binary asymmetric features. Can be 'warning', 'error' or 'missing'.
             Default is 'error' if omitted.
-        binary_asymmetric_value_order (dict[int | str, list[Any]] | None): Optional explicit ordering of binary values for binary_asymmetric features.
+        binary_asymmetric_value_order (dict[int | str, list[object]] | None): Optional explicit ordering of binary values for binary_asymmetric features.
             Similar to categorical_ordinal_values_order. If None, values are auto-detected from training data.
             If provided, must contain exactly 2 values per binary column. Example: {0: [False, True], 1: ['No', 'Yes']}.
             Recommended for production to ensure reproducibility and handle expected-but-not-yet-seen values.
         handle_unseen_binary_symmetric (HandleUnseenBinarySymmetric): Strategy for handling unseen categories in binary symmetric features. Can be 'warning', 'error' or 'missing'.
             Default is 'error' if omitted.
-        binary_symmetric_value_order (dict[int | str, list[Any]] | None): Optional explicit ordering of binary values for binary_symmetric features.
+        binary_symmetric_value_order (dict[int | str, list[object]] | None): Optional explicit ordering of binary values for binary_symmetric features.
             Similar to categorical_ordinal_values_order. If None, values are auto-detected from training data.
             If provided, must contain exactly 2 values per binary column. Example: {0: [False, True], 1: ['No', 'Yes']}.
             Recommended for production to ensure reproducibility and handle expected-but-not-yet-seen values.
@@ -270,19 +273,19 @@ class Config(BaseModel):
 
     @staticmethod
     def _check_binary_value_order(
-        v: dict[int | str, list[Any]] | None,
+        v: dict[int | str, list[object]] | None,
         info: ValidationInfo,
         binary_type: str,
-    ) -> dict[int | str, list[Any]] | None:
+    ) -> dict[int | str, list[object]] | None:
         """Verify that binary value orders contain exactly 2 unique values per column.
 
         Args:
-            v (dict[int | str, list[Any]] | None): The binary value order definitions.
+            v (dict[int | str, list[object]] | None): The binary value order definitions.
             info (ValidationInfo): Validation context containing feature types.
             binary_type (str): The binary feature type name (e.g. 'binary_asymmetric').
 
         Returns:
-            dict[int | str, list[Any]] | None: The validated order definitions.
+            dict[int | str, list[object]] | None: The validated order definitions.
 
         Raises:
             ValueError: If any binary column order doesn't have exactly 2 values.
