@@ -59,3 +59,4 @@ poetry.lock
 # Other
 results/
 scripts/
+.license-header.generated.txt

@@ -36,6 +36,8 @@ ignore = [
 ]
 
 [lint.per-file-ignores]
+"**/*.ipynb" = ["CPY001"]
+
 "examples/**" = [
     "D101",
     "D103",
