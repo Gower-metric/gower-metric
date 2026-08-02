@@ -1,18 +1,23 @@
+# Copyright (c) 2025 - 2026 the gower-metric developers
+# SPDX-License-Identifier: MIT
+
 import warnings
 
 import numpy as np
 from scipy.sparse import coo_matrix, csc_matrix, csr_matrix
 
+from gower_metric._typing import FloatArray, FloatDType
+
 
 def __get_csr_matrix(
-    data: np.ndarray,
-    data_type: type[np.floating],
+    data: FloatArray,
+    data_type: FloatDType,
 ) -> csr_matrix:
     """Convert a dense array to a CSR sparse matrix.
 
     Args:
-        data (np.ndarray): dense array (n_samples, n_samples).
-        data_type (type[np.floating]): data type for the output sparse matrix.
+        data (FloatArray): dense array (n_samples, n_samples).
+        data_type (FloatDType): data type for the output sparse matrix.
 
     Returns:
         csr_matrix: CSR sparse matrix.
@@ -22,14 +27,14 @@ def __get_csr_matrix(
 
 
 def __get_csc_matrix(
-    data: np.ndarray,
-    data_type: type[np.floating],
+    data: FloatArray,
+    data_type: FloatDType,
 ) -> csc_matrix:
     """Convert a dense array to a CSC sparse matrix.
 
     Args:
-        data (np.ndarray): dense array (n_samples, n_samples).
-        data_type (type[np.floating]): data type for the output sparse matrix.
+        data (FloatArray): dense array (n_samples, n_samples).
+        data_type (FloatDType): data type for the output sparse matrix.
 
     Returns:
         csc_matrix: CSC sparse matrix.
@@ -39,14 +44,14 @@ def __get_csc_matrix(
 
 
 def __get_coo_matrix(
-    data: np.ndarray,
-    data_type: type[np.floating],
+    data: FloatArray,
+    data_type: FloatDType,
 ) -> coo_matrix:
     """Convert a dense array to a COO sparse matrix.
 
     Args:
-         data (np.ndarray): dense array (n_samples, n_samples).
-         data_type (type[np.floating]): data type for the output sparse matrix.
+         data (FloatArray): dense array (n_samples, n_samples).
+         data_type (FloatDType): data type for the output sparse matrix.
 
     Returns:
         coo_matrix: COO sparse matrix.
@@ -56,16 +61,16 @@ def __get_coo_matrix(
 
 
 def get_scipy_sparse_matrix(
-    data: np.ndarray,
+    data: FloatArray,
     matrix_format: str = "csr",
     data_type: type[np.floating] = np.float32,
 ) -> csr_matrix | csc_matrix | coo_matrix:
     """Convert a dense array to a specified format of sparse matrix.
 
     Args:
-        data (np.ndarray): dense array (n_samples, n_samples).
+        data (FloatArray): dense array (n_samples, n_samples).
         matrix_format (str): Format of the output sparse matrix. Options are 'csr', 'csc', 'coo'. Default is 'csr'.
-        data_type (type[np.floating]): data type for the output sparse matrix. Default is np.float32.
+        data_type (FloatDType): data type for the output sparse matrix. Default is np.float32.
 
     Returns:
         csr_matrix | csc_matrix | coo_matrix: Sparse matrix in the specified format.

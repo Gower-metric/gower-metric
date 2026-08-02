@@ -1,12 +1,21 @@
+# Copyright (c) 2025 - 2026 the gower-metric developers
+# SPDX-License-Identifier: MIT
+
 import warnings
 from collections.abc import Iterator
 from contextlib import contextmanager
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, cast
 
 import numpy as np
 import pandas as pd
 import scipy.sparse
 
+from gower_metric._typing import (
+    DataFrameOrArray,
+    FloatArray,
+    FloatDType,
+    NativeKernel,
+)
 from gower_metric.utils.cpp_middleware.config_builder import build_cpp_config
 from gower_metric.utils.deprecation import retired_args
 from gower_metric.utils.matrix.convert_matrix import get_scipy_sparse_matrix
@@ -21,15 +30,15 @@ _RETIRED_PARAMS_REASON = (
 )
 
 
-def _as_native_matrix(model: "Gower", X: pd.DataFrame | np.ndarray) -> np.ndarray:
+def _as_native_matrix(model: "Gower", X: DataFrameOrArray) -> FloatArray:
     """Return a C-contiguous ``(n, n_features)`` array of ``model.data_type``.
 
     Args:
         model (gower_metric.Gower): fitted Gower instance.
-        X (pd.DataFrame | np.ndarray): input data of shape (n_samples, n_features).
+        X (DataFrameOrArray): input data of shape (n_samples, n_features).
 
     Returns:
-        np.ndarray: contiguous numeric array ready for the native kernel.
+        FloatArray: contiguous numeric array ready for the native kernel.
 
     """
     arr = X.to_numpy() if isinstance(X, pd.DataFrame) else np.asarray(X)
@@ -46,19 +55,19 @@ def _as_native_matrix(model: "Gower", X: pd.DataFrame | np.ndarray) -> np.ndarra
 
 
 def _validate_out(
-    out: np.ndarray,
+    out: FloatArray,
     shape: tuple[int, int],
-    data_type: type[np.floating],
-) -> np.ndarray:
+    data_type: FloatDType,
+) -> FloatArray:
     """Validate a user-supplied output buffer for zero-copy native writes.
 
     Args:
-        out (np.ndarray): user-supplied output buffer.
+        out (FloatArray): user-supplied output buffer.
         shape (tuple[int, int]): expected ``(rows, cols)`` shape.
-        data_type (type[np.floating]): expected dtype (the native compute precision).
+        data_type (FloatDType): expected dtype (the native compute precision).
 
     Returns:
-        np.ndarray: the validated ``out`` (unchanged).
+        FloatArray: the validated ``out`` (unchanged).
 
     Raises:
         TypeError: If ``out`` is not a NumPy array.
@@ -88,15 +97,15 @@ def _validate_out(
 
 def _get_full_matrix(
     gower: "Gower",
-    X: pd.DataFrame | np.ndarray,
-    data_type: type[np.floating],
+    X: DataFrameOrArray,
+    data_type: FloatDType,
     matrix_type: str = "distance",
-    out: np.ndarray | None = None,
+    out: FloatArray | None = None,
     convert_to_sparse: bool = False,
     sparse_type: str = "csr",
-    Y: pd.DataFrame | np.ndarray | None = None,
+    Y: DataFrameOrArray | None = None,
 ) -> (
-    np.ndarray
+    FloatArray
     | scipy.sparse.csr_matrix
     | scipy.sparse.csc_matrix
     | scipy.sparse.coo_matrix
@@ -105,22 +114,22 @@ def _get_full_matrix(
 
     Args:
         gower (gower_metric.Gower): fitted Gower instance.
-        X (pd.DataFrame | np.ndarray): shape (n_samples, n_features).
-        data_type (type[np.floating]): dtype of the returned matrix. The kernel
+        X (DataFrameOrArray): shape (n_samples, n_features).
+        data_type (FloatDType): dtype of the returned matrix. The kernel
             computes in ``gower.data_type``; the result is cast at the end if it
             differs (only when ``out`` is not supplied).
         matrix_type (str): 'distance' or 'similarity'. Default 'distance'.
             Converted to a flag the kernel applies per element; no Python-side
             post-processing takes place.
-        out (np.ndarray | None): optional preallocated output buffer of
+        out (FloatArray | None): optional preallocated output buffer of
             ``gower.data_type``; written in place (zero-copy). Default None.
         convert_to_sparse (bool): convert the dense result to sparse. Default False.
         sparse_type (str): 'csr', 'csc' or 'coo'. Default 'csr'.
-        Y (pd.DataFrame | np.ndarray | None): optional second set; when given a
+        Y (DataFrameOrArray | None): optional second set; when given a
             cross matrix X-vs-Y is computed. Default None.
 
     Returns:
-        np.ndarray | scipy.sparse matrix: the pairwise matrix.
+        FloatArray | scipy.sparse matrix: the pairwise matrix.
 
     Raises:
         ValueError: For an unknown ``matrix_type`` or an ``out``/``convert_to_sparse``
@@ -151,10 +160,11 @@ def _get_full_matrix(
     if gower.cpp_config is None:
         gower.cpp_config = build_cpp_config(gower)
 
+    kernel = cast("NativeKernel", gower.cpp_config)
     if data_y is None:
-        gower.cpp_config.calculate_matrix(data, result, similarity)
+        kernel.calculate_matrix(data, result, similarity)
     else:
-        gower.cpp_config.calculate_matrix_xy(data, data_y, result, similarity)
+        kernel.calculate_matrix_xy(data, data_y, result, similarity)
 
     if convert_to_sparse:
         return get_scipy_sparse_matrix(
@@ -199,16 +209,16 @@ def _temporary_skip_oor(gower: "Gower") -> Iterator[None]:
 @retired_args(_RETIRED_PARAMS_REASON, "n_jobs", "verbose", "backend")
 def calculate_matrix(
     gower: "Gower",
-    X: pd.DataFrame | np.ndarray,
+    X: DataFrameOrArray,
     *,
-    data_type: type[np.floating] | None = None,
+    data_type: FloatDType | None = None,
     matrix_type: str = "distance",
     convert_to_sparse: bool = False,
     sparse_type: str = "csr",
-    out: np.ndarray | None = None,
-    Y: pd.DataFrame | np.ndarray | None = None,
+    out: FloatArray | None = None,
+    Y: DataFrameOrArray | None = None,
 ) -> (
-    np.ndarray
+    FloatArray
     | scipy.sparse.csr_matrix
     | scipy.sparse.csc_matrix
     | scipy.sparse.coo_matrix
@@ -219,8 +229,8 @@ def calculate_matrix(
 
     Args:
         gower (gower_metric.Gower): Fitted Gower instance.
-        X (pd.DataFrame | np.ndarray): shape of (n_samples, n_features).
-        data_type (type[np.floating] | None): data type used for the output distance matrix.
+        X (DataFrameOrArray): shape of (n_samples, n_features).
+        data_type (FloatDType | None): data type used for the output distance matrix.
             If None, uses the data_type from the Gower instance configuration.
         matrix_type (str): Type of matrix to compute, either 'distance' or 'similarity'.
             Default is 'distance'.
@@ -228,13 +238,13 @@ def calculate_matrix(
             Default is False.
         sparse_type (str): Type of sparse matrix to convert to, either 'csr', 'csc' or 'coo'.
             Default is 'csr'.
-        out (np.ndarray | None): optional preallocated output buffer of the model's
+        out (FloatArray | None): optional preallocated output buffer of the model's
             data_type, written zero-copy. Default None.
-        Y (pd.DataFrame | np.ndarray | None): optional second set; when given,
+        Y (DataFrameOrArray | None): optional second set; when given,
             returns the cross matrix X-vs-Y of shape (len(X), len(Y)). Default None.
 
     Returns:
-        np.ndarray | scipy.sparse.csr_matrix | scipy.sparse.csc_matrix | scipy.sparse.coo_matrix:
+        FloatArray | scipy.sparse.csr_matrix | scipy.sparse.csc_matrix | scipy.sparse.coo_matrix:
             Pairwise Gower distance or similarity matrix of shape (n_samples, n_samples) or sparse matrix.
 
     Warns:
