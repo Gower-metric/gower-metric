@@ -1,25 +1,32 @@
+# Copyright (c) 2025 - 2026 the gower-metric developers
+# SPDX-License-Identifier: MIT
+
 from collections import OrderedDict
-from collections.abc import Callable
-from typing import Any
+from typing import cast
 
 import numpy as np
 import pandas as pd
 
+from gower_metric._typing import (
+    FloatArray,
+    FloatDType,
+    Record,
+    RecordKey,
+    Transform,
+)
 from gower_metric.utils.to_array import to_array
 
 DEFAULT_MAXSIZE = 4096
 
-Transform = Callable[[np.ndarray], pd.DataFrame | np.ndarray]
 
-
-def _record_key(record: Any) -> tuple:
+def _record_key(record: Record) -> RecordKey:
     """Build a hashable key from a raw record without converting it.
 
     Args:
-        record (Any): Raw record: array, Series, or sequence of feature values.
+        record (Record): Raw record: array, Series, or sequence of feature values.
 
     Returns:
-        tuple: Key identifying the record by value.
+        RecordKey: Key identifying the record by value.
 
     Raises:
         TypeError: If the record is not iterable. Callers treat that as
@@ -45,7 +52,7 @@ class RowEncodeCache:
 
         """
         self.maxsize = maxsize
-        self._entries: OrderedDict[tuple, np.ndarray] = OrderedDict()
+        self._entries: OrderedDict[RecordKey, FloatArray] = OrderedDict()
 
     def __len__(self) -> int:
         """Return the number of memorized records.
@@ -60,43 +67,43 @@ class RowEncodeCache:
         """Drop every memorized record."""
         self._entries.clear()
 
-    def __getstate__(self) -> dict[str, Any]:
+    def __getstate__(self) -> dict[str, object]:
         """Return the picklable state without the entries.
 
         Returns:
-            dict[str, Any]: Configuration needed to restore an empty cache.
+            dict[str, object]: Configuration needed to restore an empty cache.
 
         """
         return {"maxsize": self.maxsize}
 
-    def __setstate__(self, state: dict[str, Any]) -> None:
+    def __setstate__(self, state: dict[str, object]) -> None:
         """Restore an empty cache with the stored capacity.
 
         Args:
-            state (dict[str, Any]): State produced by ``__getstate__``.
+            state (dict[str, object]): State produced by ``__getstate__``.
 
         """
-        self.maxsize = state["maxsize"]
+        self.maxsize = int(cast("int", state["maxsize"]))
         self._entries = OrderedDict()
 
     def encode_pair(
         self,
-        a: Any,
-        b: Any,
+        a: Record,
+        b: Record,
         transform: Transform,
-        data_type: type[np.floating],
-    ) -> tuple[np.ndarray, np.ndarray]:
+        data_type: FloatDType,
+    ) -> tuple[FloatArray, FloatArray]:
         """Return both records encoded.
 
         Args:
-            a (Any): First raw record.
-            b (Any): Second raw record.
+            a (Record): First raw record.
+            b (Record): Second raw record.
             transform (Transform): Encoder mapping a ``(n, n_features)`` block of
                 raw values to its numeric representation.
-            data_type (type[np.floating]): Native compute precision of the result.
+            data_type (FloatDType): Native compute precision of the result.
 
         Returns:
-            tuple[np.ndarray, np.ndarray]: Contiguous encoded records.
+            tuple[FloatArray, FloatArray]: Contiguous encoded records.
 
         """
         try:
@@ -118,33 +125,33 @@ class RowEncodeCache:
 
     @staticmethod
     def _encode(
-        a: Any,
-        b: Any,
+        a: Record,
+        b: Record,
         transform: Transform,
-        data_type: type[np.floating],
-    ) -> tuple[np.ndarray, np.ndarray]:
+        data_type: FloatDType,
+    ) -> tuple[FloatArray, FloatArray]:
         """Encode both records in a single ``transform`` call.
 
         Args:
-            a (Any): First raw record.
-            b (Any): Second raw record.
+            a (Record): First raw record.
+            b (Record): Second raw record.
             transform (Transform): Encoder to apply.
-            data_type (type[np.floating]): Native compute precision of the result.
+            data_type (FloatDType): Native compute precision of the result.
 
         Returns:
-            tuple[np.ndarray, np.ndarray]: Contiguous encoded records.
+            tuple[FloatArray, FloatArray]: Contiguous encoded records.
 
         """
         rows = np.vstack((to_array(a).reshape(1, -1), to_array(b).reshape(1, -1)))
         pair = np.ascontiguousarray(transform(rows), dtype=data_type)
         return pair[0], pair[1]
 
-    def _store(self, key: tuple, row: np.ndarray) -> None:
+    def _store(self, key: RecordKey, row: FloatArray) -> None:
         """Insert one encoded record as most-recently-used and evict if needed.
 
         Args:
-            key (tuple): Hashable key built from the raw record.
-            row (np.ndarray): The encoded record.
+            key (RecordKey): Hashable key built from the raw record.
+            row (FloatArray): The encoded record.
 
         """
         self._entries[key] = row

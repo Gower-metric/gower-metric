@@ -1,6 +1,11 @@
+# Copyright (c) 2025 - 2026 the gower-metric developers
+# SPDX-License-Identifier: MIT
+
 import numpy as np
 import pandas as pd
 from sklearn.preprocessing import OrdinalEncoder
+
+from gower_metric._typing import AnyArray, FloatArray, FloatDType
 
 MAP_THRESHOLD = 3000
 """Row count above which ``pandas.Series.map`` overtakes a Python-level lookup."""
@@ -8,7 +13,7 @@ MAP_THRESHOLD = 3000
 _MAPPING_ATTR = "_gower_code_mapping"
 
 
-def _code_mapping(enc: OrdinalEncoder) -> dict:
+def _code_mapping(enc: OrdinalEncoder) -> dict[object, float]:
     """Return the fitted category-to-code mapping.
 
     Args:
@@ -35,20 +40,20 @@ def _code_mapping(enc: OrdinalEncoder) -> dict:
 
 
 def encode_categories(
-    values: np.ndarray,
+    values: AnyArray,
     enc: OrdinalEncoder,
-    data_type: type[np.floating],
-) -> np.ndarray:
+    data_type: FloatDType,
+) -> FloatArray:
     """Encode already-non-missing values.
 
     Args:
-        values (np.ndarray): 1-D array of raw values, guaranteed free of
+        values (AnyArray): 1-D array of raw values, guaranteed free of
             missing entries by the caller.
         enc (OrdinalEncoder): Encoder fitted on this column.
-        data_type (type[np.floating]): Output precision.
+        data_type (FloatDType): Output precision.
 
     Returns:
-        np.ndarray: 1-D codes, with ``np.nan`` where a value was not fitted.
+        FloatArray: 1-D codes, with ``np.nan`` where a value was not fitted.
 
     Raises:
         ValueError: If the encoder was fitted with ``handle_unknown="error"``

@@ -1,30 +1,34 @@
+# Copyright (c) 2025 - 2026 the gower-metric developers
+# SPDX-License-Identifier: MIT
+
 import warnings
 
 import numpy as np
 import pandas as pd
 from sklearn.preprocessing import OrdinalEncoder
 
+from gower_metric._typing import AnyArray, FloatArray, FloatDType
 from gower_metric.utils.transforms.encoding import encode_categories
 
 
 def transform_categorical_nominal(
-    col: np.ndarray,
+    col: AnyArray,
     col_idx: int,
     enc: OrdinalEncoder,
     handle_unseen: str,
-    data_type: type[np.floating],
-) -> np.ndarray:
+    data_type: FloatDType,
+) -> FloatArray:
     """Transform a categorical nominal feature column.
 
     Args:
-        col (np.ndarray): The column data to transform.
+        col (AnyArray): The column data to transform.
         col_idx (int): The column index (for error messages).
         enc (OrdinalEncoder): The fitted OrdinalEncoder.
         handle_unseen (str): Strategy for unseen values ('error', 'warning', 'missing').
         data_type: NumPy data type for the output array.
 
     Returns:
-        np.ndarray: Transformed column with encoded values.
+        FloatArray: Transformed column with encoded values.
 
     """
     col_arr = np.array(col)
@@ -54,23 +58,23 @@ def transform_categorical_nominal(
 
 
 def transform_categorical_ordinal(
-    col: np.ndarray,
+    col: AnyArray,
     col_idx: int,
     enc: OrdinalEncoder,
     handle_unseen: str,
-    data_type: type[np.floating],
-) -> np.ndarray:
+    data_type: FloatDType,
+) -> FloatArray:
     """Transform a categorical ordinal feature column.
 
     Args:
-        col (np.ndarray): The column data to transform.
+        col (AnyArray): The column data to transform.
         col_idx (int): The column index (for error messages).
         enc (OrdinalEncoder): The fitted OrdinalEncoder.
         handle_unseen (str): Strategy for unseen values ('error', 'warning', 'missing').
         data_type: NumPy data type for the output array.
 
     Returns:
-        np.ndarray: Transformed column with encoded values.
+        FloatArray: Transformed column with encoded values.
 
     """
     col_arr = np.array(col)

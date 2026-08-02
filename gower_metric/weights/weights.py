@@ -1,10 +1,15 @@
+# Copyright (c) 2025 - 2026 the gower-metric developers
+# SPDX-License-Identifier: MIT
+
 import numpy as np
+
+from gower_metric._typing import FloatArray
 
 
 def get_weights(
     n_features: int,
     config: dict[int, float] | str | None = None,
-) -> np.ndarray:
+) -> FloatArray:
     """Get weights for features based on the provided configuration.
 
     Args:
@@ -13,7 +18,7 @@ def get_weights(
             If a dictionary, keys are feature indices and values are weights.
 
     Returns:
-        np.ndarray: Array of weights for each feature.
+        FloatArray: Array of weights for each feature.
 
     Raises:
         ValueError: If config is not None, "uniform", or a dictionary.

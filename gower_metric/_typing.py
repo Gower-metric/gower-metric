@@ -1,3 +1,6 @@
+# Copyright (c) 2025 - 2026 the gower-metric developers
+# SPDX-License-Identifier: MIT
+
 """Shared type aliases."""
 
 from collections.abc import Callable, Mapping, Sequence

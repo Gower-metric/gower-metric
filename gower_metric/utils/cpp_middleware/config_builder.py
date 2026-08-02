@@ -1,9 +1,12 @@
+# Copyright (c) 2025 - 2026 the gower-metric developers
+# SPDX-License-Identifier: MIT
+
 import warnings
-from collections.abc import Mapping
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING
 
 import numpy as np
 
+from gower_metric._typing import ValueOrder
 from gower_metric.cpp import (
     CppConfig,
     CppConfigData,
@@ -18,7 +21,7 @@ if TYPE_CHECKING:
 
 
 def _value_orders(
-    order: Mapping[int | str, list[Any]] | None,
+    order: ValueOrder,
 ) -> dict[int, list[str]]:
     """Carry a per-column value-order mapping into the native config."""
     return {int(col): [str(v) for v in values] for col, values in (order or {}).items()}
@@ -109,7 +112,7 @@ def build_cpp_config(self: "Gower") -> CppConfig | CppConfigF | CppConfigH:
                 self.cat_ord_metadata[j]["counts"],
                 dtype=self.data_type,
             )
-            if counts.size == 0:
+            if counts.size == 0:  # pragma: no cover
                 continue
             mid = (counts - 1.0) / 2.0
             podani_denom = (counts.size - 1) - mid[0] - mid[-1]

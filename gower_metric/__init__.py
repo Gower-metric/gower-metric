@@ -1,3 +1,6 @@
+# Copyright (c) 2025 - 2026 the gower-metric developers
+# SPDX-License-Identifier: MIT
+
 from .core.config import Config
 from .core.exceptions import IllegalStateError
 from .core.metric import Gower

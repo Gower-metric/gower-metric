@@ -1,10 +1,14 @@
+# Copyright (c) 2025 - 2026 the gower-metric developers
+# SPDX-License-Identifier: MIT
+
 import functools
 import inspect
 import warnings
 from collections.abc import Callable
-from typing import Any, TypeVar
+from typing import ParamSpec, TypeVar
 
-F = TypeVar("F", bound=Callable[..., Any])
+P = ParamSpec("P")
+R = TypeVar("R")
 
 _POSITIONAL_KINDS = (
     inspect.Parameter.POSITIONAL_ONLY,
@@ -12,7 +16,10 @@ _POSITIONAL_KINDS = (
 )
 
 
-def retired_args(reason: str, *names: str) -> Callable[[F], F]:
+def retired_args(
+    reason: str,
+    *names: str,
+) -> Callable[[Callable[P, R]], Callable[P, R]]:
     """Accept and discard parameters the decorated function no longer declares.
 
     Args:
@@ -38,7 +45,7 @@ def retired_args(reason: str, *names: str) -> Callable[[F], F]:
         msg = "retired_args requires at least one parameter name"
         raise ValueError(msg)
 
-    def decorator(func: F) -> F:
+    def decorator(func: Callable[P, R]) -> Callable[P, R]:
         signature = inspect.signature(func)
 
         still_declared = sorted(set(names) & set(signature.parameters))
@@ -61,7 +68,7 @@ def retired_args(reason: str, *names: str) -> Callable[[F], F]:
         retired = ", ".join(names)
 
         @functools.wraps(func)
-        def wrapper(*args: Any, **kwargs: Any) -> Any:
+        def wrapper(*args: P.args, **kwargs: P.kwargs) -> R:
             if not accepts_var_positional and len(args) > max_positional:
                 msg = (
                     f"{func.__name__}() takes {max_positional} positional "
@@ -83,6 +90,6 @@ def retired_args(reason: str, *names: str) -> Callable[[F], F]:
 
             return func(*args, **kwargs)
 
-        return wrapper  # type: ignore[return-value]
+        return wrapper
 
     return decorator

@@ -1,28 +1,31 @@
-from typing import Any
+# Copyright (c) 2025 - 2026 the gower-metric developers
+# SPDX-License-Identifier: MIT
 
 import numpy as np
 import pandas as pd
+
+from gower_metric._typing import BinaryMetadata, ObjectArray
 
 MAX_BINARY_UNIQUE_VALUES = 2
 
 
 def fit_binary_features(
-    arr: np.ndarray,
+    arr: ObjectArray,
     binary_indices: list[int],
-    binary_value_order: dict[int, list[Any]] | None = None,
-) -> dict[int, dict[str, Any]]:
+    binary_value_order: dict[int, list[object]] | None = None,
+) -> dict[int, BinaryMetadata]:
     """Fit binary features metadata.
 
     Args:
-        arr (np.ndarray): Input data array.
+        arr (ObjectArray): Input data array.
         binary_indices (list[int]): Indices of binary features.
-        binary_value_order (dict[int, list[Any]] | None): Optional explicit ordering of binary values.
+        binary_value_order (dict[int, list[object]] | None): Optional explicit ordering of binary values.
             If provided, specifies expected values for each binary column (must be exactly 2 values).
             Creates full mapping for all expected values, even if not present in training data.
             If None, values are auto-detected from training data.
 
     Returns:
-        dict[int, dict[str, Any]]: Metadata for binary features, including:
+        dict[int, BinaryMetadata]: Metadata for binary features, including:
             - mapping: dict mapping values to 0.0/1.0
             - values: array of unique values (or expected values if explicit order provided)
             - is_explicit_order: bool indicating if explicit order was used
@@ -33,7 +36,7 @@ def fit_binary_features(
             contains values not in binary_value_order when explicit ordering is used.
 
     """
-    binary_metadata: dict[int, dict[str, Any]] = {}
+    binary_metadata: dict[int, BinaryMetadata] = {}
 
     for j in binary_indices:
         col = arr[:, j]

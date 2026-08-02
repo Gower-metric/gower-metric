@@ -1,22 +1,25 @@
-from typing import Any
+# Copyright (c) 2025 - 2026 the gower-metric developers
+# SPDX-License-Identifier: MIT
 
 import numpy as np
 import pandas as pd
 from sklearn.preprocessing import OrdinalEncoder
 
+from gower_metric._typing import FloatDType, ObjectArray, ValueOrder
+
 
 def fit_nominal_features(
-    X: np.ndarray,
+    X: ObjectArray,
     nominal_indices: list[int],
-    data_type: type[np.floating] = np.float32,
+    data_type: FloatDType = np.float32,
     handle_unseen: str = "error",
 ) -> dict[int, OrdinalEncoder]:
     """Fit OrdinalEncoders for categorical nominal features.
 
     Args:
-        X (np.ndarray): The input data array.
+        X (ObjectArray): The input data array.
         nominal_indices (list[int]): Indices of nominal columns.
-        data_type (type[np.floating]): Data type for the encoder output.
+        data_type (FloatDType): Data type for the encoder output.
         handle_unseen (str): Strategy for handling unseen categories ('error', 'warning', 'missing').
 
     Returns:
@@ -29,9 +32,9 @@ def fit_nominal_features(
         col_clean = col[~pd.isna(col)]
 
         enc = (
-            OrdinalEncoder(dtype=data_type, handle_unknown="error")
+            OrdinalEncoder(dtype=data_type, handle_unknown="error")  # type: ignore[no-untyped-call]
             if handle_unseen == "error"
-            else OrdinalEncoder(
+            else OrdinalEncoder(  # type: ignore[no-untyped-call]
                 dtype=data_type,
                 handle_unknown="use_encoded_value",
                 unknown_value=np.nan,
@@ -43,19 +46,19 @@ def fit_nominal_features(
 
 
 def fit_ordinal_features(
-    X: np.ndarray,
+    X: ObjectArray,
     ordinal_indices: list[int],
-    ordered_values: dict[int | str, list[Any]] | None,
-    data_type: type[np.floating] = np.float32,
+    ordered_values: ValueOrder,
+    data_type: FloatDType = np.float32,
     handle_unseen: str = "error",
 ) -> dict[int, OrdinalEncoder]:
     """Fit OrdinalEncoders for categorical ordinal features.
 
     Args:
-        X (np.ndarray): The input data array.
+        X (ObjectArray): The input data array.
         ordinal_indices (list[int]): Indices of ordinal columns.
-        ordered_values (dict[int | str, list[Any]] | None): Dictionary defining order for each column.
-        data_type (type[np.floating]): Data type for the encoder output.
+        ordered_values (ValueOrder): Dictionary defining order for each column.
+        data_type (FloatDType): Data type for the encoder output.
         handle_unseen (str): Strategy for handling unseen categories ('error', 'warning', 'missing').
 
     Returns:
@@ -75,13 +78,13 @@ def fit_ordinal_features(
         col_clean = col[~pd.isna(col)]
 
         if handle_unseen == "error":
-            enc = OrdinalEncoder(
+            enc = OrdinalEncoder(  # type: ignore[no-untyped-call]
                 categories=[ordered_values[j]],
                 dtype=data_type,
                 handle_unknown="error",
             )
         else:
-            enc = OrdinalEncoder(
+            enc = OrdinalEncoder(  # type: ignore[no-untyped-call]
                 categories=[ordered_values[j]],
                 dtype=data_type,
                 handle_unknown="use_encoded_value",
