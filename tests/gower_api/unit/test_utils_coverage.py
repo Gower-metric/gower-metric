@@ -1,3 +1,6 @@
+# Copyright (c) 2025 - 2026 the gower-metric developers
+# SPDX-License-Identifier: MIT
+
 """Tests for utility functions — aux, cat_ord_ut, ranges, silverman, knn_bandwidth, categorical_ut."""
 
 import numpy as np
@@ -5,8 +8,13 @@ import pandas as pd
 import pytest
 
 from gower_metric.utils.auxiliary import all_ones_off_diagonal
+from gower_metric.utils.cat_ord_ut import map_ordered_values
 from gower_metric.utils.discretization_types import knn, silverman
-from gower_metric.utils.ranges import scale_span
+from gower_metric.utils.ranges import (
+    check_out_of_range,
+    get_numeric_bounds,
+    scale_span,
+)
 from gower_metric.utils.to_array import to_array
 
 
@@ -85,3 +93,35 @@ class TestKnnBandwidth:
         data = np.arange(20, dtype=float)
         h = knn.bandwidth(data, k=3)
         assert h > 0
+
+
+class TestNumericBoundsEdgeCases:
+    def test_all_nan_column_yields_nan_bounds(self) -> None:
+        """An unusable column must not poison the fitted bounds with a number."""
+        X = np.array([[np.nan, 1.0], [np.nan, 2.0]], dtype=object)
+
+        mins, maxs = get_numeric_bounds(X, [0, 1])
+
+        assert np.isnan(mins[0])
+        assert np.isnan(maxs[0])
+        assert (mins[1], maxs[1]) == (1.0, 2.0)
+
+
+class TestCheckOutOfRangeEdgeCases:
+    def test_empty_input_reports_nothing(self) -> None:
+        """A zero-row reduction has no identity, so it is short-circuited."""
+        X = np.empty((0, 2), dtype=object)
+
+        assert (
+            check_out_of_range(X, [0], np.array([0.0]), np.array([1.0]), "numeric")
+            == []
+        )
+
+
+class TestMapOrderedValuesEdgeCases:
+    def test_empty_order_yields_no_ranks(self) -> None:
+        mapping, min_rank, max_rank = map_ordered_values([])
+
+        assert mapping == {}
+        assert min_rank is None
+        assert max_rank is None

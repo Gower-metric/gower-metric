@@ -60,7 +60,7 @@ def test_r_daisy_no_weights(n: int, random_seed: int) -> None:
 
     assert np.allclose(
         np_matrix,
-        gower_matrix,
+        gower_matrix,  # type: ignore[arg-type]
         atol=1e-6,
     ), (
         f"Matrices differ (seed={random_seed}, n={n}), max diff={np.max(np.abs(gower_matrix - np_matrix))}"
@@ -165,7 +165,7 @@ def test_r_daisy_weights(n: int, random_seed: int) -> None:
     assert np_matrix.shape == (n, n)
     assert np.allclose(
         np_matrix,
-        matrix,
+        matrix,  # type: ignore[arg-type]
         atol=1e-6,
     ), (
         f"Matrices differ (seed={random_seed}, n={n}), max diff={np.max(np.abs(matrix - np_matrix))}"

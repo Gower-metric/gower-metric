@@ -130,7 +130,7 @@ class TestHandleUnseenBinary:
         gower = Gower(cfg).fit(X_train)
 
         result = gower.transform(X_test)
-        assert np.isnan(result.to_numpy()[0, 0])
+        assert np.isnan(result.to_numpy()[0, 0])  # type: ignore[union-attr]
 
     def test_strategy_with_multiple_unseen_values(self) -> None:
         """Multiple unseen values violate binary constraint (4 total)."""

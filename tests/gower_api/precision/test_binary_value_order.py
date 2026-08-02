@@ -122,7 +122,7 @@ class TestBinaryValueOrder(BaseTest):
         gower = Gower(self._config(value_order={0: ["No", "Yes"]})).fit(X_train)
         result = gower.transform(X_test)
 
-        assert result.iloc[0, 0] == 1.0
+        assert result.iloc[0, 0] == 1.0  # type: ignore[union-attr]
 
     def test_auto_detect_without_explicit_order(self) -> None:
         """Auto-detection works when no explicit order provided."""

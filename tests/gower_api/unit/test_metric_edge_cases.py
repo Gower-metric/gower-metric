@@ -1,3 +1,6 @@
+# Copyright (c) 2025 - 2026 the gower-metric developers
+# SPDX-License-Identifier: MIT
+
 """Tests for Gower metric edge cases — error branches, call-before-fit, conditional distances."""
 
 import warnings
@@ -29,7 +32,7 @@ class TestFitErrors:
             ValueError,
             match="Sparse matrices are currently not supported",
         ):
-            gower.fit(data)
+            gower.fit(data)  # type: ignore[arg-type]
 
 
 class TestCallBeforeFit:
@@ -82,7 +85,7 @@ class TestMatrixWithoutFitIntegration:
             assert any("fit" in str(x.message).lower() for x in user_warnings)
 
         assert result.shape == (3, 3)
-        assert np.allclose(np.diag(result), 0.0)
+        assert np.allclose(np.diag(result), 0.0)  # type: ignore[arg-type]
 
     def test_matrix_without_fit_produces_valid_distances(self) -> None:
         data = np.array(
@@ -98,8 +101,8 @@ class TestMatrixWithoutFitIntegration:
             warnings.simplefilter("ignore", UserWarning)
             result = calculate_matrix(gower, data)
 
-        assert result[0, 1] == result[1, 0]
-        assert 0.0 <= result[0, 1] <= 1.0
+        assert result[0, 1] == result[1, 0]  # type: ignore[index]
+        assert 0.0 <= result[0, 1] <= 1.0  # type: ignore[index]
 
 
 class TestMatrixWithDataType:
@@ -111,37 +114,37 @@ class TestMatrixWithDataType:
         assert result.dtype == np.float64
 
     def test_matrix_with_n_jobs_1(self) -> None:
-        """Run matrix with n_jobs=1 so coverage tracks __compute_row_upper."""
+        """Matrix over a small mixed-type input."""
         data = np.array([[1.0, 0], [2.0, 1], [3.0, 0]])
         cfg = Config(feature_types={0: "numeric", 1: "binary_symmetric"})
         gower = Gower(cfg).fit(data)
-        result = calculate_matrix(gower, data, n_jobs=1)
+        result = calculate_matrix(gower, data)
         assert result.shape == (3, 3)
-        np.testing.assert_almost_equal(result[0, 0], 0.0)
+        np.testing.assert_almost_equal(result[0, 0], 0.0)  # type: ignore[index]
 
     def test_matrix_similarity_n_jobs_1(self) -> None:
-        """Similarity matrix via n_jobs=1 for coverage of similarity branch + diagonal."""
+        """Similarity matrix has a unit diagonal."""
         data = np.array([[1.0], [5.0], [10.0]])
         cfg = Config(feature_types={0: "numeric"})
         gower = Gower(cfg).fit(data)
-        mat = calculate_matrix(gower, data, n_jobs=1, matrix_type="similarity")
-        np.testing.assert_array_almost_equal(np.diag(mat), [1.0, 1.0, 1.0])
+        mat = calculate_matrix(gower, data, matrix_type="similarity")
+        np.testing.assert_array_almost_equal(np.diag(mat), [1.0, 1.0, 1.0])  # type: ignore[arg-type]
 
     def test_matrix_with_n_jobs_1_pandas(self) -> None:
-        """n_jobs=1 matrix with pandas input."""
+        """Matrix with pandas input."""
         data = pd.DataFrame({"val": [1.0, 2.0, 3.0], "flag": [0, 1, 0]})
         cfg = Config(feature_types={"val": "numeric", "flag": "binary_symmetric"})
         gower = Gower(cfg).fit(data)
-        result = calculate_matrix(gower, data, n_jobs=1)
+        result = calculate_matrix(gower, data)
         assert result.shape == (3, 3)
 
     def test_matrix_similarity_n_jobs_1_pandas(self) -> None:
-        """Similarity via n_jobs=1 with pandas."""
+        """Similarity with pandas input."""
         data = pd.DataFrame({"x": [1.0, 5.0, 10.0]})
         cfg = Config(feature_types={"x": "numeric"})
         gower = Gower(cfg).fit(data)
-        mat = calculate_matrix(gower, data, n_jobs=1, matrix_type="similarity")
-        np.testing.assert_array_almost_equal(np.diag(mat), [1.0, 1.0, 1.0])
+        mat = calculate_matrix(gower, data, matrix_type="similarity")
+        np.testing.assert_array_almost_equal(np.diag(mat), [1.0, 1.0, 1.0])  # type: ignore[arg-type]
 
 
 class TestConditionalDistancesEdgeCases:
@@ -282,14 +285,14 @@ class TestMatrixSimilarity:
         cfg = Config(feature_types={0: "numeric"})
         gower = Gower(cfg).fit(data)
         mat = calculate_matrix(gower, data, matrix_type="similarity")
-        np.testing.assert_array_almost_equal(np.diag(mat), [1.0, 1.0, 1.0])
+        np.testing.assert_array_almost_equal(np.diag(mat), [1.0, 1.0, 1.0])  # type: ignore[arg-type]
 
     def test_similarity_matrix_diagonal_pandas(self) -> None:
         data = pd.DataFrame({"x": [1.0, 2.0, 3.0]})
         cfg = Config(feature_types={"x": "numeric"})
         gower = Gower(cfg).fit(data)
         mat = calculate_matrix(gower, data, matrix_type="similarity")
-        np.testing.assert_array_almost_equal(np.diag(mat), [1.0, 1.0, 1.0])
+        np.testing.assert_array_almost_equal(np.diag(mat), [1.0, 1.0, 1.0])  # type: ignore[arg-type]
 
 
 class TestDtypeEdgeCases:
@@ -315,11 +318,11 @@ class TestDtypeEdgeCases:
         assert 0.0 <= float(dist) <= 1.0
 
     def test_matrix_float64_n_jobs_1(self) -> None:
-        """n_jobs=1 matrix with float64."""
+        """Matrix honours a float64 data_type."""
         data = np.array([[1.0], [5.0], [10.0]])
         cfg = Config(feature_types={0: "numeric"}, data_type=np.float64)
         gower = Gower(cfg).fit(data)
-        mat = calculate_matrix(gower, data, n_jobs=1)
+        mat = calculate_matrix(gower, data)
         assert mat.dtype == np.float64
 
 
@@ -391,3 +394,36 @@ class TestIntegerDtypeRejected:
     def test_config_accepts_float64(self) -> None:
         cfg = Config(feature_types={0: "numeric"}, data_type=np.float64)
         assert cfg.data_type is np.float64
+
+
+class TestFitValidation:
+    def test_feature_type_beyond_the_data_is_rejected(self) -> None:
+        data = np.array([[1.0, 2.0], [3.0, 4.0]])
+        cfg = Config(feature_types={0: "numeric", 5: "numeric"})
+
+        with pytest.raises(ValueError, match=r"references column index 5"):
+            Gower(cfg).fit(data)
+
+    def test_missing_ordinal_order_is_rejected(self) -> None:
+        """Config guarantees the order exists; fit still refuses to guess."""
+        data = np.array([["low"], ["high"]], dtype=object)
+        cfg = Config(
+            feature_types={0: "categorical_ordinal"},
+            categorical_ordinal_values_order={0: ["low", "high"]},
+        )
+        gower = Gower(cfg)
+        gower.categorical_ordinal_values_order = None
+
+        with pytest.raises(ValueError, match=r"values order is missing"):
+            gower.fit(data)
+
+    def test_named_feature_types_need_a_dataframe(self) -> None:
+        """Names are resolved against columns, which a bare array does not have.
+
+        No index bound can be checked, so the mismatch surfaces later instead.
+        """
+        data = np.array([[1.0, 2.0], [3.0, 4.0]])
+        cfg = Config(feature_types={"a": "numeric", "b": "numeric"})
+
+        with pytest.raises(ValueError, match=r"Missmatched number of feature types"):
+            Gower(cfg).fit(data)

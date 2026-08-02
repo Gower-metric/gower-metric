@@ -1,8 +1,12 @@
+# Copyright (c) 2025 - 2026 the gower-metric developers
+# SPDX-License-Identifier: MIT
+
 """Tests for unique transform branches — NaN passthrough, degenerate columns, dtype variants."""
 
 from typing import Any
 
 import numpy as np
+import numpy.typing as npt
 import pandas as pd
 import pytest
 
@@ -78,7 +82,7 @@ class TestBinaryNaNPassthrough:
         )
         result = Gower(cfg).fit(train).transform(test)
         assert isinstance(result, pd.DataFrame)
-        assert np.isnan(float(result.iloc[0, 0]))
+        assert np.isnan(result.to_numpy()[0, 0])
 
 
 class TestDegenerateBinaryColumn:
@@ -111,7 +115,7 @@ class TestCategoricalNaNTransform:
     def setup_cat_type(self, request: pytest.FixtureRequest) -> None:
         self.cat_type: str = request.param
 
-    def _train_data(self) -> np.ndarray:
+    def _train_data(self) -> npt.NDArray[np.generic]:
         if self.cat_type == "categorical_ordinal":
             return np.array([["low", 1.0], ["high", 2.0]], dtype=object)
         return np.array([["A", 1.0], ["B", 2.0]], dtype=object)
@@ -144,7 +148,7 @@ class TestCategoricalNaNTransform:
         cfg = _categorical_config_pandas(self.cat_type)
         result = Gower(cfg).fit(train).transform(test)
         assert isinstance(result, pd.DataFrame)
-        assert np.isnan(float(result.iloc[0, 0]))
+        assert np.isnan(result.to_numpy()[0, 0])
 
 
 class TestTransformDtypeVariants:

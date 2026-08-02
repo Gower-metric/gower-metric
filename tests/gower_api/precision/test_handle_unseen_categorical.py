@@ -124,7 +124,7 @@ class TestHandleUnseenCategorical:
         gower = Gower(cfg).fit(X_train)
 
         result = gower.transform(X_test)
-        assert np.isnan(result.to_numpy()[0, 0])
+        assert np.isnan(result.to_numpy()[0, 0])  # type: ignore[union-attr]
 
     def test_all_seen_values_work_fine(self) -> None:
         """All seen values produce no NaN with default error strategy."""
