@@ -7,8 +7,8 @@ project = "Gower-metric"
 copyright = "2025 & 2026, gower-metric developers"  # noqa: A001
 author = "gower-metric developers"
 
-release = "1.0.0"
-version = "1.0.0"
+release = "0.1.0"
+version = "0.1.0"
 
 extensions = [
     "sphinx.ext.duration",
