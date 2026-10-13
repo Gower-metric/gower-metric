@@ -3,7 +3,6 @@
 
 #pragma once
 
-// Half-precision (IEEE 754 binary16) support
 // Sources:
 // https://nanobind.readthedocs.io/en/latest/ndarray.html#nonstandard-arithmetic-types
 // https://nanobind.readthedocs.io/en/latest/porting.html#type-casters

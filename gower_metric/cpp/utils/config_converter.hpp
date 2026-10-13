@@ -61,6 +61,31 @@ inline auto string_to_handle_unseen(const std::string& str) -> E {
   throw std::invalid_argument("Invalid handle-unseen strategy: " + str);
 }
 
+template <typename E>
+inline auto as_unseen_strategy(const E strategy) -> UnseenStrategy {
+  if (strategy == E::ERROR) return UnseenStrategy::ERROR;
+  if (strategy == E::WARNING) return UnseenStrategy::WARNING;
+  return UnseenStrategy::MISSING;
+}
+
+inline auto feature_type_name(const FeatureTypes ft) -> const char* {
+  switch (ft) {
+    case FeatureTypes::CATEGORICAL_ORDINAL:
+      return "categorical_ordinal";
+    case FeatureTypes::CATEGORICAL_NOMINAL:
+      return "categorical_nominal";
+    case FeatureTypes::BINARY_SYMMETRIC:
+      return "binary_symmetric";
+    case FeatureTypes::BINARY_ASYMMETRIC:
+      return "binary_asymmetric";
+    case FeatureTypes::RATIO_SCALE_INTERVAL:
+      return "ratio_scale_interval";
+    case FeatureTypes::NUMERIC:
+    default:
+      return "numeric";
+  }
+}
+
 inline auto string_to_out_of_range_strategy(const std::string& str)
     -> OutOfRangeStrategy {
   if (str == "clip") return OutOfRangeStrategy::CLIP;
@@ -70,12 +95,10 @@ inline auto string_to_out_of_range_strategy(const std::string& str)
   throw std::invalid_argument("Invalid out-of-range strategy: " + str);
 }
 
-// used during conditional distances calculations and during CppConfig init
-inline auto count_as_categorical(const FeatureTypes ft) -> bool {
+inline auto in_conditional_first_step(const FeatureTypes ft) -> bool {
   return ft == FeatureTypes::BINARY_SYMMETRIC ||
          ft == FeatureTypes::BINARY_ASYMMETRIC ||
-         ft == FeatureTypes::CATEGORICAL_NOMINAL ||
-         ft == FeatureTypes::CATEGORICAL_ORDINAL;
+         ft == FeatureTypes::CATEGORICAL_NOMINAL;
 }
 
 // EOF

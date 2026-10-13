@@ -60,6 +60,12 @@ enum class HandleUnseenCategoricalOrdinal : std::uint8_t {
   MISSING,
 };
 
+enum class UnseenStrategy : std::uint8_t {
+  WARNING,
+  ERROR,
+  MISSING,
+};
+
 enum class OutOfRangeStrategy : std::uint8_t {
   CLIP,
   WARNING,
