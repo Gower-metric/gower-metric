@@ -3,15 +3,21 @@
 
 #pragma once
 
+#include <cstddef>
+
+#include "../utils/arith.hpp"
+#include "../utils/enums.hpp"
+
 template <typename T>
 struct CategoricalOrdinalParams {
   const T* x;
   const T* y;
   int i;
-  const T* mid;
+  const double* cum;
+  std::size_t levels;
   T denom;
-  T podani_denom;
-  bool use_podani;
+  double podani_denom;
+  CategoricalOrdinalCalculationTypes mode;
 };
 
 template <typename T>
@@ -20,19 +26,27 @@ auto compute_categorical_ordinal_diff(const CategoricalOrdinalParams<T>& params)
   const int i = params.i;
   const T rx = params.x[i];
   const T ry = params.y[i];
-  const T diff = rx < ry ? ry - rx : rx - ry;
 
-  if (params.use_podani) {
-    T dist = (diff - params.mid[static_cast<int>(rx)] -
-              params.mid[static_cast<int>(ry)]) /
-             params.podani_denom;
-
-    if (dist < T(0)) return T(0);
-    if (dist > T(1)) return T(1);
-    return dist;
+  switch (params.mode) {
+    case CategoricalOrdinalCalculationTypes::PODANI: {
+      if (rx == ry) return T(0);
+      const std::size_t ix = gower_detail::level_index(rx, params.levels);
+      const std::size_t iy = gower_detail::level_index(ry, params.levels);
+      if (ix == params.levels || iy == params.levels) return T(1);
+      const bool x_lower = rx < ry;
+      const std::size_t a = x_lower ? ix : iy;
+      const std::size_t b = x_lower ? iy : ix;
+      const double d =
+          (1.0 + (params.cum[b] - params.cum[a + 1])) / params.podani_denom;
+      return static_cast<T>(d < 1.0 ? d : 1.0);
+    }
+    case CategoricalOrdinalCalculationTypes::KAUFMAN:
+    default: {
+      const T diff = gower_detail::abs_diff(rx, ry);
+      const T d = static_cast<T>(diff / params.denom);
+      return d < T(1) ? d : T(1);
+    }
   }
-
-  return params.denom > T(0) ? diff / params.denom : T(0);
 }
 
 // EOF
