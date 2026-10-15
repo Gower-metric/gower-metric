@@ -14,17 +14,6 @@ enum class FeatureTypes : std::uint8_t {
   RATIO_SCALE_INTERVAL,
 };
 
-enum class ScaleMethods : std::uint8_t {
-  RANGE,
-  IQR,
-};
-
-enum class Discretization : std::uint8_t {
-  NONE,
-  SILVERMAN,
-  KNN,
-};
-
 enum class MissingStrategy : std::uint8_t {
   IGNORE,
   MAX_DISTANCE,

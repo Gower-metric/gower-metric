@@ -32,7 +32,7 @@ struct nanobind::detail::type_caster<float16> {
   // NOLINTNEXTLINE(modernize-use-trailing-return-type)
   NB_TYPE_CASTER(float16, const_name("float"))
 
-  auto from_python(const handle src, const uint8_t flags,
+  auto from_python(const handle src, const uint32_t flags,
                    cleanup_list* cleanup) noexcept -> bool {
     make_caster<double> caster;
     if (!caster.from_python(src, flags, cleanup)) {

@@ -28,13 +28,6 @@ inline auto string_to_missing_strategy(const std::string& str)
   throw std::invalid_argument("Invalid missing strategy: " + str);
 }
 
-inline auto string_to_scale_method(const std::string& str) -> ScaleMethods {
-  if (str == "range") return ScaleMethods::RANGE;
-  if (str == "iqr") return ScaleMethods::IQR;
-
-  throw std::invalid_argument("Invalid scale method: " + str);
-}
-
 inline auto string_to_categorical_ordinal_calculation_type(
     const std::string& str) -> CategoricalOrdinalCalculationTypes {
   if (str == "kaufman") return CategoricalOrdinalCalculationTypes::KAUFMAN;
@@ -42,14 +35,6 @@ inline auto string_to_categorical_ordinal_calculation_type(
 
   throw std::invalid_argument("Invalid categorical ordinal calculation type: " +
                               str);
-}
-
-inline auto string_to_discretization(const std::string& str) -> Discretization {
-  if (str.empty()) return Discretization::NONE;
-  if (str == "silverman") return Discretization::SILVERMAN;
-  if (str == "knn") return Discretization::KNN;
-
-  throw std::invalid_argument("Invalid discretization: " + str);
 }
 
 template <typename E>
