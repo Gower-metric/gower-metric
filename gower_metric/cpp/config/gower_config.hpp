@@ -5,16 +5,17 @@
 
 #include <nanobind/ndarray.h>
 
+#include <cstddef>
 #include <map>
-#include <optional>
+#include <mutex>
 #include <string>
 #include <vector>
 
 #include "../utils/enums.hpp"
 #include "../utils/half_float.hpp"
 
-using ValueOrders = std::map<int, std::vector<std::string>>;
 using OrdinalCounts = std::map<int, std::vector<double>>;
+using CategoryValues = std::map<int, std::vector<double>>;
 
 template <typename T>
 using ConfigVector =
@@ -27,41 +28,53 @@ struct CppConfigData {
   ConfigVector<T> feature_weights;
   ConfigVector<T> ranges;
   ConfigVector<T> bandwidths;
+
+  // out-of-range bounds
+  ConfigVector<T> lower;
+  ConfigVector<T> upper;
+
+  std::string out_of_range;
   std::string missing_strategy;
-  std::string scale_method;
   std::string categorical_ordinal_calculation_type;
   bool conditional_distances = false;
   int conditional_distances_threshold_coeff = 1;
-  std::string discretization;
-  double silverman_constant = 1.06;
-  std::optional<int> k_neighbors;
   std::string handle_unseen_binary_asymmetric;
   std::string handle_unseen_binary_symmetric;
   std::string handle_unseen_categorical_nominal;
   std::string handle_unseen_categorical_ordinal;
-  std::string out_of_range;
-  bool skip_out_of_range_validation = false;
-  ValueOrders categorical_ordinal_values_order;
-  ValueOrders binary_asymmetric_value_order;
-  ValueOrders binary_symmetric_value_order;
   OrdinalCounts ordinal_counts;
+  std::vector<int> excluded_features;
+  CategoryValues category_values;
 };
 
 template <typename T>
 struct OrdinalRankMeta {
-  std::vector<T> mid;
+  std::vector<double> cum;
+  std::size_t levels = 0;
+  std::size_t lo = 0;
+  std::size_t hi = 0;
+  bool varies = false;
   T denom = 0;
-  T podani_denom = 0;
-  bool use_podani = false;
+  double podani_denom = 1;
+};
+
+template <typename T>
+struct FeatureDomain {
+  std::vector<T> values;
+  bool positions = true;
+  UnseenStrategy strategy = UnseenStrategy::ERROR;
+  T positive = 1;
+  std::size_t room = -1;
 };
 
 template <typename T>
 struct CppConfig {
   std::vector<FeatureTypes> feature_types;
-  std::vector<char> is_categorical_feature;
   std::vector<T> feature_weights;
   std::vector<T> ranges;
   std::vector<T> bandwidths;
+  std::vector<T> lower;
+  std::vector<T> upper;
 
   // grouped features based on apperance, better for speed
   std::vector<int> numeric_group;
@@ -74,14 +87,11 @@ struct CppConfig {
   int p_cat = 0;
   bool uniform_weights = false;
   MissingStrategy missing_strategy = MissingStrategy::IGNORE;
-  ScaleMethods scale_method = ScaleMethods::RANGE;
+  OutOfRangeStrategy out_of_range = OutOfRangeStrategy::CLIP;
   CategoricalOrdinalCalculationTypes categorical_ordinal_calculation_type =
       CategoricalOrdinalCalculationTypes::KAUFMAN;
   bool conditional_distances = false;
   int conditional_distances_threshold_coeff = 1;
-  Discretization discretization = Discretization::NONE;
-  double silverman_constant = 1.06;
-  std::optional<int> k_neighbors;
   HandleUnseenBinaryAsymmetric handle_unseen_binary_asymmetric =
       HandleUnseenBinaryAsymmetric::ERROR;
   HandleUnseenBinarySymmetric handle_unseen_binary_symmetric =
@@ -90,12 +100,10 @@ struct CppConfig {
       HandleUnseenCategoricalNominal::ERROR;
   HandleUnseenCategoricalOrdinal handle_unseen_categorical_ordinal =
       HandleUnseenCategoricalOrdinal::ERROR;
-  OutOfRangeStrategy out_of_range = OutOfRangeStrategy::ERROR;
-  bool skip_out_of_range_validation = false;
-  ValueOrders categorical_ordinal_values_order;
-  ValueOrders binary_asymmetric_value_order;
-  ValueOrders binary_symmetric_value_order;
   std::vector<OrdinalRankMeta<T>> ordinal_meta;
+  std::vector<FeatureDomain<T>> domains;
+  std::vector<int> checked_features;
+  std::mutex configuring;
 
   void configure_arguments(const CppConfigData<T>& data);
 
