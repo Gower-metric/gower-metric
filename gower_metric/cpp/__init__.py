@@ -14,14 +14,20 @@ from gower_metric.cpp.cpp_engine import (
 
 if TYPE_CHECKING:
     from gower_metric.cpp.cpp_engine import CppConfigDataH, CppConfigH
+
+    HAS_FLOAT16 = True
 else:
     try:
         from gower_metric.cpp.cpp_engine import CppConfigDataH, CppConfigH
-    except ImportError:
-        CppConfigH = CppConfigF
-        CppConfigDataH = CppConfigDataF
+
+        HAS_FLOAT16 = True
+    except ImportError:  # pragma: no cover
+        CppConfigH = None
+        CppConfigDataH = None
+        HAS_FLOAT16 = False
 
 __all__ = [
+    "HAS_FLOAT16",
     "CppConfig",
     "CppConfigData",
     "CppConfigDataF",

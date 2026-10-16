@@ -50,10 +50,21 @@ auto CppConfig<T>::calculate_distance(const T* x, const T* y) const -> T {
   WeightedSum<T> cat;
   WeightedSum<T> num;
 
+  if (missing_strategy == MissingStrategy::RAISE_ERROR) {
+    for (int f = 0; f < n_features; ++f) {
+      if (is_missing(x[f], y[f])) {
+        accumulate_missing(missing_strategy, T(0), cat);
+      }
+    }
+  }
+
   const T* weights = feature_weights.data();
+  const auto weight_of = [&](const int i) -> T {
+    return uniform_weights ? T(1) : weights[i];
+  };
 
   for (const int i : nominal_group) {
-    const T w = uniform_weights ? T(1) : weights[i];
+    const T w = weight_of(i);
     if (is_missing(x[i], y[i])) {
       accumulate_missing(missing_strategy, w, cat);
       continue;
@@ -62,36 +73,38 @@ auto CppConfig<T>::calculate_distance(const T* x, const T* y) const -> T {
                    CategoricalNominalParams<T>{x, y, i}));
   }
 
+  WeightedSum<T>& ordinal_acc = conditional_distances ? num : cat;
   for (const int i : ordinal_group) {
-    const T w = uniform_weights ? T(1) : weights[i];
+    const T w = weight_of(i);
     if (is_missing(x[i], y[i])) {
-      accumulate_missing(missing_strategy, w, cat);
+      accumulate_missing(missing_strategy, w, ordinal_acc);
       continue;
     }
     const OrdinalRankMeta<T>& meta = ordinal_meta[i];
-    cat.add(w, compute_categorical_ordinal_diff(CategoricalOrdinalParams<T>{
-                   x, y, i, meta.mid.data(), meta.denom, meta.podani_denom,
-                   meta.use_podani}));
+    ordinal_acc.add(
+        w, compute_categorical_ordinal_diff(CategoricalOrdinalParams<T>{
+               x, y, i, meta.cum.data(), meta.levels, meta.denom,
+               meta.podani_denom, categorical_ordinal_calculation_type}));
   }
 
   for (const int i : binary_symmetric_group) {
-    const T w = uniform_weights ? T(1) : weights[i];
+    const T w = weight_of(i);
     if (is_missing(x[i], y[i])) {
       accumulate_missing(missing_strategy, w, cat);
       continue;
     }
-    cat.add(w,
-            compute_binary_symmetric_diff(BinarySymmetricParams<T>{x, y, i}));
+    cat.add(w, compute_binary_symmetric_diff(
+                   BinarySymmetricParams<T>{x, y, i, domains[i].positive}));
   }
 
   for (const int i : binary_asymmetric_group) {
-    const T w = uniform_weights ? T(1) : weights[i];
+    const T w = weight_of(i);
     if (is_missing(x[i], y[i])) {
       accumulate_missing(missing_strategy, w, cat);
       continue;
     }
-    const auto result =
-        compute_binary_asymmetric_diff(BinaryAsymmetricParams<T>{x, y, i});
+    const auto result = compute_binary_asymmetric_diff(
+        BinaryAsymmetricParams<T>{x, y, i, domains[i].positive});
     if (!result.present) continue;
     cat.add(w, result.diff);
   }
@@ -111,7 +124,7 @@ auto CppConfig<T>::calculate_distance(const T* x, const T* y) const -> T {
   }
 
   for (const int i : numeric_group) {
-    const T w = uniform_weights ? T(1) : weights[i];
+    const T w = weight_of(i);
     if (is_missing(x[i], y[i])) {
       accumulate_missing(missing_strategy, w, num);
       continue;

@@ -1,7 +1,7 @@
 """Gower metric C++ core (nanobind bindings)"""
 
 from collections.abc import Mapping, Sequence
-from typing import Annotated
+from typing import Annotated, overload
 
 import numpy
 from numpy.typing import NDArray
@@ -35,16 +35,28 @@ class CppConfigData:
     def bandwidths(self, arg: Annotated[NDArray[numpy.float64], dict(shape=(None,), order='C', device='cpu', writable=False)], /) -> None: ...
 
     @property
+    def lower(self) -> Annotated[NDArray[numpy.float64], dict(shape=(None,), order='C', device='cpu', writable=False)]: ...
+
+    @lower.setter
+    def lower(self, arg: Annotated[NDArray[numpy.float64], dict(shape=(None,), order='C', device='cpu', writable=False)], /) -> None: ...
+
+    @property
+    def upper(self) -> Annotated[NDArray[numpy.float64], dict(shape=(None,), order='C', device='cpu', writable=False)]: ...
+
+    @upper.setter
+    def upper(self, arg: Annotated[NDArray[numpy.float64], dict(shape=(None,), order='C', device='cpu', writable=False)], /) -> None: ...
+
+    @property
+    def out_of_range(self) -> str: ...
+
+    @out_of_range.setter
+    def out_of_range(self, arg: str, /) -> None: ...
+
+    @property
     def missing_strategy(self) -> str: ...
 
     @missing_strategy.setter
     def missing_strategy(self, arg: str, /) -> None: ...
-
-    @property
-    def scale_method(self) -> str: ...
-
-    @scale_method.setter
-    def scale_method(self, arg: str, /) -> None: ...
 
     @property
     def categorical_ordinal_calculation_type(self) -> str: ...
@@ -63,24 +75,6 @@ class CppConfigData:
 
     @conditional_distances_threshold_coeff.setter
     def conditional_distances_threshold_coeff(self, arg: int, /) -> None: ...
-
-    @property
-    def discretization(self) -> str: ...
-
-    @discretization.setter
-    def discretization(self, arg: str, /) -> None: ...
-
-    @property
-    def silverman_constant(self) -> float: ...
-
-    @silverman_constant.setter
-    def silverman_constant(self, arg: float, /) -> None: ...
-
-    @property
-    def k_neighbors(self) -> int | None: ...
-
-    @k_neighbors.setter
-    def k_neighbors(self, arg: int | None) -> None: ...
 
     @property
     def handle_unseen_binary_asymmetric(self) -> str: ...
@@ -107,40 +101,22 @@ class CppConfigData:
     def handle_unseen_categorical_ordinal(self, arg: str, /) -> None: ...
 
     @property
-    def out_of_range(self) -> str: ...
-
-    @out_of_range.setter
-    def out_of_range(self, arg: str, /) -> None: ...
-
-    @property
-    def skip_out_of_range_validation(self) -> bool: ...
-
-    @skip_out_of_range_validation.setter
-    def skip_out_of_range_validation(self, arg: bool, /) -> None: ...
-
-    @property
-    def categorical_ordinal_values_order(self) -> dict[int, list[str]]: ...
-
-    @categorical_ordinal_values_order.setter
-    def categorical_ordinal_values_order(self, arg: Mapping[int, Sequence[str]], /) -> None: ...
-
-    @property
-    def binary_asymmetric_value_order(self) -> dict[int, list[str]]: ...
-
-    @binary_asymmetric_value_order.setter
-    def binary_asymmetric_value_order(self, arg: Mapping[int, Sequence[str]], /) -> None: ...
-
-    @property
-    def binary_symmetric_value_order(self) -> dict[int, list[str]]: ...
-
-    @binary_symmetric_value_order.setter
-    def binary_symmetric_value_order(self, arg: Mapping[int, Sequence[str]], /) -> None: ...
-
-    @property
     def ordinal_counts(self) -> dict[int, list[float]]: ...
 
     @ordinal_counts.setter
     def ordinal_counts(self, arg: Mapping[int, Sequence[float]], /) -> None: ...
+
+    @property
+    def excluded_features(self) -> list[int]: ...
+
+    @excluded_features.setter
+    def excluded_features(self, arg: Sequence[int], /) -> None: ...
+
+    @property
+    def category_values(self) -> dict[int, list[float]]: ...
+
+    @category_values.setter
+    def category_values(self, arg: Mapping[int, Sequence[float]], /) -> None: ...
 
 class CppConfig:
     def __init__(self) -> None: ...
@@ -163,10 +139,38 @@ class CppConfig:
     def calculate_distance(self, x: Annotated[NDArray[numpy.float64], dict(shape=(None,), order='C', device='cpu', writable=False)], y: Annotated[NDArray[numpy.float64], dict(shape=(None,), order='C', device='cpu', writable=False)]) -> float:
         """Gower distance between two 1-D feature vectors."""
 
-    def calculate_matrix(self, data: Annotated[NDArray[numpy.float64], dict(shape=(None, None), order='C', device='cpu', writable=False)], out: Annotated[NDArray[numpy.float64], dict(shape=(None, None), order='C', device='cpu')], similarity: bool = False) -> None:
-        """Fill a pre-allocated (n, n) matrix with pairwise Gower distances."""
+    @overload
+    def calculate_matrix(self, data: Annotated[NDArray[numpy.float64], dict(shape=(None, None), order='C', device='cpu', writable=False)], out: Annotated[NDArray[numpy.float64], dict(shape=(None, None), order='C', device='cpu')], similarity: bool = False) -> None: ...
 
-    def calculate_matrix_xy(self, x_data: Annotated[NDArray[numpy.float64], dict(shape=(None, None), order='C', device='cpu', writable=False)], y_data: Annotated[NDArray[numpy.float64], dict(shape=(None, None), order='C', device='cpu', writable=False)], out: Annotated[NDArray[numpy.float64], dict(shape=(None, None), order='C', device='cpu')], similarity: bool = False) -> None:
+    @overload
+    def calculate_matrix(self, data: Annotated[NDArray[numpy.float64], dict(shape=(None, None), order='C', device='cpu', writable=False)], out: Annotated[NDArray[numpy.float32], dict(shape=(None, None), order='C', device='cpu')], similarity: bool = False) -> None: ...
+
+    @overload
+    def calculate_matrix(self, data: Annotated[NDArray[numpy.float64], dict(shape=(None, None), order='C', device='cpu', writable=False)], out: Annotated[NDArray[numpy.float16], dict(shape=(None, None), order='C', device='cpu')], similarity: bool = False) -> None:
+        """
+        Fill a pre-allocated (n, n) matrix with pairwise Gower distances. `out` may be any supported float width; narrower than the model's own precision rounds each cell on the way out.
+        """
+
+    @overload
+    def calculate_matrix_condensed(self, data: Annotated[NDArray[numpy.float64], dict(shape=(None, None), order='C', device='cpu', writable=False)], out: Annotated[NDArray[numpy.float64], dict(shape=(None,), order='C', device='cpu')], similarity: bool = False) -> None: ...
+
+    @overload
+    def calculate_matrix_condensed(self, data: Annotated[NDArray[numpy.float64], dict(shape=(None, None), order='C', device='cpu', writable=False)], out: Annotated[NDArray[numpy.float32], dict(shape=(None,), order='C', device='cpu')], similarity: bool = False) -> None: ...
+
+    @overload
+    def calculate_matrix_condensed(self, data: Annotated[NDArray[numpy.float64], dict(shape=(None, None), order='C', device='cpu', writable=False)], out: Annotated[NDArray[numpy.float16], dict(shape=(None,), order='C', device='cpu')], similarity: bool = False) -> None:
+        """
+        Fill a pre-allocated n*(n-1)/2 vector with the upper triangle of the pairwise Gower distances, in scipy pdist order.
+        """
+
+    @overload
+    def calculate_matrix_xy(self, x_data: Annotated[NDArray[numpy.float64], dict(shape=(None, None), order='C', device='cpu', writable=False)], y_data: Annotated[NDArray[numpy.float64], dict(shape=(None, None), order='C', device='cpu', writable=False)], out: Annotated[NDArray[numpy.float64], dict(shape=(None, None), order='C', device='cpu')], similarity: bool = False) -> None: ...
+
+    @overload
+    def calculate_matrix_xy(self, x_data: Annotated[NDArray[numpy.float64], dict(shape=(None, None), order='C', device='cpu', writable=False)], y_data: Annotated[NDArray[numpy.float64], dict(shape=(None, None), order='C', device='cpu', writable=False)], out: Annotated[NDArray[numpy.float32], dict(shape=(None, None), order='C', device='cpu')], similarity: bool = False) -> None: ...
+
+    @overload
+    def calculate_matrix_xy(self, x_data: Annotated[NDArray[numpy.float64], dict(shape=(None, None), order='C', device='cpu', writable=False)], y_data: Annotated[NDArray[numpy.float64], dict(shape=(None, None), order='C', device='cpu', writable=False)], out: Annotated[NDArray[numpy.float16], dict(shape=(None, None), order='C', device='cpu')], similarity: bool = False) -> None:
         """Fill a pre-allocated (n_x, n_y) matrix with cross pairwise Gower."""
 
 class CppConfigDataF:
@@ -197,16 +201,28 @@ class CppConfigDataF:
     def bandwidths(self, arg: Annotated[NDArray[numpy.float32], dict(shape=(None,), order='C', device='cpu', writable=False)], /) -> None: ...
 
     @property
+    def lower(self) -> Annotated[NDArray[numpy.float32], dict(shape=(None,), order='C', device='cpu', writable=False)]: ...
+
+    @lower.setter
+    def lower(self, arg: Annotated[NDArray[numpy.float32], dict(shape=(None,), order='C', device='cpu', writable=False)], /) -> None: ...
+
+    @property
+    def upper(self) -> Annotated[NDArray[numpy.float32], dict(shape=(None,), order='C', device='cpu', writable=False)]: ...
+
+    @upper.setter
+    def upper(self, arg: Annotated[NDArray[numpy.float32], dict(shape=(None,), order='C', device='cpu', writable=False)], /) -> None: ...
+
+    @property
+    def out_of_range(self) -> str: ...
+
+    @out_of_range.setter
+    def out_of_range(self, arg: str, /) -> None: ...
+
+    @property
     def missing_strategy(self) -> str: ...
 
     @missing_strategy.setter
     def missing_strategy(self, arg: str, /) -> None: ...
-
-    @property
-    def scale_method(self) -> str: ...
-
-    @scale_method.setter
-    def scale_method(self, arg: str, /) -> None: ...
 
     @property
     def categorical_ordinal_calculation_type(self) -> str: ...
@@ -225,24 +241,6 @@ class CppConfigDataF:
 
     @conditional_distances_threshold_coeff.setter
     def conditional_distances_threshold_coeff(self, arg: int, /) -> None: ...
-
-    @property
-    def discretization(self) -> str: ...
-
-    @discretization.setter
-    def discretization(self, arg: str, /) -> None: ...
-
-    @property
-    def silverman_constant(self) -> float: ...
-
-    @silverman_constant.setter
-    def silverman_constant(self, arg: float, /) -> None: ...
-
-    @property
-    def k_neighbors(self) -> int | None: ...
-
-    @k_neighbors.setter
-    def k_neighbors(self, arg: int | None) -> None: ...
 
     @property
     def handle_unseen_binary_asymmetric(self) -> str: ...
@@ -269,40 +267,22 @@ class CppConfigDataF:
     def handle_unseen_categorical_ordinal(self, arg: str, /) -> None: ...
 
     @property
-    def out_of_range(self) -> str: ...
-
-    @out_of_range.setter
-    def out_of_range(self, arg: str, /) -> None: ...
-
-    @property
-    def skip_out_of_range_validation(self) -> bool: ...
-
-    @skip_out_of_range_validation.setter
-    def skip_out_of_range_validation(self, arg: bool, /) -> None: ...
-
-    @property
-    def categorical_ordinal_values_order(self) -> dict[int, list[str]]: ...
-
-    @categorical_ordinal_values_order.setter
-    def categorical_ordinal_values_order(self, arg: Mapping[int, Sequence[str]], /) -> None: ...
-
-    @property
-    def binary_asymmetric_value_order(self) -> dict[int, list[str]]: ...
-
-    @binary_asymmetric_value_order.setter
-    def binary_asymmetric_value_order(self, arg: Mapping[int, Sequence[str]], /) -> None: ...
-
-    @property
-    def binary_symmetric_value_order(self) -> dict[int, list[str]]: ...
-
-    @binary_symmetric_value_order.setter
-    def binary_symmetric_value_order(self, arg: Mapping[int, Sequence[str]], /) -> None: ...
-
-    @property
     def ordinal_counts(self) -> dict[int, list[float]]: ...
 
     @ordinal_counts.setter
     def ordinal_counts(self, arg: Mapping[int, Sequence[float]], /) -> None: ...
+
+    @property
+    def excluded_features(self) -> list[int]: ...
+
+    @excluded_features.setter
+    def excluded_features(self, arg: Sequence[int], /) -> None: ...
+
+    @property
+    def category_values(self) -> dict[int, list[float]]: ...
+
+    @category_values.setter
+    def category_values(self, arg: Mapping[int, Sequence[float]], /) -> None: ...
 
 class CppConfigF:
     def __init__(self) -> None: ...
@@ -325,10 +305,38 @@ class CppConfigF:
     def calculate_distance(self, x: Annotated[NDArray[numpy.float32], dict(shape=(None,), order='C', device='cpu', writable=False)], y: Annotated[NDArray[numpy.float32], dict(shape=(None,), order='C', device='cpu', writable=False)]) -> float:
         """Gower distance between two 1-D feature vectors."""
 
-    def calculate_matrix(self, data: Annotated[NDArray[numpy.float32], dict(shape=(None, None), order='C', device='cpu', writable=False)], out: Annotated[NDArray[numpy.float32], dict(shape=(None, None), order='C', device='cpu')], similarity: bool = False) -> None:
-        """Fill a pre-allocated (n, n) matrix with pairwise Gower distances."""
+    @overload
+    def calculate_matrix(self, data: Annotated[NDArray[numpy.float32], dict(shape=(None, None), order='C', device='cpu', writable=False)], out: Annotated[NDArray[numpy.float32], dict(shape=(None, None), order='C', device='cpu')], similarity: bool = False) -> None: ...
 
-    def calculate_matrix_xy(self, x_data: Annotated[NDArray[numpy.float32], dict(shape=(None, None), order='C', device='cpu', writable=False)], y_data: Annotated[NDArray[numpy.float32], dict(shape=(None, None), order='C', device='cpu', writable=False)], out: Annotated[NDArray[numpy.float32], dict(shape=(None, None), order='C', device='cpu')], similarity: bool = False) -> None:
+    @overload
+    def calculate_matrix(self, data: Annotated[NDArray[numpy.float32], dict(shape=(None, None), order='C', device='cpu', writable=False)], out: Annotated[NDArray[numpy.float64], dict(shape=(None, None), order='C', device='cpu')], similarity: bool = False) -> None: ...
+
+    @overload
+    def calculate_matrix(self, data: Annotated[NDArray[numpy.float32], dict(shape=(None, None), order='C', device='cpu', writable=False)], out: Annotated[NDArray[numpy.float16], dict(shape=(None, None), order='C', device='cpu')], similarity: bool = False) -> None:
+        """
+        Fill a pre-allocated (n, n) matrix with pairwise Gower distances. `out` may be any supported float width; narrower than the model's own precision rounds each cell on the way out.
+        """
+
+    @overload
+    def calculate_matrix_condensed(self, data: Annotated[NDArray[numpy.float32], dict(shape=(None, None), order='C', device='cpu', writable=False)], out: Annotated[NDArray[numpy.float32], dict(shape=(None,), order='C', device='cpu')], similarity: bool = False) -> None: ...
+
+    @overload
+    def calculate_matrix_condensed(self, data: Annotated[NDArray[numpy.float32], dict(shape=(None, None), order='C', device='cpu', writable=False)], out: Annotated[NDArray[numpy.float64], dict(shape=(None,), order='C', device='cpu')], similarity: bool = False) -> None: ...
+
+    @overload
+    def calculate_matrix_condensed(self, data: Annotated[NDArray[numpy.float32], dict(shape=(None, None), order='C', device='cpu', writable=False)], out: Annotated[NDArray[numpy.float16], dict(shape=(None,), order='C', device='cpu')], similarity: bool = False) -> None:
+        """
+        Fill a pre-allocated n*(n-1)/2 vector with the upper triangle of the pairwise Gower distances, in scipy pdist order.
+        """
+
+    @overload
+    def calculate_matrix_xy(self, x_data: Annotated[NDArray[numpy.float32], dict(shape=(None, None), order='C', device='cpu', writable=False)], y_data: Annotated[NDArray[numpy.float32], dict(shape=(None, None), order='C', device='cpu', writable=False)], out: Annotated[NDArray[numpy.float32], dict(shape=(None, None), order='C', device='cpu')], similarity: bool = False) -> None: ...
+
+    @overload
+    def calculate_matrix_xy(self, x_data: Annotated[NDArray[numpy.float32], dict(shape=(None, None), order='C', device='cpu', writable=False)], y_data: Annotated[NDArray[numpy.float32], dict(shape=(None, None), order='C', device='cpu', writable=False)], out: Annotated[NDArray[numpy.float64], dict(shape=(None, None), order='C', device='cpu')], similarity: bool = False) -> None: ...
+
+    @overload
+    def calculate_matrix_xy(self, x_data: Annotated[NDArray[numpy.float32], dict(shape=(None, None), order='C', device='cpu', writable=False)], y_data: Annotated[NDArray[numpy.float32], dict(shape=(None, None), order='C', device='cpu', writable=False)], out: Annotated[NDArray[numpy.float16], dict(shape=(None, None), order='C', device='cpu')], similarity: bool = False) -> None:
         """Fill a pre-allocated (n_x, n_y) matrix with cross pairwise Gower."""
 
 class CppConfigDataH:
@@ -359,16 +367,28 @@ class CppConfigDataH:
     def bandwidths(self, arg: Annotated[NDArray[numpy.float16], dict(shape=(None,), order='C', device='cpu', writable=False)], /) -> None: ...
 
     @property
+    def lower(self) -> Annotated[NDArray[numpy.float16], dict(shape=(None,), order='C', device='cpu', writable=False)]: ...
+
+    @lower.setter
+    def lower(self, arg: Annotated[NDArray[numpy.float16], dict(shape=(None,), order='C', device='cpu', writable=False)], /) -> None: ...
+
+    @property
+    def upper(self) -> Annotated[NDArray[numpy.float16], dict(shape=(None,), order='C', device='cpu', writable=False)]: ...
+
+    @upper.setter
+    def upper(self, arg: Annotated[NDArray[numpy.float16], dict(shape=(None,), order='C', device='cpu', writable=False)], /) -> None: ...
+
+    @property
+    def out_of_range(self) -> str: ...
+
+    @out_of_range.setter
+    def out_of_range(self, arg: str, /) -> None: ...
+
+    @property
     def missing_strategy(self) -> str: ...
 
     @missing_strategy.setter
     def missing_strategy(self, arg: str, /) -> None: ...
-
-    @property
-    def scale_method(self) -> str: ...
-
-    @scale_method.setter
-    def scale_method(self, arg: str, /) -> None: ...
 
     @property
     def categorical_ordinal_calculation_type(self) -> str: ...
@@ -387,24 +407,6 @@ class CppConfigDataH:
 
     @conditional_distances_threshold_coeff.setter
     def conditional_distances_threshold_coeff(self, arg: int, /) -> None: ...
-
-    @property
-    def discretization(self) -> str: ...
-
-    @discretization.setter
-    def discretization(self, arg: str, /) -> None: ...
-
-    @property
-    def silverman_constant(self) -> float: ...
-
-    @silverman_constant.setter
-    def silverman_constant(self, arg: float, /) -> None: ...
-
-    @property
-    def k_neighbors(self) -> int | None: ...
-
-    @k_neighbors.setter
-    def k_neighbors(self, arg: int | None) -> None: ...
 
     @property
     def handle_unseen_binary_asymmetric(self) -> str: ...
@@ -431,40 +433,22 @@ class CppConfigDataH:
     def handle_unseen_categorical_ordinal(self, arg: str, /) -> None: ...
 
     @property
-    def out_of_range(self) -> str: ...
-
-    @out_of_range.setter
-    def out_of_range(self, arg: str, /) -> None: ...
-
-    @property
-    def skip_out_of_range_validation(self) -> bool: ...
-
-    @skip_out_of_range_validation.setter
-    def skip_out_of_range_validation(self, arg: bool, /) -> None: ...
-
-    @property
-    def categorical_ordinal_values_order(self) -> dict[int, list[str]]: ...
-
-    @categorical_ordinal_values_order.setter
-    def categorical_ordinal_values_order(self, arg: Mapping[int, Sequence[str]], /) -> None: ...
-
-    @property
-    def binary_asymmetric_value_order(self) -> dict[int, list[str]]: ...
-
-    @binary_asymmetric_value_order.setter
-    def binary_asymmetric_value_order(self, arg: Mapping[int, Sequence[str]], /) -> None: ...
-
-    @property
-    def binary_symmetric_value_order(self) -> dict[int, list[str]]: ...
-
-    @binary_symmetric_value_order.setter
-    def binary_symmetric_value_order(self, arg: Mapping[int, Sequence[str]], /) -> None: ...
-
-    @property
     def ordinal_counts(self) -> dict[int, list[float]]: ...
 
     @ordinal_counts.setter
     def ordinal_counts(self, arg: Mapping[int, Sequence[float]], /) -> None: ...
+
+    @property
+    def excluded_features(self) -> list[int]: ...
+
+    @excluded_features.setter
+    def excluded_features(self, arg: Sequence[int], /) -> None: ...
+
+    @property
+    def category_values(self) -> dict[int, list[float]]: ...
+
+    @category_values.setter
+    def category_values(self, arg: Mapping[int, Sequence[float]], /) -> None: ...
 
 class CppConfigH:
     def __init__(self) -> None: ...
@@ -487,8 +471,36 @@ class CppConfigH:
     def calculate_distance(self, x: Annotated[NDArray[numpy.float16], dict(shape=(None,), order='C', device='cpu', writable=False)], y: Annotated[NDArray[numpy.float16], dict(shape=(None,), order='C', device='cpu', writable=False)]) -> float:
         """Gower distance between two 1-D feature vectors."""
 
-    def calculate_matrix(self, data: Annotated[NDArray[numpy.float16], dict(shape=(None, None), order='C', device='cpu', writable=False)], out: Annotated[NDArray[numpy.float16], dict(shape=(None, None), order='C', device='cpu')], similarity: bool = False) -> None:
-        """Fill a pre-allocated (n, n) matrix with pairwise Gower distances."""
+    @overload
+    def calculate_matrix(self, data: Annotated[NDArray[numpy.float16], dict(shape=(None, None), order='C', device='cpu', writable=False)], out: Annotated[NDArray[numpy.float16], dict(shape=(None, None), order='C', device='cpu')], similarity: bool = False) -> None: ...
 
-    def calculate_matrix_xy(self, x_data: Annotated[NDArray[numpy.float16], dict(shape=(None, None), order='C', device='cpu', writable=False)], y_data: Annotated[NDArray[numpy.float16], dict(shape=(None, None), order='C', device='cpu', writable=False)], out: Annotated[NDArray[numpy.float16], dict(shape=(None, None), order='C', device='cpu')], similarity: bool = False) -> None:
+    @overload
+    def calculate_matrix(self, data: Annotated[NDArray[numpy.float16], dict(shape=(None, None), order='C', device='cpu', writable=False)], out: Annotated[NDArray[numpy.float64], dict(shape=(None, None), order='C', device='cpu')], similarity: bool = False) -> None: ...
+
+    @overload
+    def calculate_matrix(self, data: Annotated[NDArray[numpy.float16], dict(shape=(None, None), order='C', device='cpu', writable=False)], out: Annotated[NDArray[numpy.float32], dict(shape=(None, None), order='C', device='cpu')], similarity: bool = False) -> None:
+        """
+        Fill a pre-allocated (n, n) matrix with pairwise Gower distances. `out` may be any supported float width; narrower than the model's own precision rounds each cell on the way out.
+        """
+
+    @overload
+    def calculate_matrix_condensed(self, data: Annotated[NDArray[numpy.float16], dict(shape=(None, None), order='C', device='cpu', writable=False)], out: Annotated[NDArray[numpy.float16], dict(shape=(None,), order='C', device='cpu')], similarity: bool = False) -> None: ...
+
+    @overload
+    def calculate_matrix_condensed(self, data: Annotated[NDArray[numpy.float16], dict(shape=(None, None), order='C', device='cpu', writable=False)], out: Annotated[NDArray[numpy.float64], dict(shape=(None,), order='C', device='cpu')], similarity: bool = False) -> None: ...
+
+    @overload
+    def calculate_matrix_condensed(self, data: Annotated[NDArray[numpy.float16], dict(shape=(None, None), order='C', device='cpu', writable=False)], out: Annotated[NDArray[numpy.float32], dict(shape=(None,), order='C', device='cpu')], similarity: bool = False) -> None:
+        """
+        Fill a pre-allocated n*(n-1)/2 vector with the upper triangle of the pairwise Gower distances, in scipy pdist order.
+        """
+
+    @overload
+    def calculate_matrix_xy(self, x_data: Annotated[NDArray[numpy.float16], dict(shape=(None, None), order='C', device='cpu', writable=False)], y_data: Annotated[NDArray[numpy.float16], dict(shape=(None, None), order='C', device='cpu', writable=False)], out: Annotated[NDArray[numpy.float16], dict(shape=(None, None), order='C', device='cpu')], similarity: bool = False) -> None: ...
+
+    @overload
+    def calculate_matrix_xy(self, x_data: Annotated[NDArray[numpy.float16], dict(shape=(None, None), order='C', device='cpu', writable=False)], y_data: Annotated[NDArray[numpy.float16], dict(shape=(None, None), order='C', device='cpu', writable=False)], out: Annotated[NDArray[numpy.float64], dict(shape=(None, None), order='C', device='cpu')], similarity: bool = False) -> None: ...
+
+    @overload
+    def calculate_matrix_xy(self, x_data: Annotated[NDArray[numpy.float16], dict(shape=(None, None), order='C', device='cpu', writable=False)], y_data: Annotated[NDArray[numpy.float16], dict(shape=(None, None), order='C', device='cpu', writable=False)], out: Annotated[NDArray[numpy.float32], dict(shape=(None, None), order='C', device='cpu')], similarity: bool = False) -> None:
         """Fill a pre-allocated (n_x, n_y) matrix with cross pairwise Gower."""
