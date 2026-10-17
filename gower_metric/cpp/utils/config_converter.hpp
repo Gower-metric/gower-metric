@@ -37,20 +37,12 @@ inline auto string_to_categorical_ordinal_calculation_type(
                               str);
 }
 
-template <typename E>
-inline auto string_to_handle_unseen(const std::string& str) -> E {
-  if (str == "warning") return E::WARNING;
-  if (str == "error") return E::ERROR;
-  if (str == "missing") return E::MISSING;
+inline auto string_to_handle_unseen(const std::string& str) -> UnseenStrategy {
+  if (str == "warning") return UnseenStrategy::WARNING;
+  if (str == "error") return UnseenStrategy::ERROR;
+  if (str == "missing") return UnseenStrategy::MISSING;
 
   throw std::invalid_argument("Invalid handle-unseen strategy: " + str);
-}
-
-template <typename E>
-inline auto as_unseen_strategy(const E strategy) -> UnseenStrategy {
-  if (strategy == E::ERROR) return UnseenStrategy::ERROR;
-  if (strategy == E::WARNING) return UnseenStrategy::WARNING;
-  return UnseenStrategy::MISSING;
 }
 
 inline auto feature_type_name(const FeatureTypes ft) -> const char* {

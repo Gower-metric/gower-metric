@@ -25,30 +25,6 @@ enum class CategoricalOrdinalCalculationTypes : std::uint8_t {
   PODANI,
 };
 
-enum class HandleUnseenBinaryAsymmetric : std::uint8_t {
-  WARNING,
-  ERROR,
-  MISSING,
-};
-
-enum class HandleUnseenBinarySymmetric : std::uint8_t {
-  WARNING,
-  ERROR,
-  MISSING,
-};
-
-enum class HandleUnseenCategoricalNominal : std::uint8_t {
-  WARNING,
-  ERROR,
-  MISSING,
-};
-
-enum class HandleUnseenCategoricalOrdinal : std::uint8_t {
-  WARNING,
-  ERROR,
-  MISSING,
-};
-
 enum class UnseenStrategy : std::uint8_t {
   WARNING,
   ERROR,

@@ -145,10 +145,6 @@ struct CondensedLayout {
   }
 
   static constexpr bool kHasDiagonal = false;
-
-  template <typename TOut>
-  static void set_diagonal(TOut* /*out*/, const std::size_t /*n*/,
-                           const std::size_t /*i*/, const TOut /*v*/) {}
 };
 
 }  // namespace gower_detail

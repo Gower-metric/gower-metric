@@ -89,9 +89,6 @@ void CppConfig<T>::configure_arguments(const CppConfigData<T>& data) {
       case FeatureTypes::BINARY_ASYMMETRIC:
         binary_asymmetric_group.push_back(idx);
         break;
-      default:
-        throw std::invalid_argument("Unknown feature type at index " +
-                                    std::to_string(idx));
     }
   }
 
@@ -124,17 +121,13 @@ void CppConfig<T>::configure_arguments(const CppConfigData<T>& data) {
   conditional_distances_threshold_coeff =
       data.conditional_distances_threshold_coeff;
   handle_unseen_binary_asymmetric =
-      string_to_handle_unseen<HandleUnseenBinaryAsymmetric>(
-          data.handle_unseen_binary_asymmetric);
+      string_to_handle_unseen(data.handle_unseen_binary_asymmetric);
   handle_unseen_binary_symmetric =
-      string_to_handle_unseen<HandleUnseenBinarySymmetric>(
-          data.handle_unseen_binary_symmetric);
+      string_to_handle_unseen(data.handle_unseen_binary_symmetric);
   handle_unseen_categorical_nominal =
-      string_to_handle_unseen<HandleUnseenCategoricalNominal>(
-          data.handle_unseen_categorical_nominal);
+      string_to_handle_unseen(data.handle_unseen_categorical_nominal);
   handle_unseen_categorical_ordinal =
-      string_to_handle_unseen<HandleUnseenCategoricalOrdinal>(
-          data.handle_unseen_categorical_ordinal);
+      string_to_handle_unseen(data.handle_unseen_categorical_ordinal);
 
   ordinal_meta.assign(n, OrdinalRankMeta<T>{});
   for (const auto& [j, counts] : data.ordinal_counts) {
@@ -160,8 +153,6 @@ void CppConfig<T>::configure_arguments(const CppConfigData<T>& data) {
     meta.varies = lo < c && hi > lo;
     if (!meta.varies) continue;
 
-    meta.lo = lo;
-    meta.hi = hi;
     meta.denom = static_cast<T>(hi - lo);
     meta.podani_denom = 1.0 + (meta.cum[hi] - meta.cum[lo + 1]);
   }
@@ -177,19 +168,18 @@ void CppConfig<T>::configure_arguments(const CppConfigData<T>& data) {
       for (std::size_t l = 0; l < ordinal_meta[f].levels; ++l) {
         domain.values.push_back(static_cast<T>(l));
       }
-      domain.strategy = as_unseen_strategy(handle_unseen_categorical_ordinal);
+      domain.strategy = handle_unseen_categorical_ordinal;
     } else if (fitted == data.category_values.end()) {
       continue;
     } else {
       for (const double v : fitted->second) {
         domain.values.push_back(static_cast<T>(v));
       }
-      domain.strategy =
-          type == FeatureTypes::CATEGORICAL_NOMINAL
-              ? as_unseen_strategy(handle_unseen_categorical_nominal)
-          : type == FeatureTypes::BINARY_SYMMETRIC
-              ? as_unseen_strategy(handle_unseen_binary_symmetric)
-              : as_unseen_strategy(handle_unseen_binary_asymmetric);
+      domain.strategy = type == FeatureTypes::CATEGORICAL_NOMINAL
+                            ? handle_unseen_categorical_nominal
+                        : type == FeatureTypes::BINARY_SYMMETRIC
+                            ? handle_unseen_binary_symmetric
+                            : handle_unseen_binary_asymmetric;
       if (type != FeatureTypes::CATEGORICAL_NOMINAL) {
         domain.room = 2 - domain.values.size();
         if (domain.room == 0) domain.positive = domain.values[1];

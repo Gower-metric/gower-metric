@@ -111,16 +111,11 @@ auto CppConfig<T>::calculate_distance(const T* x, const T* y) const -> T {
 
   const T nan = static_cast<T>(std::numeric_limits<double>::quiet_NaN());
 
-  bool cat_over_threshold = false;
   if (conditional_distances) {
     if (cat.weight <= T(0)) return nan;
     const T threshold = static_cast<T>(conditional_distances_threshold_coeff) /
                         static_cast<T>(p_cat);
-    cat_over_threshold = cat.diff / cat.weight > threshold;
-    if (cat_over_threshold &&
-        missing_strategy != MissingStrategy::RAISE_ERROR) {
-      return T(1);
-    }
+    if (cat.diff / cat.weight > threshold) return T(1);
   }
 
   for (const int i : numeric_group) {
@@ -134,7 +129,6 @@ auto CppConfig<T>::calculate_distance(const T* x, const T* y) const -> T {
   }
 
   if (conditional_distances) {
-    if (cat_over_threshold) return T(1);
     return num.weight > T(0) ? num.diff / num.weight : nan;
   }
 

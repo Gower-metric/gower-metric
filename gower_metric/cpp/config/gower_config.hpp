@@ -51,8 +51,6 @@ template <typename T>
 struct OrdinalRankMeta {
   std::vector<double> cum;
   std::size_t levels = 0;
-  std::size_t lo = 0;
-  std::size_t hi = 0;
   bool varies = false;
   T denom = 0;
   double podani_denom = 1;
@@ -92,14 +90,10 @@ struct CppConfig {
       CategoricalOrdinalCalculationTypes::KAUFMAN;
   bool conditional_distances = false;
   int conditional_distances_threshold_coeff = 1;
-  HandleUnseenBinaryAsymmetric handle_unseen_binary_asymmetric =
-      HandleUnseenBinaryAsymmetric::ERROR;
-  HandleUnseenBinarySymmetric handle_unseen_binary_symmetric =
-      HandleUnseenBinarySymmetric::ERROR;
-  HandleUnseenCategoricalNominal handle_unseen_categorical_nominal =
-      HandleUnseenCategoricalNominal::ERROR;
-  HandleUnseenCategoricalOrdinal handle_unseen_categorical_ordinal =
-      HandleUnseenCategoricalOrdinal::ERROR;
+  UnseenStrategy handle_unseen_binary_asymmetric = UnseenStrategy::ERROR;
+  UnseenStrategy handle_unseen_binary_symmetric = UnseenStrategy::ERROR;
+  UnseenStrategy handle_unseen_categorical_nominal = UnseenStrategy::ERROR;
+  UnseenStrategy handle_unseen_categorical_ordinal = UnseenStrategy::ERROR;
   std::vector<OrdinalRankMeta<T>> ordinal_meta;
   std::vector<FeatureDomain<T>> domains;
   std::vector<int> checked_features;
