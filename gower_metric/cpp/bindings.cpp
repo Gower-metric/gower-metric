@@ -81,7 +81,7 @@ auto check_rows(const CppConfig<T>& cfg, const T* data, const size_t n_rows,
     if (cfg.out_of_range == OutOfRangeStrategy::ERROR) {
       throw std::invalid_argument(head + outside);
     }
-    if (unseen.outside == size_t(-1)) {
+    if (unseen.outside == static_cast<size_t>(-1)) {
       unseen.outside = unseen.warnings.size();
       unseen.warnings.push_back(head);
     }

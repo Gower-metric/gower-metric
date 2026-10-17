@@ -20,7 +20,7 @@ auto view_size(const ConfigVector<T>& v) -> std::size_t {
 
 template <typename T>
 void CppConfig<T>::configure_arguments(const CppConfigData<T>& data) {
-  const std::lock_guard<std::mutex> lock(configuring);
+  const std::scoped_lock lock(configuring);
   const auto n = data.feature_types.size();
 
   const auto weights_size = view_size(data.feature_weights);
