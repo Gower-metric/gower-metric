@@ -4,7 +4,7 @@
 """Shared type aliases."""
 
 from collections.abc import Callable, Mapping, Sequence
-from typing import Protocol, TypeAlias, TypedDict
+from typing import Literal, Protocol, TypeAlias, TypedDict
 
 import numpy as np
 import numpy.typing as npt
@@ -60,6 +60,20 @@ class OrdinalMetadata(TypedDict):
     max: int | None
 
 
+class FittedEncoder(Protocol):
+    """What the package reads from a fitted scikit-learn ``OrdinalEncoder``."""
+
+    @property
+    def categories_(self) -> Sequence[AnyArray]:
+        """The fitted categories, one array per encoded column."""
+        ...
+
+    @property
+    def handle_unknown(self) -> str:
+        """The ``handle_unknown`` setting the encoder was built with."""
+        ...
+
+
 class NativeKernel(Protocol):
     """The compute entry points shared by the native config classes."""
 
@@ -76,6 +90,15 @@ class NativeKernel(Protocol):
         """Fill ``out`` with the pairwise matrix of ``data``."""
         ...
 
+    def calculate_matrix_condensed(
+        self,
+        data: FloatArray,
+        out: FloatArray,
+        similarity: bool,
+    ) -> None:
+        """Fill ``out`` with the upper triangle of ``data``, in pdist order."""
+        ...
+
     def calculate_matrix_xy(
         self,
         x_data: FloatArray,
@@ -87,18 +110,27 @@ class NativeKernel(Protocol):
         ...
 
 
+MatrixType: TypeAlias = Literal["distance", "similarity"]
+"""Which of the two complementary matrices to compute."""
+
+SparseType: TypeAlias = Literal["csr", "csc", "coo"]
+"""Sparse layouts ``calculate_matrix`` can return."""
+
 __all__ = [
     "AnyArray",
     "BinaryMetadata",
     "BoolArray",
     "DataFrameOrArray",
+    "FittedEncoder",
     "FloatArray",
     "FloatDType",
+    "MatrixType",
     "NativeKernel",
     "ObjectArray",
     "OrdinalMetadata",
     "Record",
     "RecordKey",
+    "SparseType",
     "Transform",
     "ValueOrder",
 ]

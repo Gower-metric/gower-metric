@@ -1,6 +1,8 @@
 # Copyright (c) 2025 - 2026 the gower-metric developers
 # SPDX-License-Identifier: MIT
 
+from collections.abc import Mapping
+
 import numpy as np
 
 from gower_metric._typing import FloatArray
@@ -8,13 +10,13 @@ from gower_metric._typing import FloatArray
 
 def get_weights(
     n_features: int,
-    config: dict[int, float] | str | None = None,
+    config: Mapping[int, float] | str | None = None,
 ) -> FloatArray:
     """Get weights for features based on the provided configuration.
 
     Args:
         n_features (int): Number of features.
-        config (dict[int, float] | str | None): Configuration for weights. If None or "uniform", all features will have equal weight of 1.
+        config (Mapping[int, float] | str | None): Configuration for weights. If None or "uniform", all features will have equal weight of 1.
             If a dictionary, keys are feature indices and values are weights.
 
     Returns:
@@ -26,7 +28,7 @@ def get_weights(
     """
     w = np.ones(n_features, dtype=float)
 
-    if isinstance(config, dict):
+    if isinstance(config, Mapping):
         for idx, val in config.items():
             if idx >= n_features:
                 msg = f"feature_weights index {idx} is out of bounds for {n_features} features."

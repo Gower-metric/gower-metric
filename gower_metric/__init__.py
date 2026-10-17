@@ -1,11 +1,11 @@
 # Copyright (c) 2025 - 2026 the gower-metric developers
 # SPDX-License-Identifier: MIT
 
-from .core.config import Config
+from .core.config import Config, FeatureType
 from .core.exceptions import IllegalStateError
 from .core.metric import Gower
 
-__all__ = ["Config", "Gower", "IllegalStateError"]
+__all__ = ["Config", "FeatureType", "Gower", "IllegalStateError"]
 
 __doc__ = """
 Gower metric for mixed data types.
