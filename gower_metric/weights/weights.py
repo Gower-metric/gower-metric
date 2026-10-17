@@ -23,14 +23,15 @@ def get_weights(
         FloatArray: Array of weights for each feature.
 
     Raises:
-        ValueError: If config is not None, "uniform", or a dictionary.
+        ValueError: If config is not None, "uniform", or a dictionary, or if
+            a key is negative or not below n_features.
 
     """
     w = np.ones(n_features, dtype=float)
 
     if isinstance(config, Mapping):
         for idx, val in config.items():
-            if idx >= n_features:
+            if not 0 <= idx < n_features:
                 msg = f"feature_weights index {idx} is out of bounds for {n_features} features."
                 raise ValueError(msg)
             w[idx] = float(val)

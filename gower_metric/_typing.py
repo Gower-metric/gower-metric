@@ -16,9 +16,6 @@ ObjectArray: TypeAlias = npt.NDArray[np.object_]
 FloatArray: TypeAlias = npt.NDArray[np.floating]
 """Encoded values in any float width."""
 
-BoolArray: TypeAlias = npt.NDArray[np.bool_]
-"""Element-wise masks over a column."""
-
 AnyArray: TypeAlias = npt.NDArray[np.generic]
 """An array of any dtype."""
 
@@ -45,19 +42,13 @@ class BinaryMetadata(TypedDict):
     """What ``fit_binary_features`` learns about one binary column."""
 
     mapping: dict[object, float]
-    values: ObjectArray
     is_explicit_order: bool
-    positive_value: object
 
 
 class OrdinalMetadata(TypedDict):
-    """What ``fit`` learns about one ordinal column's levels and cardinalities."""
+    """What ``fit`` learns about one ordinal column: the count of each level."""
 
-    ranks: dict[object, int]
-    denom: float
     counts: FloatArray
-    min: int | None
-    max: int | None
 
 
 class FittedEncoder(Protocol):
@@ -119,7 +110,6 @@ SparseType: TypeAlias = Literal["csr", "csc", "coo"]
 __all__ = [
     "AnyArray",
     "BinaryMetadata",
-    "BoolArray",
     "DataFrameOrArray",
     "FittedEncoder",
     "FloatArray",
