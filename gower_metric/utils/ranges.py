@@ -6,7 +6,7 @@ import warnings
 import numpy as np
 import pandas as pd
 
-from gower_metric._typing import DataFrameOrArray, FloatArray
+from gower_metric._typing import DataFrameOrArray, FloatArray, FloatDType
 from gower_metric.core.config import OutOfRangeStrategy
 
 
@@ -106,12 +106,35 @@ def _extract_float_columns(
     return arr[:, indices].astype(np.float64)
 
 
+def _bounds_in_precision(
+    mins: FloatArray,
+    maxs: FloatArray,
+    data_type: FloatDType,
+) -> tuple[FloatArray, FloatArray]:
+    """Widen fitted bounds to what they round to in the model's precision.
+
+    Args:
+        mins (FloatArray): fitted minimums in float64.
+        maxs (FloatArray): fitted maximums in float64.
+        data_type (FloatDType): the precision the model computes in.
+
+    Returns:
+        tuple[FloatArray, FloatArray]: lower and upper bounds to compare with.
+
+    """
+    with np.errstate(over="ignore"):
+        rounded_mins = mins.astype(data_type).astype(np.float64)
+        rounded_maxs = maxs.astype(data_type).astype(np.float64)
+    return np.minimum(mins, rounded_mins), np.maximum(maxs, rounded_maxs)
+
+
 def check_out_of_range(
     X: DataFrameOrArray,
     indices: list[int],
     mins: FloatArray,
     maxs: FloatArray,
     feature_label: str,
+    data_type: FloatDType,
 ) -> list[str]:
     """Check which columns have values outside the fitted [min, max].
 
@@ -121,6 +144,7 @@ def check_out_of_range(
         mins (FloatArray): fitted minimums, length len(indices).
         maxs (FloatArray): fitted maximums, length len(indices).
         feature_label (str): label like "numeric" or "ratio_scale".
+        data_type (FloatDType): the model's precision.
 
     Returns:
         list[str]: detail strings for offending columns (empty if all in range).
@@ -135,7 +159,12 @@ def check_out_of_range(
         col_mins = np.nanmin(sub, axis=0)
         col_maxs = np.nanmax(sub, axis=0)
 
-    violated = (col_mins < mins) | (col_maxs > maxs)
+    # A column constant at fit time (max == min, or all missing) is excluded
+    # from the coefficient, so values outside its single fitted point affect no
+    # distance and must not trip out_of_range="error".
+    varies = np.asarray(maxs) > np.asarray(mins)
+    lower, upper = _bounds_in_precision(np.asarray(mins), np.asarray(maxs), data_type)
+    violated = varies & ((col_mins < lower) | (col_maxs > upper))
     return [
         f"{feature_label} column {j}: "
         f"values in [{col_mins[pos]}, {col_maxs[pos]}], "
@@ -154,6 +183,7 @@ def enforce_oor_policy(
     ratio_scale_indices: list[int],
     ratio_mins: FloatArray,
     ratio_maxs: FloatArray,
+    data_type: FloatDType,
     stacklevel: int = 3,
 ) -> None:
     """Enforce the out-of-range policy for numeric and ratio-scale columns.
@@ -172,6 +202,7 @@ def enforce_oor_policy(
         ratio_scale_indices (list[int]): fitted ratio-scale column indices.
         ratio_mins (FloatArray): fitted minimums for ratio-scale columns.
         ratio_maxs (FloatArray): fitted maximums for ratio-scale columns.
+        data_type (FloatDType): the model's precision, in which the bounds are compared.
         stacklevel (int): stack depth for warnings.warn.
 
     Raises:
@@ -191,6 +222,7 @@ def enforce_oor_policy(
                     numeric_mins,
                     numeric_maxs,
                     "numeric",
+                    data_type,
                 ),
             )
         if ratio_scale_indices and ratio_mins.size > 0:
@@ -201,6 +233,7 @@ def enforce_oor_policy(
                     ratio_mins,
                     ratio_maxs,
                     "ratio_scale",
+                    data_type,
                 ),
             )
     if not oor_details:

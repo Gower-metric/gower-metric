@@ -7,8 +7,8 @@ import numpy as np
 import pandas as pd
 
 from gower_metric._typing import AnyArray, BinaryMetadata, FloatArray
-
-MAX_BINARY_UNIQUE_VALUES = 2
+from gower_metric.utils.binary_ut import MAX_BINARY_UNIQUE_VALUES
+from gower_metric.utils.transforms.encoding import _own_codes
 
 
 def _transform_binary(
@@ -28,7 +28,7 @@ def _transform_binary(
         col_idx (int): Column index, used in error and warning messages.
         metadata (BinaryMetadata): Fitted metadata produced by
             :func:`~gower_metric.utils.binary_ut.fit_binary_features`, containing
-            ``"mapping"``, ``"values"``, and ``"is_explicit_order"`` keys.
+            ``"mapping"`` and ``"is_explicit_order"`` keys.
         handle_unseen (str): Strategy for unseen values — ``"error"``,
             ``"warning"``, or ``"missing"``.
         binary_type (str): The binary feature type name (e.g. ``"binary_asymmetric"``).
@@ -67,7 +67,7 @@ def _transform_binary(
 
     transformed_col = np.full(col.shape[0], np.nan, dtype=float)
     matched = ~non_null_mask
-    for v, code in mapping.items():
+    for v, code in (_own_codes(mapping) or mapping).items():
         value_mask = non_null_mask & (col == v)
         transformed_col[value_mask] = code
         matched |= value_mask

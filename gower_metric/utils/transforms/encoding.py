@@ -1,23 +1,36 @@
 # Copyright (c) 2025 - 2026 the gower-metric developers
 # SPDX-License-Identifier: MIT
 
+from collections.abc import Iterable
+
 import numpy as np
 import pandas as pd
-from sklearn.preprocessing import OrdinalEncoder
 
-from gower_metric._typing import AnyArray, FloatArray, FloatDType
+from gower_metric._typing import AnyArray, FittedEncoder, FloatArray, FloatDType
 
 MAP_THRESHOLD = 3000
 """Row count above which ``pandas.Series.map`` overtakes a Python-level lookup."""
 
 _MAPPING_ATTR = "_gower_code_mapping"
+_NUMBERS = (int, float, np.integer, np.floating, np.bool_)
 
 
-def _code_mapping(enc: OrdinalEncoder) -> dict[object, float]:
+def _own_codes(values: Iterable[object]) -> dict[object, float] | None:
+    # A categorical column of numbers is its own encoding. Numeric input is
+    # taken as encoded already, so a raw value must not differ from its code.
+    codes: dict[object, float] = {}
+    for value in values:
+        if not isinstance(value, _NUMBERS):
+            return None
+        codes[value] = float(value)
+    return codes
+
+
+def _code_mapping(enc: FittedEncoder) -> dict[object, float]:
     """Return the fitted category-to-code mapping.
 
     Args:
-        enc (OrdinalEncoder): Encoder fitted on a single column.
+        enc (FittedEncoder): Encoder fitted on a single column.
 
     Returns:
         dict: Mapping from fitted category to its integer code as a float.
@@ -32,7 +45,7 @@ def _code_mapping(enc: OrdinalEncoder) -> dict[object, float]:
     """
     mapping = getattr(enc, _MAPPING_ATTR, None)
     if mapping is None:
-        mapping = {
+        mapping = _own_codes(enc.categories_[0]) or {
             category: float(code) for code, category in enumerate(enc.categories_[0])
         }
         setattr(enc, _MAPPING_ATTR, mapping)
@@ -41,16 +54,18 @@ def _code_mapping(enc: OrdinalEncoder) -> dict[object, float]:
 
 def encode_categories(
     values: AnyArray,
-    enc: OrdinalEncoder,
+    enc: FittedEncoder,
     data_type: FloatDType,
+    col_idx: int,
 ) -> FloatArray:
     """Encode already-non-missing values.
 
     Args:
         values (AnyArray): 1-D array of raw values, guaranteed free of
             missing entries by the caller.
-        enc (OrdinalEncoder): Encoder fitted on this column.
+        enc (FittedEncoder): Encoder fitted on this column.
         data_type (FloatDType): Output precision.
+        col_idx (int): Column index, named in the error message.
 
     Returns:
         FloatArray: 1-D codes, with ``np.nan`` where a value was not fitted.
@@ -77,7 +92,9 @@ def encode_categories(
         unknown = np.isnan(codes)
         if unknown.any():
             found = list(pd.unique(values[unknown]))
-            msg = f"Found unknown categories {found} in column 0 during transform"
+            msg = (
+                f"Found unknown categories {found} in column {col_idx} during transform"
+            )
             raise ValueError(msg)
 
     return codes

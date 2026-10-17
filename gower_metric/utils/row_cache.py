@@ -51,7 +51,7 @@ class RowEncodeCache:
             maxsize (int): Maximum number of encoded records retained.
 
         """
-        self.maxsize = maxsize
+        self.maxsize: int = maxsize
         self._entries: OrderedDict[RecordKey, FloatArray] = OrderedDict()
 
     def __len__(self) -> int:
