@@ -140,8 +140,6 @@ void register_matrix_methods(nb::class_<CppConfig<T>>& cls) {
       nb::ndarray<const T, nb::ndim<2>, nb::c_contig, nb::device::cpu>;
   using OutMatrix =
       nb::ndarray<TOut, nb::ndim<2>, nb::c_contig, nb::device::cpu>;
-  using OutVector =
-      nb::ndarray<TOut, nb::ndim<1>, nb::c_contig, nb::device::cpu>;
 
   cls.def(
       "calculate_matrix",
@@ -165,30 +163,6 @@ void register_matrix_methods(nb::class_<CppConfig<T>>& cls) {
       "Fill a pre-allocated (n, n) matrix with pairwise Gower distances. "
       "`out` may be any supported float width; narrower than the model's own "
       "precision rounds each cell on the way out.");
-
-  cls.def(
-      "calculate_matrix_condensed",
-      [](const CppConfig<T>& self, const Matrix& data, const OutVector& out,
-         const bool similarity) -> void {
-        nb::gil_scoped_release release;
-        const size_t n = data.shape(0);
-        if (data.shape(1) != static_cast<size_t>(self.n_features)) {
-          throw std::invalid_argument("data must have n_features columns");
-        }
-        const size_t expected = n < 2 ? 0 : n * (n - 1) / 2;
-        if (out.shape(0) != expected) {
-          throw std::invalid_argument("out must have length n * (n - 1) / 2");
-        }
-        std::vector<T> fixed;
-        Unseen<T> unseen;
-        const T* rows = check_rows(self, data.data(), n, fixed, unseen);
-        unseen.warn(4);
-        compute_gower_matrix_condensed<T, TOut>(self, rows, out.data(), n,
-                                                similarity);
-      },
-      "data"_a.noconvert(), "out"_a.noconvert(), "similarity"_a = false,
-      "Fill a pre-allocated n*(n-1)/2 vector with the upper triangle of "
-      "the pairwise Gower distances, in scipy pdist order.");
 
   cls.def(
       "calculate_matrix_xy",

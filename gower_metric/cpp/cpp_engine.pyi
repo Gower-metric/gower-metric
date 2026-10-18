@@ -152,18 +152,6 @@ class CppConfig:
         """
 
     @overload
-    def calculate_matrix_condensed(self, data: Annotated[NDArray[numpy.float64], dict(shape=(None, None), order='C', device='cpu', writable=False)], out: Annotated[NDArray[numpy.float64], dict(shape=(None,), order='C', device='cpu')], similarity: bool = False) -> None: ...
-
-    @overload
-    def calculate_matrix_condensed(self, data: Annotated[NDArray[numpy.float64], dict(shape=(None, None), order='C', device='cpu', writable=False)], out: Annotated[NDArray[numpy.float32], dict(shape=(None,), order='C', device='cpu')], similarity: bool = False) -> None: ...
-
-    @overload
-    def calculate_matrix_condensed(self, data: Annotated[NDArray[numpy.float64], dict(shape=(None, None), order='C', device='cpu', writable=False)], out: Annotated[NDArray[numpy.float16], dict(shape=(None,), order='C', device='cpu')], similarity: bool = False) -> None:
-        """
-        Fill a pre-allocated n*(n-1)/2 vector with the upper triangle of the pairwise Gower distances, in scipy pdist order.
-        """
-
-    @overload
     def calculate_matrix_xy(self, x_data: Annotated[NDArray[numpy.float64], dict(shape=(None, None), order='C', device='cpu', writable=False)], y_data: Annotated[NDArray[numpy.float64], dict(shape=(None, None), order='C', device='cpu', writable=False)], out: Annotated[NDArray[numpy.float64], dict(shape=(None, None), order='C', device='cpu')], similarity: bool = False) -> None: ...
 
     @overload
@@ -318,18 +306,6 @@ class CppConfigF:
         """
 
     @overload
-    def calculate_matrix_condensed(self, data: Annotated[NDArray[numpy.float32], dict(shape=(None, None), order='C', device='cpu', writable=False)], out: Annotated[NDArray[numpy.float32], dict(shape=(None,), order='C', device='cpu')], similarity: bool = False) -> None: ...
-
-    @overload
-    def calculate_matrix_condensed(self, data: Annotated[NDArray[numpy.float32], dict(shape=(None, None), order='C', device='cpu', writable=False)], out: Annotated[NDArray[numpy.float64], dict(shape=(None,), order='C', device='cpu')], similarity: bool = False) -> None: ...
-
-    @overload
-    def calculate_matrix_condensed(self, data: Annotated[NDArray[numpy.float32], dict(shape=(None, None), order='C', device='cpu', writable=False)], out: Annotated[NDArray[numpy.float16], dict(shape=(None,), order='C', device='cpu')], similarity: bool = False) -> None:
-        """
-        Fill a pre-allocated n*(n-1)/2 vector with the upper triangle of the pairwise Gower distances, in scipy pdist order.
-        """
-
-    @overload
     def calculate_matrix_xy(self, x_data: Annotated[NDArray[numpy.float32], dict(shape=(None, None), order='C', device='cpu', writable=False)], y_data: Annotated[NDArray[numpy.float32], dict(shape=(None, None), order='C', device='cpu', writable=False)], out: Annotated[NDArray[numpy.float32], dict(shape=(None, None), order='C', device='cpu')], similarity: bool = False) -> None: ...
 
     @overload
@@ -481,18 +457,6 @@ class CppConfigH:
     def calculate_matrix(self, data: Annotated[NDArray[numpy.float16], dict(shape=(None, None), order='C', device='cpu', writable=False)], out: Annotated[NDArray[numpy.float32], dict(shape=(None, None), order='C', device='cpu')], similarity: bool = False) -> None:
         """
         Fill a pre-allocated (n, n) matrix with pairwise Gower distances. `out` may be any supported float width; narrower than the model's own precision rounds each cell on the way out.
-        """
-
-    @overload
-    def calculate_matrix_condensed(self, data: Annotated[NDArray[numpy.float16], dict(shape=(None, None), order='C', device='cpu', writable=False)], out: Annotated[NDArray[numpy.float16], dict(shape=(None,), order='C', device='cpu')], similarity: bool = False) -> None: ...
-
-    @overload
-    def calculate_matrix_condensed(self, data: Annotated[NDArray[numpy.float16], dict(shape=(None, None), order='C', device='cpu', writable=False)], out: Annotated[NDArray[numpy.float64], dict(shape=(None,), order='C', device='cpu')], similarity: bool = False) -> None: ...
-
-    @overload
-    def calculate_matrix_condensed(self, data: Annotated[NDArray[numpy.float16], dict(shape=(None, None), order='C', device='cpu', writable=False)], out: Annotated[NDArray[numpy.float32], dict(shape=(None,), order='C', device='cpu')], similarity: bool = False) -> None:
-        """
-        Fill a pre-allocated n*(n-1)/2 vector with the upper triangle of the pairwise Gower distances, in scipy pdist order.
         """
 
     @overload

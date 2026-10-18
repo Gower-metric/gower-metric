@@ -56,11 +56,6 @@ struct TileView {
   bool diagonal;
 };
 
-inline auto condensed_index(const std::size_t i, const std::size_t j,
-                            const std::size_t n) -> std::size_t {
-  return (n * i) - (i * (i + 1) / 2) + (j - i - 1);
-}
-
 struct SquareLayout {
   template <typename T, typename TOut>
   static void scatter(const TileView<T>& tile, TOut* out, const std::size_t n) {
@@ -111,40 +106,6 @@ struct SquareLayout {
                            const TOut v) {
     out[(i * n) + i] = v;
   }
-};
-
-struct CondensedLayout {
-  template <typename T, typename TOut>
-  static void scatter(const TileView<T>& tile, TOut* out, const std::size_t n) {
-    const std::size_t j0 = tile.j0;
-    const std::size_t len = tile.len;
-
-    for (std::size_t r = 0; r < tile.rows; ++r) {
-      const std::size_t i = tile.i0 + r;
-      const std::size_t b_begin =
-          tile.diagonal && i >= j0 ? std::min(i + 1 - j0, len) : 0;
-      if (b_begin >= len) continue;
-      TOut* dst = out + condensed_index(i, j0 + b_begin, n);
-      const T* src = tile.data + (r * tile.stride) + b_begin;
-      for (std::size_t b = 0; b < len - b_begin; ++b) {
-        dst[b] = static_cast<TOut>(src[b]);
-      }
-    }
-  }
-
-  template <typename T, typename TOut>
-  static void store(TOut* out, const std::size_t n, const std::size_t i,
-                    const std::size_t j, const T v) {
-    out[condensed_index(i, j, n)] = static_cast<TOut>(v);
-  }
-
-  template <typename TOut>
-  static void fill_diagonal(TOut* /*out*/, const std::size_t /*n*/, const TOut
-                            /*v*/) {
-    // A condensed vector holds no diagonal.
-  }
-
-  static constexpr bool kHasDiagonal = false;
 };
 
 }  // namespace gower_detail
@@ -238,14 +199,6 @@ void compute_gower_matrix(const CppConfig<T>& cfg, const T* data, TOut* out,
                           const std::size_t n_rows, bool similarity) {
   compute_gower_upper<gower_detail::SquareLayout>(cfg, data, out, n_rows,
                                                   similarity);
-}
-
-template <typename T, typename TOut = T>
-void compute_gower_matrix_condensed(const CppConfig<T>& cfg, const T* data,
-                                    TOut* out, const std::size_t n_rows,
-                                    bool similarity) {
-  compute_gower_upper<gower_detail::CondensedLayout>(cfg, data, out, n_rows,
-                                                     similarity);
 }
 
 template <typename T, typename TOut = T>

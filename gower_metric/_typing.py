@@ -81,15 +81,6 @@ class NativeKernel(Protocol):
         """Fill ``out`` with the pairwise matrix of ``data``."""
         ...
 
-    def calculate_matrix_condensed(
-        self,
-        data: FloatArray,
-        out: FloatArray,
-        similarity: bool,
-    ) -> None:
-        """Fill ``out`` with the upper triangle of ``data``, in pdist order."""
-        ...
-
     def calculate_matrix_xy(
         self,
         x_data: FloatArray,
@@ -104,9 +95,6 @@ class NativeKernel(Protocol):
 MatrixType: TypeAlias = Literal["distance", "similarity"]
 """Which of the two complementary matrices to compute."""
 
-SparseType: TypeAlias = Literal["csr", "csc", "coo"]
-"""Sparse layouts ``calculate_matrix`` can return."""
-
 __all__ = [
     "AnyArray",
     "BinaryMetadata",
@@ -120,7 +108,6 @@ __all__ = [
     "OrdinalMetadata",
     "Record",
     "RecordKey",
-    "SparseType",
     "Transform",
     "ValueOrder",
 ]
