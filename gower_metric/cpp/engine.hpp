@@ -115,7 +115,8 @@ auto CppConfig<T>::calculate_distance(const T* x, const T* y) const -> T {
     if (cat.weight <= T(0)) return nan;
     const T threshold = static_cast<T>(conditional_distances_threshold_coeff) /
                         static_cast<T>(p_cat);
-    if (cat.diff / cat.weight > threshold) return T(1);
+    const T step_one = cat.diff / cat.weight;
+    if (step_one > threshold) return T(1);
   }
 
   for (const int i : numeric_group) {

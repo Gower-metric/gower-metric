@@ -107,7 +107,12 @@ def build_cpp_config(self: "Gower") -> CppConfig | CppConfigF | CppConfigH:
 
     data = data_cls()
     data.feature_types = [self.feature_types[i] for i in range(self.n_feats)]
-    data.feature_weights = np.ascontiguousarray(self.weights, dtype=self.data_type)
+    weights = np.array(self.weights, dtype=float)
+    first = [*self.binary_symmetric_indices, *self.binary_asymmetric_indices]
+    first += self.categorical_nominal_indices
+    if self.conditional_distances and len(set(weights[first])) == 1:
+        weights[first] = 1.0
+    data.feature_weights = np.ascontiguousarray(weights, dtype=self.data_type)
     data.ranges = ranges
     data.bandwidths = bandwidths
     data.lower = lower.astype(self.data_type)
