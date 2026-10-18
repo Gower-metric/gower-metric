@@ -1,5 +1,5 @@
 [build-system]
-requires = ["nanobind", "scikit-build-core"]
+requires = ["nanobind>=3.1", "scikit-build-core"]
 build-backend = "scikit_build_core.build"
 
 [project]
@@ -10,7 +10,6 @@ dependencies = [
     "pandas>=2.3.0",
     "pydantic>=2.12.5",
     "scikit-learn>=1.7.2",
-    "scipy>=1.15.3",
 ]
 requires-python = ">=3.10, <3.15"
 authors = [
@@ -48,11 +47,13 @@ Repository = "https://github.com/Gower-metric/gower-metric"
 Issues = "https://github.com/Gower-metric/gower-metric/issues"
 Changelog = "https://github.com/Gower-metric/gower-metric/blob/master/CHANGELOG.md"
 
-[tool.setuptools.packages.find]
-include = ["gower_metric*"]
-
-[tool.setuptools]
-include-package-data = true
+[tool.scikit-build]
+sdist.exclude = [
+    ".*", "/benchmarks", "/comparison", "/data", "/docs", "/examples", "/tests",
+    "/CHANGELOG.md", "/CITATION.cff", "/TODO.md", "/mypy.ini", "/ruff.toml", "/tox.toml",
+    "/uv.lock",
+]
+wheel.exclude = ["*.cpp", "*.hpp"]
 
 [tool.uv.workspace]
 members = [
@@ -70,16 +71,19 @@ dev = [
     "joblib>=1.5.1",
     "matplotlib>=3.10.7",
     "mypy>=1.17.0",
-    "nanobind>=2.12.0",
+    "nanobind>=3.1",
     "ninja>=1.13.0",
     "numpy>=2.2.6",
     "pandas>=2.3.1",
+    "pandas-stubs>=2.3.2",
     "pip>=25.2",
     "pre-commit>=4.3.0",
     "pydantic>=2.12.5",
     "pytest-cov>=7.0.0",
     "scikit-build-core>=0.12.2",
     "scikit-learn>=1.7.1",
+    "scipy>=1.15.3",
+    "scipy-stubs>=1.15.3",
     "tox>=4.55.1",
     "tox-uv>=1.35.2",
     "tqdm>=4.67.1",
@@ -95,6 +99,8 @@ tests = [
     "mypy>=1.17.0",
     "numpy>=2.2.6",
     "pandas>=2.3.1",
+    "pandas-stubs>=2.3.2",
+    "scipy-stubs>=1.15.3",
     "tqdm>=4.67.1",
     "pydantic>=2.12.5",
 ]
@@ -104,11 +110,13 @@ r_env_tests = [
     "numpy>=2.2.6",
     "openpyxl>=3.1.5",
     "pandas>=2.3.1",
+    "pandas-stubs>=2.3.2",
     "pydantic>=2.12.5",
     "pytest>=8.4.1",
     "rpy2>=3.6.1",
     "scikit-learn>=1.7.1",
     "scipy>=1.15.3",
+    "scipy-stubs>=1.15.3",
     "setuptools>=80.9.0",
     "tqdm>=4.67.1",
 ]
@@ -178,4 +186,6 @@ exclude_lines = [
     "if __name__ == .__main__.:",
     "if TYPE_CHECKING:",
     "@abstractmethod",
+    "@overload",
+    '^\s*\.\.\.$',
 ]

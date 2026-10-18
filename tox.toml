@@ -3,8 +3,8 @@ requires = ["tox>=4.22"]
 
 [env_run_base]
 description = "Run tests"
-dependency_groups = ["tests", "r_env_tests"]
-commands = [["pytest", "{posargs:tests}"]]
+dependency_groups = ["tests"]
+commands = [["pytest", "--ignore=tests/r_comparison", { replace = "posargs", default = ["tests/gower_api", "tests/cpp"], extend = true }]]
 
 [env.py310]
 description = "Run tests with Python 3.10"
@@ -33,11 +33,16 @@ base_python = ["python3.14t"]
 [env.py]
 description = "Run tests with current Python"
 
+[env.r]
+description = "Compare with R (needs R and its cluster and gower packages)"
+dependency_groups = ["tests", "r_env_tests"]
+commands = [["pytest", { replace = "posargs", default = ["tests/r_comparison"], extend = true }]]
+
 [env.package]
-description = "Build sdist + wheel and validate the sdist manifest"
+description = "Build sdist + wheel"
 skip_install = true
-deps = ["build", "check-manifest"]
+dependency_groups = []
+deps = ["build"]
 commands = [
     ["python", "-m", "build"],
-    ["check-manifest"],
 ]
