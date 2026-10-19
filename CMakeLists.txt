@@ -29,7 +29,6 @@ find_package(nanobind CONFIG REQUIRED)
 find_package(OpenMP)
 
 set(GOWER_NB_OPTIONS
-  STABLE_ABI
   NB_STATIC
   FREE_THREADED
   LTO
@@ -47,6 +46,9 @@ nanobind_add_module(cpp_engine
 if(OpenMP_CXX_FOUND)
   target_link_libraries(cpp_engine PRIVATE OpenMP::OpenMP_CXX)
 endif()
+
+target_compile_options(cpp_engine PRIVATE
+  $<$<CXX_COMPILER_ID:GNU,Clang,AppleClang>:-ffp-contract=off;-fno-trapping-math>)
 
 install(TARGETS cpp_engine LIBRARY DESTINATION gower_metric/cpp)
 
