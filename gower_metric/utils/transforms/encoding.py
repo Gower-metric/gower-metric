@@ -2,11 +2,15 @@
 # SPDX-License-Identifier: MIT
 
 from collections.abc import Iterable
+from typing import TYPE_CHECKING
 
 import numpy as np
 import pandas as pd
 
 from gower_metric._typing import AnyArray, FittedEncoder, FloatArray, FloatDType
+
+if TYPE_CHECKING:
+    from gower_metric.core.metric import Gower
 
 MAP_THRESHOLD = 3000
 """Row count above which ``pandas.Series.map`` overtakes a Python-level lookup."""
@@ -15,9 +19,8 @@ _MAPPING_ATTR = "_gower_code_mapping"
 _NUMBERS = (int, float, np.integer, np.floating, np.bool_)
 
 
-def _own_codes(values: Iterable[object]) -> dict[object, float] | None:
-    # A categorical column of numbers is its own encoding. Numeric input is
-    # taken as encoded already, so a raw value must not differ from its code.
+def own_codes(values: Iterable[object]) -> dict[object, float] | None:
+    """Code a column of numbers as itself; None if a value is not a number."""
     codes: dict[object, float] = {}
     for value in values:
         if not isinstance(value, _NUMBERS):
@@ -45,7 +48,7 @@ def _code_mapping(enc: FittedEncoder) -> dict[object, float]:
     """
     mapping = getattr(enc, _MAPPING_ATTR, None)
     if mapping is None:
-        mapping = _own_codes(enc.categories_[0]) or {
+        mapping = own_codes(enc.categories_[0]) or {
             category: float(code) for code, category in enumerate(enc.categories_[0])
         }
         setattr(enc, _MAPPING_ATTR, mapping)
@@ -98,3 +101,12 @@ def encode_categories(
             raise ValueError(msg)
 
     return codes
+
+
+def fitted_codes(model: "Gower") -> dict[int, dict[object, float]]:
+    """Give the code of each fitted value of every nominal and binary feature."""
+    binary = {**model.binary_symmetric_metadata, **model.binary_asymmetric_metadata}
+    return {
+        **{j: _code_mapping(e) for j, e in model.nominal_metadata.items()},
+        **{j: own_codes(b["mapping"]) or b["mapping"] for j, b in binary.items()},
+    }

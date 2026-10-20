@@ -106,7 +106,7 @@ def _extract_float_columns(
     return arr[:, indices].astype(np.float64)
 
 
-def _bounds_in_precision(
+def bounds_in_precision(
     mins: FloatArray,
     maxs: FloatArray,
     data_type: FloatDType,
@@ -159,11 +159,8 @@ def check_out_of_range(
         col_mins = np.nanmin(sub, axis=0)
         col_maxs = np.nanmax(sub, axis=0)
 
-    # A column constant at fit time (max == min, or all missing) is excluded
-    # from the coefficient, so values outside its single fitted point affect no
-    # distance and must not trip out_of_range="error".
     varies = np.asarray(maxs) > np.asarray(mins)
-    lower, upper = _bounds_in_precision(np.asarray(mins), np.asarray(maxs), data_type)
+    lower, upper = bounds_in_precision(np.asarray(mins), np.asarray(maxs), data_type)
     violated = varies & ((col_mins < lower) | (col_maxs > upper))
     return [
         f"{feature_label} column {j}: "

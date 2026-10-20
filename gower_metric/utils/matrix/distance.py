@@ -18,14 +18,14 @@ from gower_metric._typing import (
     NativeKernel,
 )
 from gower_metric.utils.cpp_middleware.config_builder import (
-    _CLASSES_BY_ITEMSIZE,
+    CLASSES_BY_ITEMSIZE,
     build_cpp_config,
 )
 
 if TYPE_CHECKING:
     from gower_metric import Gower
 
-_OUT_DTYPES = [np.dtype(f"f{size}") for size in sorted(_CLASSES_BY_ITEMSIZE)]
+_OUT_DTYPES = [np.dtype(f"f{size}") for size in sorted(CLASSES_BY_ITEMSIZE)]
 
 
 def _as_native_matrix(model: "Gower", X: DataFrameOrArray) -> FloatArray:
@@ -42,7 +42,7 @@ def _as_native_matrix(model: "Gower", X: DataFrameOrArray) -> FloatArray:
     arr = X.to_numpy() if isinstance(X, pd.DataFrame) else np.asarray(X)
 
     if not np.issubdtype(arr.dtype, np.number):
-        with _temporary_skip_oor(model):  # the kernel checks the range
+        with temporary_skip_oor(model):  # the kernel checks the range
             transformed = model.transform(X)
         arr = (
             transformed.to_numpy()
@@ -90,7 +90,7 @@ def _validate_out(
 
 
 @contextmanager
-def _temporary_skip_oor(gower: "Gower") -> Generator[None]:
+def temporary_skip_oor(gower: "Gower") -> Generator[None]:
     """Temporarily disable out-of-range (OOR) checking on a Gower instance.
 
     This context manager sets `gower.skip_oor` to True for the duration of the
@@ -175,7 +175,7 @@ def calculate_matrix(
         ValueError: If ``X`` is a scipy sparse matrix or ``matrix_type`` is unknown.
 
     """
-    sparse = sys.modules.get("scipy.sparse")  # loaded if X can be sparse at all
+    sparse = sys.modules.get("scipy.sparse")
     if sparse is not None and sparse.issparse(X):
         msg = (
             "Sparse matrices are currently not supported as direct input. "

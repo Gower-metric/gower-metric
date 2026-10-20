@@ -8,7 +8,7 @@ import pandas as pd
 
 from gower_metric._typing import AnyArray, BinaryMetadata, FloatArray
 from gower_metric.utils.binary_ut import MAX_BINARY_UNIQUE_VALUES
-from gower_metric.utils.transforms.encoding import _own_codes
+from gower_metric.utils.transforms.encoding import own_codes
 
 
 def _transform_binary(
@@ -67,7 +67,7 @@ def _transform_binary(
 
     transformed_col = np.full(col.shape[0], np.nan, dtype=float)
     matched = ~non_null_mask
-    for v, code in (_own_codes(mapping) or mapping).items():
+    for v, code in (own_codes(mapping) or mapping).items():
         value_mask = non_null_mask & (col == v)
         transformed_col[value_mask] = code
         matched |= value_mask

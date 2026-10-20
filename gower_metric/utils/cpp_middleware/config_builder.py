@@ -14,20 +14,11 @@ from gower_metric.cpp import (
     CppConfigF,
     CppConfigH,
 )
-from gower_metric.utils.ranges import _bounds_in_precision
-from gower_metric.utils.transforms.encoding import _code_mapping, _own_codes
+from gower_metric.utils.ranges import bounds_in_precision
+from gower_metric.utils.transforms.encoding import fitted_codes
 
 if TYPE_CHECKING:
     from gower_metric.core.metric import Gower
-
-
-def fitted_codes(model: "Gower") -> dict[int, dict[object, float]]:
-    """Give the code of each fitted value of every nominal and binary feature."""
-    binary = {**model.binary_symmetric_metadata, **model.binary_asymmetric_metadata}
-    return {
-        **{j: _code_mapping(e) for j, e in model.nominal_metadata.items()},
-        **{j: _own_codes(b["mapping"]) or b["mapping"] for j, b in binary.items()},
-    }
 
 
 _ConfigClasses = (
@@ -35,12 +26,12 @@ _ConfigClasses = (
     | tuple[type[CppConfigF], type[CppConfigDataF]]
     | tuple[type[CppConfig], type[CppConfigData]]
 )
-_CLASSES_BY_ITEMSIZE: dict[int, _ConfigClasses] = {
+CLASSES_BY_ITEMSIZE: dict[int, _ConfigClasses] = {
     np.dtype(np.float32).itemsize: (CppConfigF, CppConfigDataF),
     np.dtype(np.float64).itemsize: (CppConfig, CppConfigData),
 }
 if HAS_FLOAT16:
-    _CLASSES_BY_ITEMSIZE[np.dtype(np.float16).itemsize] = (
+    CLASSES_BY_ITEMSIZE[np.dtype(np.float16).itemsize] = (
         CppConfigH,
         CppConfigDataH,
     )
@@ -74,7 +65,7 @@ def build_cpp_config(self: "Gower") -> CppConfig | CppConfigF | CppConfigH:
     itemsize = np.dtype(self.data_type).itemsize
     if itemsize == np.dtype(np.float16).itemsize and not HAS_FLOAT16:
         raise NotImplementedError(_NO_FLOAT16)
-    if itemsize not in _CLASSES_BY_ITEMSIZE:
+    if itemsize not in CLASSES_BY_ITEMSIZE:
         msg = (
             f"data_type=numpy.{self.data_type.__name__} is {itemsize * 8}-bit "
             "here, and the C++ kernel computes in float32 or float64 (float16 "
@@ -83,7 +74,7 @@ def build_cpp_config(self: "Gower") -> CppConfig | CppConfigF | CppConfigH:
         )
         raise ValueError(msg)
 
-    config_cls, data_cls = _CLASSES_BY_ITEMSIZE[itemsize]
+    config_cls, data_cls = CLASSES_BY_ITEMSIZE[itemsize]
 
     ranges = np.zeros(self.n_feats, dtype=self.data_type)
     ranges[self.numeric_indices] = self.numeric_ranges
@@ -101,7 +92,7 @@ def build_cpp_config(self: "Gower") -> CppConfig | CppConfigF | CppConfigH:
         (self.numeric_indices, self.numeric_mins, self.numeric_maxs),
         (self.ratio_scale_indices, self.ratio_mins, self.ratio_maxs),
     ):
-        low, high = _bounds_in_precision(mins, maxs, self.data_type)
+        low, high = bounds_in_precision(mins, maxs, self.data_type)
         lower[indices] = low
         upper[indices] = high
 
