@@ -39,8 +39,8 @@ Supported and tested numerical scalar types:
 | Data type | Linux | macOS | Windows |
 |:---:|:---:|:---:|:---:|
 | `numpy.float16` | ✅ | ✅ | ⚠️ |
-| `numpy.float32` | ✅ | ✅ | ✅ |
-| `numpy.float64` | ✅ | ✅ | ✅ |
+| `numpy.float32` | ✅ | ✅ | ⚠️ |
+| `numpy.float64` | ✅ | ✅ | ⚠️ |
 
 Legend: ✅ - supported and tested, ⚠️ - might work but not tested, ❌ - not supported
 
