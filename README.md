@@ -26,15 +26,23 @@ Implementation of Gower's Metric in Python.
 
 ## Compatibility matrix
 
-| | Python 3.10 | Python 3.11 | Python 3.12 | Python 3.13 | Python 3.14 |
-|:---:|:-----------:|:-----------:|:-----------:|:-----------:|:-----------:|
-| Linux | ✅ | ✅ | ✅ | ✅ | ✅ |
-| Windows | ✅ | ✅ | ✅ | ✅ | ✅ |
-| macOS | ✅ | ✅ | ✅ | ✅ | ✅ |
+| | Python 3.10 | Python 3.11 | Python 3.12 | Python 3.13 | Python 3.13t<sup>1)</sup> | Python 3.14 | Python 3.14t |
+|:---:|:-----------:|:-----------:|:-----------:|:-----------:|:-----------:|:-----------:|:-----------:|
+| Linux | ✅ | ✅ | ✅ | ✅ | ❌ | ✅ | ✅ |
+| Windows | ✅ | ✅ | ✅ | ✅ | ❌ | ✅ | ✅ |
+| macOS | ✅ | ✅ | ✅ | ✅ | ❌ | ✅ | ✅ |
 
-Legend: ✅ - supported and tested, 🚧 - work in progress
+<sup>1)</sup> No wheels: [cibuildwheel v4.0.0](https://cibuildwheel.pypa.io/en/stable/changelog/#v400) removed the experimental free-threaded CPython 3.13 builds. Free-threaded CPython 3.14t is still supported.
 
-Supported and tested numerical scalar types: `numpy.float16`, `np.float32`, `np.float64`.
+Supported and tested numerical scalar types:
+
+| Data type | Linux | macOS | Windows |
+|:---:|:---:|:---:|:---:|
+| `numpy.float16` | ✅ | ✅ | ⚠️ |
+| `numpy.float32` | ✅ | ✅ | ✅ |
+| `numpy.float64` | ✅ | ✅ | ✅ |
+
+Legend: ✅ - supported and tested, ⚠️ - might work but not tested, ❌ - not supported
 
 ## Documentation
 
@@ -42,12 +50,8 @@ Documentation is available [here](https://gower-metric.readthedocs.io/en/latest/
 
 ## Installation
 
-The easiest way to install the package is via pip:
-```bash
-pip install gower-metric
-```
+The easiest way to install the package:
 
-or via uv:
 ```bash
 uv add gower-metric
 ```
