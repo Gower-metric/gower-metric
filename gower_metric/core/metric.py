@@ -1,44 +1,53 @@
-from typing import TYPE_CHECKING, Any, cast
+# Copyright (c) 2025 - 2026 the gower-metric developers
+# SPDX-License-Identifier: MIT
+
+import sys
+from typing import TYPE_CHECKING, cast
 
 import numpy as np
 import pandas as pd
-import scipy.sparse
 
+from gower_metric._typing import (
+    AnyArray,
+    BinaryMetadata,
+    DataFrameOrArray,
+    FittedEncoder,
+    FloatArray,
+    FloatDType,
+    NativeKernel,
+    OrdinalMetadata,
+    Record,
+)
 from gower_metric.core.config import (
+    BinaryValueOrders,
     Config,
+    OrdinalValueOrders,
     OutOfRangeStrategy,
-    SkipOutOfRangeValidation,
 )
 from gower_metric.core.exceptions import IllegalStateError
-from gower_metric.distances.binary_asymmetric import (
-    binary_asymmetric_component,
-)
-from gower_metric.distances.binary_symmetric import binary_symmetric_component
-from gower_metric.distances.categorical_nominal import categorical_nominal_component
-from gower_metric.distances.categorical_ordinal import categorical_ordinal_component
-from gower_metric.distances.numeric_interval import numeric_component
-from gower_metric.distances.ratio_scale_interval import ratio_scale_component
-from gower_metric.utils.binary_ut import (
-    fit_binary_features,
-)
-from gower_metric.utils.cat_ord_ut import (
-    get_cardinalities_mapping,
-    map_ordered_values,
-)
+from gower_metric.utils.binary_ut import fit_binary_features
+from gower_metric.utils.cat_ord_ut import get_cardinalities_mapping
 from gower_metric.utils.categorical_ut import (
     fit_nominal_features,
     fit_ordinal_features,
 )
+from gower_metric.utils.cpp_middleware.config_builder import build_cpp_config
 from gower_metric.utils.discretization_types import (
     knn,
     silverman,
 )
+from gower_metric.utils.fit_checks import (
+    check_precision,
+    constant_features,
+    report_constant_features,
+)
+from gower_metric.utils.matrix.distance import SKIPPING_OOR, temporary_skip_oor
 from gower_metric.utils.ranges import (
     enforce_oor_policy,
     get_numeric_bounds,
     get_numeric_ranges,
 )
-from gower_metric.utils.to_array import to_array
+from gower_metric.utils.row_cache import RowEncodeCache
 from gower_metric.utils.transforms import (
     transform_binary_asymmetric,
     transform_binary_symmetric,
@@ -48,7 +57,14 @@ from gower_metric.utils.transforms import (
 from gower_metric.weights.weights import get_weights
 
 if TYPE_CHECKING:
-    from sklearn.preprocessing import OrdinalEncoder
+    from collections.abc import Sequence
+
+    from typing_extensions import Self
+
+    from gower_metric.cpp import CppConfig, CppConfigF, CppConfigH
+
+_NUMERIC_DTYPE_KINDS = "iufcm"
+"""Dtype kind codes that ``np.issubdtype(dtype, np.number)`` accepts."""
 
 
 class Gower:
@@ -62,9 +78,6 @@ class Gower:
 
         Args:
             config (Config): Configuration object containing all parameters needed for initialization.
-
-        Raises:
-            ValueError: If feature_types is not a non-empty dict.
 
         Example:
             >>> import pandas as pd
@@ -91,11 +104,11 @@ class Gower:
             >>> gower = Gower(cfg)
 
         """
-        self.feature_types = config.feature_types
+        self.feature_types: dict[int | str, str] = dict(config.feature_types)
 
         self.feature_weights = config.feature_weights
 
-        self.data_type: type[np.floating] = (
+        self.data_type: FloatDType = (
             config.data_type if config.data_type is not None else np.float32
         )
 
@@ -105,17 +118,19 @@ class Gower:
         self.binary_asymmetric_indices: list[int] = []
         self.binary_symmetric_indices: list[int] = []
         self.ratio_scale_indices: list[int] = []
-        self.ratio_ranges: np.ndarray = np.array([])
-        self.numeric_ranges: np.ndarray = np.array([])
-        self.numeric_mins: np.ndarray = np.array([])
-        self.numeric_maxs: np.ndarray = np.array([])
-        self.ratio_mins: np.ndarray = np.array([])
-        self.ratio_maxs: np.ndarray = np.array([])
+        self.ratio_ranges: FloatArray = np.array([])
+        self.numeric_ranges: FloatArray = np.array([])
+        self.numeric_mins: FloatArray = np.array([])
+        self.numeric_maxs: FloatArray = np.array([])
+        self.ratio_mins: FloatArray = np.array([])
+        self.ratio_maxs: FloatArray = np.array([])
 
         self.scale_method: str = config.scale_method
 
         self.missing_strategy: str = config.missing_strategy
-        self.categorical_ordinal_values_order = config.categorical_ordinal_values_order
+        self.categorical_ordinal_values_order: OrdinalValueOrders | None = (
+            config.categorical_ordinal_values_order
+        )
 
         self.categorical_ordinal_calculation_type = (
             config.categorical_ordinal_calculation_type
@@ -124,19 +139,23 @@ class Gower:
         self.discretization: str | None = config.discretization
         self.silverman_constant: int | float = config.silverman_constant
 
-        self.k_neighbors = config.k_neighbors
+        self.k_neighbors: int | None = config.k_neighbors
 
-        self.conditional_distances = config.conditional_distances
+        self.conditional_distances: bool = config.conditional_distances
 
-        self.conditional_distances_threshold_coeff = (
+        self.conditional_distances_threshold_coeff: int = (
             config.conditional_distances_threshold_coeff
         )
 
         self.handle_unseen_binary_asymmetric = config.handle_unseen_binary_asymmetric
-        self.binary_asymmetric_value_order = config.binary_asymmetric_value_order
+        self.binary_asymmetric_value_order: BinaryValueOrders | None = (
+            config.binary_asymmetric_value_order
+        )
 
         self.handle_unseen_binary_symmetric = config.handle_unseen_binary_symmetric
-        self.binary_symmetric_value_order = config.binary_symmetric_value_order
+        self.binary_symmetric_value_order: BinaryValueOrders | None = (
+            config.binary_symmetric_value_order
+        )
 
         self.handle_unseen_categorical_nominal = (
             config.handle_unseen_categorical_nominal
@@ -146,13 +165,18 @@ class Gower:
         )
 
         self.out_of_range: OutOfRangeStrategy = config.out_of_range
-        self.skip_oor: SkipOutOfRangeValidation = config.skip_out_of_range_validation
+        self.skip_oor: bool = config.skip_out_of_range_validation
 
         self._is_fitted: bool = False
-        self.binary_symmetric_metadata: dict[int, dict[str, Any]] = {}
-        self.binary_asymmetric_metadata: dict[int, dict[str, Any]] = {}
-        self.nominal_metadata: dict[int, OrdinalEncoder] = {}
-        self.ordinal_metadata: dict[int, OrdinalEncoder] = {}
+        self._row_cache = RowEncodeCache()
+        self.cpp_config: CppConfig | CppConfigF | CppConfigH | None = None
+        self.binary_symmetric_metadata: dict[int, BinaryMetadata] = {}
+        self.binary_asymmetric_metadata: dict[int, BinaryMetadata] = {}
+        self.nominal_metadata: dict[int, FittedEncoder] = {}
+        self.ordinal_metadata: dict[int, FittedEncoder] = {}
+        self.excluded_features: list[int] = []
+        self.n_feats: int = 0
+        self.weights: FloatArray = np.array([])
 
     @property
     def is_fitted(self) -> bool:
@@ -165,11 +189,33 @@ class Gower:
         """
         return getattr(self, "_is_fitted", False)
 
-    def fit(self, X: pd.DataFrame | np.ndarray) -> "Gower":  # noqa: PLR0912
+    def __getstate__(self) -> dict[str, object]:
+        """Return picklable state, dropping the native config handle.
+
+        Returns:
+            dict[str, object]: Instance ``__dict__`` with ``cpp_config`` set to None.
+
+        """
+        state = self.__dict__.copy()
+        state["cpp_config"] = None
+        return state
+
+    def __setstate__(self, state: dict[str, object]) -> None:
+        """Restore instance state, re-seeding the fields a pickle may predate.
+
+        Args:
+            state (dict[str, object]): State produced by ``__getstate__``.
+
+        """
+        self.__dict__.update(state)
+        self.__dict__.setdefault("cpp_config", None)
+        self.__dict__.setdefault("_row_cache", RowEncodeCache())
+
+    def fit(self, X: DataFrameOrArray) -> "Self":  # noqa: PLR0912, PLR0915
         """Fit the Gower model by computing numeric feature ranges.
 
         Args:
-            X (np.ndarray | pd.DataFrame): shape of (n_samples, n_features).
+            X (DataFrameOrArray): shape of (n_samples, n_features).
                 For DataFrame inputs, column names in feature_types are converted to indices.
                 Sparse matrices are not supported as direct input.
 
@@ -178,7 +224,6 @@ class Gower:
 
         Raises:
             ValueError: For incorrect input data and configuration parameters.
-            ValueError: If input data is already transformed.
 
         Example:
             >>> import pandas as pd
@@ -205,14 +250,16 @@ class Gower:
             >>> gower = Gower(cfg).fit(data)
 
         """
-        if scipy.sparse.issparse(X):
+        sparse = sys.modules.get("scipy.sparse")
+        if sparse is not None and sparse.issparse(X):
             msg = "Sparse matrices are currently not supported as direct input. Please convert to dense."
             raise ValueError(msg)
 
+        col_names: Sequence[object] | None = None
         if isinstance(X, pd.DataFrame):
-            cols = list(X.columns)
+            cols = col_names = list(X.columns)
 
-            ft: dict[int, str] = {}
+            ft: dict[int | str, str] = {}
             for k, t in self.feature_types.items():
                 if isinstance(k, str):
                     if k not in cols:
@@ -221,20 +268,24 @@ class Gower:
                     ft[cols.index(k)] = t
                 else:
                     ft[k] = t
-            self.feature_types = ft  # type: ignore[assignment]
+            self.feature_types = ft
 
-            for order_dict, order_name in [
-                (self.categorical_ordinal_values_order, "categorical ordinal"),
-                (self.binary_asymmetric_value_order, "binary asymmetric"),
-                (self.binary_symmetric_value_order, "binary symmetric"),
+            for name, order_name in [
+                ("categorical_ordinal_values_order", "categorical ordinal"),
+                ("binary_asymmetric_value_order", "binary asymmetric"),
+                ("binary_symmetric_value_order", "binary symmetric"),
             ]:
+                order_dict = getattr(self, name)
                 if order_dict:
+                    order_dict = dict(order_dict)
+                    setattr(self, name, order_dict)
                     for k in list(order_dict.keys()):
                         if isinstance(k, str):
                             if k not in cols:  # pragma: no cover
                                 msg = f"Column name '{k}' specified for {order_name} values not found in DataFrame."
                                 raise ValueError(msg)
-                            order_dict[cols.index(k)] = order_dict.pop(k)
+                            values = order_dict.pop(k)
+                            order_dict[cols.index(k)] = values
 
         self.numeric_indices = [
             i
@@ -283,14 +334,6 @@ class Gower:
                     f"but data has only {self.n_feats} columns."
                 )
                 raise ValueError(msg)
-
-        if self.conditional_distances:
-            self.p_cat = (
-                len(self.binary_symmetric_indices)
-                + len(self.binary_asymmetric_indices)
-                + len(self.categorical_nominal_indices)
-                + len(self.categorical_ordinal_indices)
-            )
 
         if self.ratio_scale_indices:
             self.ratio_ranges = get_numeric_ranges(
@@ -362,16 +405,12 @@ class Gower:
             self._h_ratio = np.empty(0)
             self._h_numeric = np.empty(0)
 
-        self.cat_ord_metadata: dict[int | str, dict[str, Any]] = {}
+        self.cat_ord_metadata: dict[int | str, OrdinalMetadata] = {}
         for j in self.categorical_ordinal_indices:
             col = arr[:, j]
             if self.categorical_ordinal_values_order is None:
                 msg = "Categorical ordinal values order is missing"
                 raise ValueError(msg)
-            ranks_map, mn, mx = map_ordered_values(
-                self.categorical_ordinal_values_order[j],
-                data_type=self.data_type,
-            )
             counts_map, _ = get_cardinalities_mapping(col)
             counts_arr = np.asarray(
                 [
@@ -381,13 +420,7 @@ class Gower:
                 dtype=float,
             )
 
-            self.cat_ord_metadata[j] = {
-                "ranks": ranks_map,
-                "denom": (mx - mn) if mn is not None and mx is not None else 0,
-                "counts": counts_arr,
-                "min": mn,
-                "max": mx,
-            }
+            self.cat_ord_metadata[j] = {"counts": counts_arr}
 
         self.weights = get_weights(
             n_features=self.n_feats,
@@ -397,13 +430,15 @@ class Gower:
         self.binary_symmetric_metadata = fit_binary_features(
             arr,
             self.binary_symmetric_indices,
-            binary_value_order=self.binary_symmetric_value_order,  # type: ignore[arg-type]
+            binary_value_order=self.binary_symmetric_value_order,
         )
 
         self.binary_asymmetric_metadata = fit_binary_features(
             arr,
             self.binary_asymmetric_indices,
-            binary_value_order=self.binary_asymmetric_value_order,  # type: ignore[arg-type]
+            binary_value_order=self.binary_asymmetric_value_order,
+            asymmetric=True,
+            col_names=col_names,
         )
 
         self.nominal_metadata = fit_nominal_features(
@@ -421,10 +456,17 @@ class Gower:
             handle_unseen=self.handle_unseen_categorical_ordinal,
         )
 
+        check_precision(self, col_names)
+        self.excluded_features = constant_features(self)
+        report_constant_features(self, col_names)
+
+        self.cpp_config = build_cpp_config(self)
+        self._row_cache = RowEncodeCache(self._row_cache.maxsize)
+
         self._is_fitted = True
         return self
 
-    def transform(self, X: pd.DataFrame | np.ndarray) -> pd.DataFrame | np.ndarray:
+    def transform(self, X: DataFrameOrArray) -> pd.DataFrame | FloatArray:
         """Transform the input DataFrame or ndarray to contain only floats.
 
         Useful when applying 'gower' distance metrics in scikit-learn methods
@@ -435,7 +477,7 @@ class Gower:
             - Model ranges and parameters are NOT updated by this method (it is stateless).
 
         Args:
-            X (np.ndarray | pd.DataFrame): shape of (n_samples, n_features).
+            X (DataFrameOrArray): shape of (n_samples, n_features).
                 For DataFrame inputs, column names in feature_types are converted to indices.
 
         Returns:
@@ -470,16 +512,16 @@ class Gower:
             raise IllegalStateError(msg)
 
         is_df = isinstance(X, pd.DataFrame)
+        X_arr: AnyArray
         if isinstance(X, pd.DataFrame):
             df: pd.DataFrame = X
             X_arr = df.to_numpy()
         else:
-            arr: np.ndarray = X
-            X_arr = np.asarray(arr, dtype=object)
+            X_arr = np.asarray(X, dtype=object)
 
-        if not self.skip_oor:
+        if not (self.skip_oor or SKIPPING_OOR.get() is self):
             enforce_oor_policy(
-                np.asarray(X_arr, dtype=object),
+                X,
                 strategy=self.out_of_range,
                 numeric_indices=self.numeric_indices,
                 numeric_mins=self.numeric_mins,
@@ -487,19 +529,21 @@ class Gower:
                 ratio_scale_indices=self.ratio_scale_indices,
                 ratio_mins=self.ratio_mins,
                 ratio_maxs=self.ratio_maxs,
+                data_type=self.data_type,
                 stacklevel=2,
             )
 
-        transformed_columns: list[np.ndarray] = []
+        n_rows = df.shape[0] if is_df else X_arr.shape[0]
+        transformed_data: FloatArray = np.empty(
+            (n_rows, self.n_feats),
+            dtype=self.data_type,
+        )
 
         for col_idx_raw, ftype in sorted(self.feature_types.items()):
             col_idx = int(col_idx_raw)
 
-            if is_df:
-                col_series = cast("pd.Series", df.iloc[:, col_idx])
-                col = col_series.to_numpy()
-            else:
-                col = X_arr[:, col_idx]
+            col: AnyArray
+            col = df.iloc[:, col_idx].to_numpy() if is_df else X_arr[:, col_idx]
 
             if ftype == "binary_asymmetric":
                 transformed_col = transform_binary_asymmetric(
@@ -545,25 +589,23 @@ class Gower:
             else:
                 transformed_col = col.astype(self.data_type)
 
-            transformed_columns.append(transformed_col)
-
-        transformed_data: np.ndarray = np.column_stack(transformed_columns)
+            transformed_data[:, col_idx] = transformed_col
 
         if is_df:
             return pd.DataFrame(
                 transformed_data,
                 columns=df.columns,
                 index=df.index,
-                dtype=self.data_type,
+                copy=False,
             )
 
-        return transformed_data.astype(self.data_type)
+        return transformed_data
 
-    def fit_transform(self, X: pd.DataFrame | np.ndarray) -> pd.DataFrame | np.ndarray:
+    def fit_transform(self, X: DataFrameOrArray) -> pd.DataFrame | FloatArray:
         """Fit to data, then transform it.
 
         Args:
-            X (np.ndarray | pd.DataFrame): shape of (n_samples, n_features).
+            X (DataFrameOrArray): shape of (n_samples, n_features).
                 For DataFrame inputs, column names in feature_types are converted to indices.
 
         Returns:
@@ -573,12 +615,12 @@ class Gower:
         self.fit(X)
         return self.transform(X)
 
-    def __call__(self, a: Any, b: Any) -> np.floating:
+    def __call__(self, a: Record, b: Record) -> np.floating:
         """Compute the Gower distance between two records.
 
         Args:
-            a (Any): First record of data.
-            b (Any): Second record of data.
+            a (Record): First record of data.
+            b (Record): Second record of data.
 
         Returns:
             np.floating: Gower distance in [0,1], or np.nan if no features are comparable.
@@ -608,150 +650,36 @@ class Gower:
             msg = "Must call .fit(X) before computing distances."
             raise IllegalStateError(msg)
 
-        x = to_array(a)
-        y = to_array(b)
-        Xn = x.reshape(1, -1)
-        Yn = y.reshape(1, -1)
+        if self.cpp_config is None:
+            self.cpp_config = build_cpp_config(self)
 
-        if not self.skip_oor:
-            enforce_oor_policy(
-                Xn,
-                Yn,
-                strategy=self.out_of_range,
-                numeric_indices=self.numeric_indices,
-                numeric_mins=self.numeric_mins,
-                numeric_maxs=self.numeric_maxs,
-                ratio_scale_indices=self.ratio_scale_indices,
-                ratio_mins=self.ratio_mins,
-                ratio_maxs=self.ratio_maxs,
-            )
+        kernel = cast("NativeKernel", self.cpp_config)
+        try:
+            return self.data_type(kernel.calculate_distance(a, b))  # type: ignore[arg-type]
+        except TypeError:
+            a_arr = a.to_numpy() if isinstance(a, pd.Series) else np.asarray(a)
+            b_arr = b.to_numpy() if isinstance(b, pd.Series) else np.asarray(b)
 
-        num_w = self.weights[self.numeric_indices]
-        cat_nom_w = self.weights[self.categorical_nominal_indices]
-        cat_ord_w = self.weights[self.categorical_ordinal_indices]
-        bin_asym_w = self.weights[self.binary_asymmetric_indices]
-        bin_sym_w = self.weights[self.binary_symmetric_indices]
-        ratio_w = self.weights[self.ratio_scale_indices]
-
-        bin_asym_sum, bin_asym_count = binary_asymmetric_component(
-            Xn,
-            Yn,
-            self.binary_asymmetric_indices,
-            missing_strategy=self.missing_strategy,
-            weights=bin_asym_w,
-            metadata=self.binary_asymmetric_metadata,
-        )
-
-        bin_sym_sum, bin_sym_count = binary_symmetric_component(
-            Xn,
-            Yn,
-            self.binary_symmetric_indices,
-            missing_strategy=self.missing_strategy,
-            weights=bin_sym_w,
-            metadata=self.binary_symmetric_metadata,
-        )
-
-        cat_nom_sum, cat_nom_count = categorical_nominal_component(
-            Xn,
-            Yn,
-            self.categorical_nominal_indices,
-            missing_strategy=self.missing_strategy,
-            weights=cat_nom_w,
-        )
-
-        cat_ord_sum, cat_ord_count = categorical_ordinal_component(
-            Xn,
-            Yn,
-            self.categorical_ordinal_indices,
-            metadata=self.cat_ord_metadata,
-            missing_strategy=self.missing_strategy,
-            calculation_type=self.categorical_ordinal_calculation_type,
-            weights=cat_ord_w,
-        )
-
-        if self.conditional_distances:
-            cat_sum = 0.0
-            cat_cnt = 0.0
-
-            if self.binary_asymmetric_indices:
-                cat_sum += bin_asym_sum[0, 0]
-                cat_cnt += bin_asym_count[0, 0]
-
-            if self.binary_symmetric_indices:
-                cat_sum += bin_sym_sum[0, 0]
-                cat_cnt += bin_sym_count[0, 0]
-
-            if self.categorical_nominal_indices:
-                cat_sum += cat_nom_sum[0, 0]
-                cat_cnt += cat_nom_count[0, 0]
-
-            if self.categorical_ordinal_indices:
-                cat_sum += cat_ord_sum[0, 0]
-                cat_cnt += cat_ord_count[0, 0]
-
-            if cat_cnt == 0:
-                return self.data_type(np.nan)
-
-            cat_dist = cat_sum / cat_cnt
-            threshold = self.conditional_distances_threshold_coeff / self.p_cat
-
-            if cat_dist > threshold:
-                return self.data_type(1.0)
-
-        num_sum, num_count = numeric_component(
-            Xn,
-            Yn,
-            self.numeric_indices,
-            ranges=self.numeric_ranges,
-            h=self._h_numeric,
-            missing_strategy=self.missing_strategy,
-            weights=num_w,
-            discretization=self.discretization,
-        )
-
-        ratio_sum, ratio_count = ratio_scale_component(
-            Xn,
-            Yn,
-            self.ratio_scale_indices,
-            ranges=self.ratio_ranges,
-            h=self._h_ratio,
-            missing_strategy=self.missing_strategy,
-            weights=ratio_w,
-            discretization=self.discretization,
-        )
-
-        if self.conditional_distances:
-            total_sum = num_sum + ratio_sum
-            total_count = num_count + ratio_count
+        x: FloatArray
+        y: FloatArray
+        if (
+            a_arr.dtype.kind in _NUMERIC_DTYPE_KINDS
+            and b_arr.dtype.kind in _NUMERIC_DTYPE_KINDS
+        ):
+            x = np.ascontiguousarray(a_arr, dtype=self.data_type).reshape(-1)
+            y = np.ascontiguousarray(b_arr, dtype=self.data_type).reshape(-1)
         else:
-            total_sum = (
-                num_sum
-                + cat_nom_sum
-                + cat_ord_sum
-                + bin_asym_sum
-                + bin_sym_sum
-                + ratio_sum
-            )
-            total_count = (
-                num_count
-                + cat_nom_count
-                + cat_ord_count
-                + bin_asym_count
-                + bin_sym_count
-                + ratio_count
-            )
+            with temporary_skip_oor(self):
+                x, y = self._row_cache.encode_pair(a, b, self.transform, self.data_type)
 
-        if total_count[0, 0] == 0:
-            return self.data_type(np.nan)
+        return self.data_type(kernel.calculate_distance(x, y))
 
-        return self.data_type(total_sum[0, 0] / total_count[0, 0])
-
-    def similarity(self, a: Any, b: Any) -> np.floating:
+    def similarity(self, a: Record, b: Record) -> np.floating:
         """Compute the Gower similarity between two records.
 
         Args:
-            a (Any): First record of data.
-            b (Any): Second record of data.
+            a (Record): First record of data.
+            b (Record): Second record of data.
 
         Returns:
             np.floating: Gower similarity in [0,1], defined as 1 - distance(a, b).

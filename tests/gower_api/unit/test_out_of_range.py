@@ -1,3 +1,6 @@
+# Copyright (c) 2025 - 2026 the gower-metric developers
+# SPDX-License-Identifier: MIT
+
 """Tests for Config.out_of_range parameter — clip, warning, error."""
 
 import warnings

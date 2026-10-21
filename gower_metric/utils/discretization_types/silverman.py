@@ -1,16 +1,21 @@
+# Copyright (c) 2025 - 2026 the gower-metric developers
+# SPDX-License-Identifier: MIT
+
 from typing import Final
 
 import numpy as np
+
+from gower_metric._typing import FloatArray
 
 MIN_SAMPLES: int = 2
 NAME: Final = "silverman"
 
 
-def bandwidth(x: np.ndarray, c: float = 1.06) -> float:
+def bandwidth(x: FloatArray, c: float = 1.06) -> float:
     """Calculate Silverman's rule of thumb bandwidth for kernel density estimation.
 
     Args:
-        x (np.ndarray): Input data array.
+        x (FloatArray): Input data array.
         c (int | float): Silverman constant in the formula
             ``h = c * min(s, IQR / 1.34) * n ** (-1/5)``. Default ``1.06``.
 

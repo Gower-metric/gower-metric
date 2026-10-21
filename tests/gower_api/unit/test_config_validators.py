@@ -1,4 +1,7 @@
-"""Tests for Config field validators - covers every validation error branch."""
+# Copyright (c) 2025 - 2026 the gower-metric developers
+# SPDX-License-Identifier: MIT
+
+"""Tests for Config field validators."""
 
 import numpy as np
 import pytest
@@ -243,4 +246,13 @@ class TestSilvermanConstantConfigValidation:
                 feature_types={0: "numeric"},
                 silverman_constant=invalid_value,
                 discretization=silverman.NAME,
+            )
+
+
+class TestEmptyOrdinalOrder:
+    def test_empty_values_order_is_rejected(self) -> None:
+        with pytest.raises(ValidationError, match=r"Empty values order for column"):
+            Config(
+                feature_types={0: "categorical_ordinal"},
+                categorical_ordinal_values_order={0: []},
             )
