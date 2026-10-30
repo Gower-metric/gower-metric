@@ -1,19 +1,22 @@
-from collections.abc import Sequence
-from typing import Any
+# Copyright (c) 2025 - 2026 the gower-metric developers
+# SPDX-License-Identifier: MIT
 
 import numpy as np
 import pandas as pd
-from numpy.typing import NDArray
+
+from gower_metric._typing import ObjectArray, Record
 
 
-def to_array(record: np.ndarray | pd.Series | Sequence[object]) -> NDArray[Any]:
+def to_array(
+    record: Record,
+) -> ObjectArray:
     """Convert a record to a flat NumPy array of dtype object.
 
     Args:
-        record (np.ndarray | pd.Series | Sequence[object]): feature values.
+        record (Record): feature values.
 
     Returns:
-        NDArray[Any]: 1D array of feature values, with original dtype preserved.
+        ObjectArray: 1D array of feature values, with original dtype preserved.
 
     """
     if isinstance(record, np.ndarray):

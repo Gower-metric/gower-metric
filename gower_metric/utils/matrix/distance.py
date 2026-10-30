@@ -1,190 +1,96 @@
+# Copyright (c) 2025 - 2026 the gower-metric developers
+# SPDX-License-Identifier: MIT
+
+import sys
 import warnings
-from collections.abc import Iterator
+from collections.abc import Generator
 from contextlib import contextmanager
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, cast
 
 import numpy as np
 import pandas as pd
-import scipy.sparse
-from joblib import Parallel, delayed
-from tqdm.auto import tqdm
 
-from gower_metric.utils.matrix.convert_matrix import get_scipy_sparse_matrix
-from gower_metric.utils.ranges import enforce_oor_policy
+from gower_metric._typing import (
+    DataFrameOrArray,
+    FloatArray,
+    FloatDType,
+    MatrixType,
+    NativeKernel,
+)
+from gower_metric.utils.cpp_middleware.config_builder import (
+    CLASSES_BY_ITEMSIZE,
+    build_cpp_config,
+)
 
 if TYPE_CHECKING:
     from gower_metric import Gower
 
+_OUT_DTYPES = [np.dtype(f"f{size}") for size in sorted(CLASSES_BY_ITEMSIZE)]
 
-def __compute_row_upper(
-    i: int,
-    X_arr: np.ndarray,
-    n: int,
-    model: "Gower",
-    data_type: type[np.floating],
-    row_type: str,
-) -> tuple[int, np.ndarray]:
-    """Compute one upper triangle row of Gower distances.
+
+def _as_native_matrix(model: "Gower", X: DataFrameOrArray) -> FloatArray:
+    """Return a C-contiguous ``(n, n_features)`` array of ``model.data_type``.
 
     Args:
-        i (int): row index.
-        X_arr (np.ndarray): data array of shape (n_samples, n_features).
-        n (int): number of samples.
         model (gower_metric.Gower): fitted Gower instance.
-        data_type (type[np.floating]): data type for the output row array.
-        row_type (str): type of row to compute, distance or similarity. Defaults to "distance".
+        X (DataFrameOrArray): input data of shape (n_samples, n_features).
 
     Returns:
-        tuple[i, row]: tuple of row index and computed row array.
+        FloatArray: contiguous numeric array ready for the native kernel.
 
     """
-    n = X_arr.shape[0] if n == 0 else n
-    xi = X_arr[i]
+    arr = X.to_numpy() if isinstance(X, pd.DataFrame) else np.asarray(X)
 
-    start = i + 1
-    count = n - start
+    if not np.issubdtype(arr.dtype, np.number):
+        with temporary_skip_oor(model):  # the kernel checks the range
+            transformed = model.transform(X)
+        arr = (
+            transformed.to_numpy()
+            if isinstance(transformed, pd.DataFrame)
+            else np.asarray(transformed)
+        )
 
-    if count <= 0:
-        return (i, np.empty(0, dtype=data_type))
-
-    func = model.similarity if row_type == "similarity" else model
-
-    values = (func(xi, X_arr[j]) for j in range(start, n))
-
-    row = np.fromiter(values, dtype=data_type, count=count)
-
-    return (i, row)
+    return np.ascontiguousarray(arr, dtype=model.data_type)
 
 
-def _get_results_from_joblib(
-    arr: np.ndarray,
-    n_jobs: int,
-    verbose: int,
-    data_type: type[np.floating],
-    model: "Gower",
-    matrix_type: str,
-    backend: str = "loky",
-    n: int = 0,
-) -> list[tuple[int, np.ndarray]]:
-    """Get results from joblib parallel processing.
+def _validate_out(
+    out: FloatArray,
+    shape: tuple[int, ...],
+) -> FloatArray:
+    """Validate a user-supplied output buffer for zero-copy native writes.
 
     Args:
-        arr (np.ndarray): data array of shape (n_samples, n_features).
-        n_jobs (int): number of parallel jobs.
-        verbose (int): whether to show progress bar.
-        data_type (type[np.floating]): data type for the output rows.
-        model (gower_metric.Gower): fitted Gower instance.
-        matrix_type (str): type of matrix to compute, distance or similarity. Defaults to "distance".
-        backend (str): joblib backend to use. Defaults to "loky".
-        n (int): number of samples (if 0, will be set to arr.shape[0]).
+        out (FloatArray): user-supplied output buffer.
+        shape (tuple[int, ...]): expected shape ``(rows, cols)``.
 
     Returns:
-        list[tuple[int, np.ndarray]]: List of tuples (row index, computed row array).
+        FloatArray: the validated ``out`` (unchanged).
+
+    Raises:
+        TypeError: If ``out`` is not a NumPy array.
+        ValueError: If shape, dtype, contiguity, or writability is wrong.
 
     """
-    results: list[tuple[int, np.ndarray]] = Parallel(
-        n_jobs=n_jobs,
-        backend=backend,
-        verbose=verbose,
-    )(
-        delayed(__compute_row_upper)(i, arr, n, model, data_type, matrix_type)
-        for i in tqdm(
-            range(n),
-            desc="Calculating upper triangle rows",
-            unit="row",
-            disable=not verbose,
-        )
-    )
-
-    return results
-
-
-def _get_full_matrix(
-    gower: "Gower",
-    X: pd.DataFrame | np.ndarray,
-    data_type: type[np.floating],
-    n_jobs: int = -1,
-    verbose: int = 0,
-    matrix_type: str = "distance",
-    convert_to_sparse: bool = False,
-    sparse_type: str = "csr",
-    backend: str = "loky",
-) -> (
-    np.ndarray
-    | scipy.sparse.csr_matrix
-    | scipy.sparse.csc_matrix
-    | scipy.sparse.coo_matrix
-):
-    """Compute symmetric pairwise Gower distance matrix using joblib (parallel).
-
-    Args:
-        gower (gower_metric.Gower): Fitted Gower instance.
-        X (pd.DataFrame | np.ndarray): shape of (n_samples, n_features).
-        data_type (type[np.floating]): data type for the output distance matrix, default gower.data_type.
-        n_jobs (int): number of parallel jobs to run, -1 means using all processors. Default is -1.
-        verbose (int): whether to show tqdm progress bar. Default is 0 (no progress bar).
-        matrix_type (str): Type of matrix to compute, either 'distance' or 'similarity'.
-            Default is 'distance'.
-        convert_to_sparse (bool): Whether to convert the output dense matrix to a sparse format.
-            Default is False.
-        sparse_type (str): Type of sparse matrix to convert to, either 'csr', 'csc' or 'coo'.
-            Default is 'csr'.
-        backend (str): Backend to use for joblib parallelization. Default is 'loky'.
-
-    Returns:
-        np.ndarray | scipy.sparse.csr_matrix | scipy.sparse.csc_matrix | scipy.sparse.coo_matrix:
-            Pairwise Gower distance or similarity matrix of shape (n_samples, n_samples) or sparse matrix.
-
-    """
-    arr = (
-        X.to_numpy(dtype=object)
-        if isinstance(X, pd.DataFrame)
-        else np.array(X, dtype=object)
-    )
-
-    n: int = arr.shape[0]
-
-    result_matrix: np.ndarray = np.zeros((n, n), dtype=data_type)
-
-    results: list[tuple[int, np.ndarray]] = _get_results_from_joblib(
-        n_jobs=n_jobs,
-        n=n,
-        arr=arr,
-        model=gower,
-        data_type=data_type,
-        verbose=verbose,
-        backend=backend,
-        matrix_type=matrix_type,
-    )
-
-    for i, row in results:
-        if row.size > 0:
-            result_matrix[i, i + 1 : n] = row
-
-    result_matrix += result_matrix.T
-
-    if matrix_type == "distance":
-        np.fill_diagonal(result_matrix, 0.0)
-    elif matrix_type == "similarity":  # pragma: no branch
-        np.fill_diagonal(result_matrix, 1.0)
-    else:
-        msg = (
-            f"Unknown matrix_type '{matrix_type}'. Must be 'distance' or 'similarity'."
-        )
+    if not isinstance(out, np.ndarray):
+        msg = "out must be a numpy ndarray"
+        raise TypeError(msg)
+    if out.shape != shape:
+        msg = f"out must have shape {shape}, got {out.shape}"
         raise ValueError(msg)
-
-    if convert_to_sparse:
-        return get_scipy_sparse_matrix(
-            result_matrix,
-            matrix_format=sparse_type,
-            data_type=data_type,
-        )
-
-    return result_matrix
+    if out.dtype not in _OUT_DTYPES:
+        msg = f"out must have dtype {', '.join(map(str, _OUT_DTYPES))}, got {out.dtype}"
+        raise ValueError(msg)
+    if not out.flags["C_CONTIGUOUS"]:
+        msg = "out must be C-contiguous"
+        raise ValueError(msg)
+    if not out.flags["WRITEABLE"]:
+        msg = "out must be writable"
+        raise ValueError(msg)
+    return out
 
 
 @contextmanager
-def temporary_skip_oor(gower: "Gower") -> Iterator[None]:
+def temporary_skip_oor(gower: "Gower") -> Generator[None]:
     """Temporarily disable out-of-range (OOR) checking on a Gower instance.
 
     This context manager sets `gower.skip_oor` to True for the duration of the
@@ -212,42 +118,36 @@ def temporary_skip_oor(gower: "Gower") -> Iterator[None]:
 
 def calculate_matrix(
     gower: "Gower",
-    X: pd.DataFrame | np.ndarray,
-    data_type: type[np.floating] | None = None,
-    n_jobs: int = -1,
-    verbose: int = 0,
-    matrix_type: str = "distance",
-    convert_to_sparse: bool = False,
-    sparse_type: str = "csr",
-    backend: str = "loky",
-) -> (
-    np.ndarray
-    | scipy.sparse.csr_matrix
-    | scipy.sparse.csc_matrix
-    | scipy.sparse.coo_matrix
-):
-    """Return symmetric pairwise Gower distance matrix using joblib (parallel).
+    X: DataFrameOrArray,
+    *,
+    data_type: FloatDType | None = None,
+    matrix_type: MatrixType = "distance",
+    out: FloatArray | None = None,
+    Y: DataFrameOrArray | None = None,
+) -> FloatArray:
+    """Return the pairwise Gower distance matrix.
 
-    Scipy sparse matrices are not supported as direct input.
+    Scipy sparse matrices are not supported as direct input. The result is
+    always dense; for a sparse one convert it, e.g. ``scipy.sparse.csr_matrix(m)``
+    (scipy has no float16: convert with ``m.astype(np.float32)`` first).
 
     Args:
         gower (gower_metric.Gower): Fitted Gower instance.
-        X (pd.DataFrame | np.ndarray): shape of (n_samples, n_features).
-        data_type (type[np.floating] | None): data type used for the output distance matrix.
+        X (DataFrameOrArray): shape of (n_samples, n_features).
+        data_type (FloatDType | None): data type used for the output distance matrix.
             If None, uses the data_type from the Gower instance configuration.
-        n_jobs (int): number of parallel jobs to run, -1 means using all processors. Default is -1.
-        verbose (int): whether to show tqdm progress bar. Default is 0 (no progress bar).
         matrix_type (str): Type of matrix to compute, either 'distance' or 'similarity'.
             Default is 'distance'.
-        convert_to_sparse (bool): Whether to convert the output dense matrix to a sparse format.
-            Default is False.
-        sparse_type (str): Type of sparse matrix to convert to, either 'csr', 'csc' or 'coo'.
-            Default is 'csr'.
-        backend (str): Backend to use for joblib parallelization. Default is 'loky'.
+        out (FloatArray | None): optional preallocated output buffer, written
+            zero-copy. Its dtype may be any width the native kernel writes and
+            need not match the model's ``data_type``; when given, it overrides
+            the ``data_type`` argument. Default None.
+        Y (DataFrameOrArray | None): optional second set; when given,
+            returns the cross matrix X-vs-Y of shape (len(X), len(Y)). Default None.
 
     Returns:
-        np.ndarray | scipy.sparse.csr_matrix | scipy.sparse.csc_matrix | scipy.sparse.coo_matrix:
-            Pairwise Gower distance or similarity matrix of shape (n_samples, n_samples) or sparse matrix.
+        FloatArray:
+            Pairwise Gower distance or similarity matrix of shape (n_samples, n_samples).
 
     Note:
         If fit(X) was not called before computing the matrix, the model will be
@@ -256,60 +156,31 @@ def calculate_matrix(
 
     Examples:
         Basic usage:
-            >>> import pandas as pd
+            >>> import numpy as np
             >>> from gower_metric import Config, Gower
             >>> from gower_metric.utils.matrix.distance import calculate_matrix
-            >>> data = pd.DataFrame({
-            ...     'feature1': [1.0, 2.0, 3.0, 4.0],
-            ...     'feature2': ['A', 'B', 'A', 'C'],
-            ...     'feature3': [0, 1, 0, 1],
-            ...})
+            >>> data = np.array([[1, 'a'], [2, 'b'], [3, 'a'], [4, 'c']], dtype=object)
             >>> feature_types = {
-            ...     'feature1': 'numeric',
-            ...     'feature2': 'categorical_nominal',
-            ...     'feature3': 'binary_symmetric',
+            ...     0: 'ratio_scale_interval',
+            ...     1: 'categorical_nominal',
             ... }
             >>> cfg = Config(
             ...     feature_types=feature_types,
             ... )
             >>> gower = Gower(cfg).fit(data)
-            >>> similarity_matrix = calculate_matrix
-            ...     gower,
-            ...     data,
-            ...     matrix_type='similarity',
-            ...     convert_to_sparse=True,
-            ...     sparse_type='csr'
-            ... )
+            >>> distance_matrix = calculate_matrix(gower, data)
+            >>> similarity_matrix = calculate_matrix(gower, data, matrix_type='similarity')
 
-        Using similarity matrix and sparse output:
-            >>> import pandas as pd
-            >>> from gower_metric import Config, Gower
-            >>> from gower_metric.utils.matrix.distance import calculate_matrix
-            >>> data = pd.DataFrame({
-            ...     'feature1': [1.0, 2.0, 3.0, 4.0],
-            ...     'feature2': ['A', 'B', 'A', 'C'],
-            ...     'feature3': [0, 1, 0, 1],
-            ... })
-            >>> feature_types = {
-            ...     'feature1': 'numeric',
-            ...     'feature2': 'categorical_nominal',
-            ...     'feature3': 'binary_symmetric',
-            ... }
-            >>> cfg = Config(
-            ...     feature_types=feature_types,
-            ... )
-            >>> gower = Gower(cfg).fit(data)
-            >>> similarity_matrix = calculate_matrix(
-            ...     gower,
-            ...     data,
-            ...     matrix_type='similarity',
-            ...     convert_to_sparse=True,
-            ...     sparse_type='csr'
-            ... )
+    Raises:
+        ValueError: If ``X`` is a scipy sparse matrix or ``matrix_type`` is unknown.
 
     """
-    if scipy.sparse.issparse(X):
-        msg = "Sparse matrices are currently not supported as direct input. Please provide a dense matrix."
+    sparse = sys.modules.get("scipy.sparse")
+    if sparse is not None and sparse.issparse(X):
+        msg = (
+            "Sparse matrices are currently not supported as direct input. "
+            "Please provide a dense matrix."
+        )
         raise ValueError(msg)
 
     if not gower.is_fitted:
@@ -320,34 +191,33 @@ def calculate_matrix(
     if data_type is None:
         data_type = gower.data_type
 
-    arr_check = (
-        X.to_numpy(dtype=object)
-        if isinstance(X, pd.DataFrame)
-        else np.asarray(X, dtype=object)
-    )
-
-    if not gower.skip_oor:
-        enforce_oor_policy(
-            arr_check,
-            strategy=gower.out_of_range,
-            numeric_indices=gower.numeric_indices,
-            numeric_mins=gower.numeric_mins,
-            numeric_maxs=gower.numeric_maxs,
-            ratio_scale_indices=gower.ratio_scale_indices,
-            ratio_mins=gower.ratio_mins,
-            ratio_maxs=gower.ratio_maxs,
-            stacklevel=2,
+    if matrix_type not in ("distance", "similarity"):
+        msg = (
+            f"Unknown matrix_type '{matrix_type}'. Must be 'distance' or 'similarity'."
         )
+        raise ValueError(msg)
+    similarity = matrix_type == "similarity"
 
-    with temporary_skip_oor(gower):
-        return _get_full_matrix(
-            gower,
-            X,
-            data_type=data_type,
-            n_jobs=n_jobs,
-            verbose=verbose,
-            matrix_type=matrix_type,
-            convert_to_sparse=convert_to_sparse,
-            sparse_type=sparse_type,
-            backend=backend,
-        )
+    data = _as_native_matrix(gower, X)
+    data_y = None if Y is None else _as_native_matrix(gower, Y)
+    shape = (len(data), len(data) if data_y is None else len(data_y))
+
+    target = np.dtype(data_type)
+    if target not in _OUT_DTYPES:
+        target = np.dtype(gower.data_type)
+
+    result = np.empty(shape, dtype=target) if out is None else _validate_out(out, shape)
+
+    if gower.cpp_config is None:
+        gower.cpp_config = build_cpp_config(gower)
+
+    kernel = cast("NativeKernel", gower.cpp_config)
+    if data_y is None:
+        kernel.calculate_matrix(data, result, similarity)
+    else:
+        kernel.calculate_matrix_xy(data, data_y, result, similarity)
+
+    if out is None and result.dtype != np.dtype(data_type):
+        return result.astype(data_type)
+
+    return result
