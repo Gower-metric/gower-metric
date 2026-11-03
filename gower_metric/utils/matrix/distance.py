@@ -5,6 +5,7 @@ import sys
 import warnings
 from collections.abc import Generator
 from contextlib import contextmanager
+from contextvars import ContextVar
 from typing import TYPE_CHECKING, cast
 
 import numpy as np
@@ -26,6 +27,9 @@ if TYPE_CHECKING:
     from gower_metric import Gower
 
 _OUT_DTYPES = [np.dtype(f"f{size}") for size in sorted(CLASSES_BY_ITEMSIZE)]
+
+SKIPPING_OOR: ContextVar["Gower | None"] = ContextVar("SKIPPING_OOR", default=None)
+"""The model whose ``transform`` leaves the range check to the kernel here."""
 
 
 def _as_native_matrix(model: "Gower", X: DataFrameOrArray) -> FloatArray:
@@ -93,9 +97,9 @@ def _validate_out(
 def temporary_skip_oor(gower: "Gower") -> Generator[None]:
     """Temporarily disable out-of-range (OOR) checking on a Gower instance.
 
-    This context manager sets `gower.skip_oor` to True for the duration of the
-    context and restores its previous value afterward, even if an exception
-    occurs.
+    For the duration of the context, ``gower.transform`` skips the check in the
+    current thread (or asyncio task) only; ``gower`` itself is not changed, so
+    other threads using the same instance keep checking.
 
     Args:
         gower (gower_metric.Gower): Fitted Gower instance.
@@ -104,16 +108,15 @@ def temporary_skip_oor(gower: "Gower") -> Generator[None]:
         None
 
     Notes:
-        This mutates shared state on the provided `gower` object. It is not
-            thread-safe if the same instance is used concurrently in multiple computations.
+        Threads started inside the context inherit the skip where Python copies
+            the context into new threads.
 
     """
-    old = gower.skip_oor
-    gower.skip_oor = True
+    token = SKIPPING_OOR.set(gower)
     try:
         yield
     finally:
-        gower.skip_oor = old
+        SKIPPING_OOR.reset(token)
 
 
 def calculate_matrix(
