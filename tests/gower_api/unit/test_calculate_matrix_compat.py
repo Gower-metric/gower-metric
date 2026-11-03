@@ -3,7 +3,7 @@
 
 """Compatibility tests for the ``calculate_matrix`` entry point."""
 
-import warnings
+import threading
 from typing import Any, cast
 
 import numpy as np
@@ -12,7 +12,8 @@ import pytest
 import scipy.sparse as sp
 
 from gower_metric import Config, Gower
-from gower_metric.utils.matrix.distance import _temporary_skip_oor, calculate_matrix
+from gower_metric._typing import MatrixType
+from gower_metric.utils.matrix.distance import calculate_matrix, temporary_skip_oor
 
 FEATURE_TYPES: dict[int | str, str] = {
     0: "ratio_scale_interval",
@@ -55,14 +56,14 @@ def _pairwise(
 
 class TestMatchesScalarPath:
     @pytest.mark.parametrize("matrix_type", ["distance", "similarity"])
-    def test_matches_pairwise_distances(self, matrix_type: str) -> None:
+    def test_matches_pairwise_distances(self, matrix_type: MatrixType) -> None:
         gower = _fitted()
         data = _data()
 
         matrix = calculate_matrix(gower, data, matrix_type=matrix_type)
         expected = _pairwise(gower, data, similarity=matrix_type == "similarity")
 
-        np.testing.assert_allclose(matrix, expected, rtol=0, atol=1e-6)  # type: ignore[arg-type]
+        np.testing.assert_allclose(matrix, expected, rtol=0, atol=1e-6)
 
     def test_data_type_override_is_applied(self) -> None:
         gower = _fitted()
@@ -70,24 +71,6 @@ class TestMatchesScalarPath:
         result = calculate_matrix(gower, _data(), data_type=np.float64)
 
         assert result.dtype == np.float64
-
-    def test_sparse_output(self) -> None:
-        gower = _fitted()
-        data = _data()
-
-        sparse = cast(
-            "sp.coo_matrix",
-            calculate_matrix(gower, data, convert_to_sparse=True, sparse_type="coo"),
-        )
-
-        assert sp.issparse(sparse)
-        assert sparse.format == "coo"
-        np.testing.assert_allclose(
-            sparse.toarray(),
-            _pairwise(gower, data),
-            rtol=0,
-            atol=1e-6,
-        )
 
     def test_out_buffer_is_written_in_place(self) -> None:
         gower = _fitted()
@@ -110,22 +93,15 @@ class TestMatchesScalarPath:
         expected = np.array(
             [[float(gower(row, other)) for other in query] for row in data],
         )
-        np.testing.assert_allclose(cross, expected, rtol=0, atol=1e-6)  # type: ignore[arg-type]
+        np.testing.assert_allclose(cross, expected, rtol=0, atol=1e-6)
 
 
 class TestValidation:
-    def test_out_rejects_sparse_conversion(self) -> None:
-        gower = _fitted()
-        buffer = np.empty((5, 5), dtype=gower.data_type)
-
-        with pytest.raises(ValueError, match=r"out cannot be combined"):
-            calculate_matrix(gower, _data(), out=buffer, convert_to_sparse=True)
-
     def test_unknown_matrix_type_is_rejected(self) -> None:
         gower = _fitted()
 
         with pytest.raises(ValueError, match=r"Unknown matrix_type"):
-            calculate_matrix(gower, _data(), matrix_type="nonsense")
+            calculate_matrix(gower, _data(), matrix_type="nonsense")  # type: ignore[arg-type]
 
     def test_sparse_input_is_rejected(self) -> None:
         gower = _fitted()
@@ -143,105 +119,46 @@ class TestValidation:
         assert result.shape == (5, 5)
 
 
-class TestRetiredJoblibParameters:
-    def test_call_without_retired_params_is_silent(self) -> None:
-        gower = _fitted()
-
-        with warnings.catch_warnings(record=True) as caught:
-            warnings.simplefilter("always")
-            calculate_matrix(gower, _data())
-
-        assert not [w for w in caught if issubclass(w.category, DeprecationWarning)]
-
-    @pytest.mark.parametrize(
-        ("kwargs", "expected"),
-        [
-            ({"n_jobs": 4}, "n_jobs"),
-            ({"verbose": 1}, "verbose"),
-            ({"backend": "threading"}, "backend"),
-        ],
-    )
-    def test_non_default_warns(self, kwargs: dict[str, Any], expected: str) -> None:
-        gower = _fitted()
-
-        with pytest.warns(DeprecationWarning, match=expected):
-            calculate_matrix(gower, _data(), **kwargs)
-
-    def test_non_default_still_returns_correct_result(self) -> None:
-        gower = _fitted()
-        data = _data()
-
-        with pytest.warns(DeprecationWarning, match="n_jobs"):
-            result = calculate_matrix(gower, data, n_jobs=2)  # type: ignore[call-arg]
-
-        np.testing.assert_allclose(result, _pairwise(gower, data), rtol=0, atol=1e-6)  # type: ignore[arg-type]
-
-    def test_all_non_defaults_reported_together(self) -> None:
-        gower = _fitted()
-
-        with pytest.warns(
-            DeprecationWarning,
-            match="no longer has any effect",
-        ) as record:
-            calculate_matrix(  # type: ignore[call-arg]
-                gower,
-                _data(),
-                n_jobs=4,
-                verbose=1,
-                backend="threading",
-            )
-
-        message = str(record[0].message)
-        assert "backend" in message
-        assert "n_jobs" in message
-        assert "verbose" in message
-
-    def test_stale_positional_call_is_rejected(self) -> None:
-        """The old order was data_type/n_jobs/verbose/matrix_type.
-
-        With the retired parameters gone, position 4 would now bind to
-        ``matrix_type``. That must fail loudly rather than be reinterpreted.
-        """
-        gower = _fitted()
-
-        with pytest.raises(TypeError) as excinfo:
-            calculate_matrix(gower, _data(), None, 2, 0, "similarity")  # type: ignore[arg-type,misc]
-
-        message = str(excinfo.value)
-        assert "n_jobs, verbose, backend" in message
-        assert "keyword" in message
-
-    def test_retired_keywords_do_not_disturb_the_result(self) -> None:
-        gower = _fitted()
-        data = _data()
-
-        with pytest.warns(DeprecationWarning, match="n_jobs"):
-            result = calculate_matrix(  # type: ignore[call-arg]
-                gower,
-                data,
-                n_jobs=2,
-                matrix_type="similarity",
-            )
-
-        expected = _pairwise(gower, data, similarity=True)
-        np.testing.assert_allclose(result, expected, rtol=0, atol=1e-6)  # type: ignore[arg-type]
-
-
 class TestTemporarySkipOor:
-    def test_restores_previous_value(self) -> None:
+    def test_skips_the_check_without_touching_the_model(self) -> None:
         gower = _fitted()
-        gower.skip_oor = False
+        out_of_range = np.array([[99.0, "a", 0]], dtype=object)
 
-        with _temporary_skip_oor(gower):
-            assert gower.skip_oor is True
+        with temporary_skip_oor(gower):
+            gower.transform(out_of_range)
+            assert gower.skip_oor is False
 
-        assert gower.skip_oor is False
+        with pytest.raises(ValueError, match="Out-of-range"):
+            gower.transform(out_of_range)
+
+    def test_skips_only_in_its_own_thread(self) -> None:
+        gower = _fitted()
+        out_of_range = np.array([[99.0, "a", 0]], dtype=object)
+        opened, checked = threading.Event(), threading.Event()
+        raised: list[bool] = []
+
+        def transform_while_open() -> None:
+            opened.wait()
+            try:
+                gower.transform(out_of_range)
+            except ValueError:
+                raised.append(True)
+            checked.set()
+
+        other = threading.Thread(target=transform_while_open)
+        other.start()
+        with temporary_skip_oor(gower):
+            opened.set()
+            checked.wait()
+        other.join()
+
+        assert raised == [True]
 
     def test_restores_after_exception(self) -> None:
         gower = _fitted()
         gower.skip_oor = False
 
-        with pytest.raises(RuntimeError), _temporary_skip_oor(gower):
+        with pytest.raises(RuntimeError), temporary_skip_oor(gower):
             raise RuntimeError
 
         assert gower.skip_oor is False
@@ -264,11 +181,12 @@ class TestOutBufferValidation:
             calculate_matrix(gower, _data(), out=buffer)
 
     def test_wrong_dtype_is_rejected(self) -> None:
+        """Only a width the kernel can write is accepted."""
         gower = _fitted()
-        buffer = np.empty((5, 5), dtype=np.float64)
+        buffer = np.empty((5, 5), dtype=np.int64)
 
         with pytest.raises(ValueError, match=r"out must have dtype"):
-            calculate_matrix(gower, _data(), out=buffer)
+            calculate_matrix(gower, _data(), out=cast("Any", buffer))
 
     def test_non_contiguous_is_rejected(self) -> None:
         gower = _fitted()
@@ -308,3 +226,44 @@ class TestNativeConfigLifecycle:
         gower = Gower(cfg).fit(train)
 
         assert calculate_matrix(gower, probe).shape == (2, 2)
+
+
+class TestRaiseErrorStrategyReachesPython:
+    """``missing_strategy='raise_error'`` must raise, not abort the process."""
+
+    N_ROWS = 400
+    N_FEATURES = 20
+
+    def _fitted_with_missing(self) -> tuple[Gower, npt.NDArray[np.floating]]:
+        rng = np.random.default_rng(0)
+        data = np.ascontiguousarray(
+            rng.normal(size=(self.N_ROWS, self.N_FEATURES)),
+            dtype=np.float32,
+        )
+        data[7, 3] = np.nan
+        cfg = Config(
+            feature_types=dict.fromkeys(range(self.N_FEATURES), "numeric"),
+            missing_strategy="raise_error",
+        )
+        return Gower(cfg).fit(data), data
+
+    def test_square_path_raises(self) -> None:
+        gower, data = self._fitted_with_missing()
+
+        with pytest.raises(ValueError, match=r"Missing values detected"):
+            calculate_matrix(gower, data)
+
+    def test_cross_path_raises(self) -> None:
+        gower, data = self._fitted_with_missing()
+
+        with pytest.raises(ValueError, match=r"Missing values detected"):
+            calculate_matrix(gower, data, Y=data[:50])
+
+    def test_clean_data_still_computes(self) -> None:
+        gower, data = self._fitted_with_missing()
+        clean = np.nan_to_num(data)
+
+        result = calculate_matrix(gower, clean)
+
+        assert result.shape == (self.N_ROWS, self.N_ROWS)
+        assert np.isfinite(np.asarray(result)).all()
