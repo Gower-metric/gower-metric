@@ -113,7 +113,14 @@ class TestCheckOutOfRangeEdgeCases:
         X = np.empty((0, 2), dtype=object)
 
         assert (
-            check_out_of_range(X, [0], np.array([0.0]), np.array([1.0]), "numeric")
+            check_out_of_range(
+                X,
+                [0],
+                np.array([0.0]),
+                np.array([1.0]),
+                "numeric",
+                np.float64,
+            )
             == []
         )
 
