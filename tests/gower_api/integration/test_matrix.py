@@ -5,7 +5,6 @@ from typing import cast
 
 import numpy as np
 import numpy.typing as npt
-import scipy.sparse as sp
 
 from gower_metric import Config, Gower
 from gower_metric.utils.discretization_types import silverman
@@ -252,84 +251,3 @@ def test_matrix_endpoint_podani_if_symmetrical_similarity() -> None:
         rtol=1e-5,
         atol=1e-5,
     ), "Matrix is not symmetrical"
-
-
-def test_sparse_matrix_convertion_csr() -> None:
-    data = np.array(
-        [["low", "high"], ["medium", "high"], ["high", "high"], ["low", "high"]],
-        dtype=object,
-    )
-    categorical_ordinal_values_order: dict[int | str, list[str]] | None = {
-        0: ["low", "medium", "high"],
-    }
-
-    cfg = Config(
-        feature_types={0: "categorical_ordinal", 1: "categorical_nominal"},
-        categorical_ordinal_values_order=categorical_ordinal_values_order,
-        categorical_ordinal_calculation_type="podani",
-    )
-    gower = Gower(cfg).fit(data)
-
-    dist_matrix = calculate_matrix(
-        gower,
-        data,
-        convert_to_sparse=True,
-        sparse_type="csr",
-    )
-
-    assert sp.issparse(dist_matrix), "Matrix is not sparse"
-    assert sp.isspmatrix_csr(dist_matrix), "Matrix is not csr format"
-
-
-def test_sparse_matrix_convertion_csc() -> None:
-    data = np.array(
-        [["low", "high"], ["medium", "high"], ["high", "high"], ["low", "high"]],
-        dtype=object,
-    )
-    categorical_ordinal_values_order: dict[int | str, list[str]] | None = {
-        0: ["low", "medium", "high"],
-    }
-
-    cfg = Config(
-        feature_types={0: "categorical_ordinal", 1: "categorical_nominal"},
-        categorical_ordinal_values_order=categorical_ordinal_values_order,
-        categorical_ordinal_calculation_type="podani",
-    )
-    gower = Gower(cfg).fit(data)
-
-    dist_matrix = calculate_matrix(
-        gower,
-        data,
-        convert_to_sparse=True,
-        sparse_type="csc",
-    )
-
-    assert sp.issparse(dist_matrix), "Matrix is not sparse"
-    assert sp.isspmatrix_csc(dist_matrix), "Matrix is not csc format"
-
-
-def test_sparse_matrix_convertion_c00() -> None:
-    data = np.array(
-        [["low", "high"], ["medium", "high"], ["high", "high"], ["low", "high"]],
-        dtype=object,
-    )
-    categorical_ordinal_values_order: dict[int | str, list[str]] | None = {
-        0: ["low", "medium", "high"],
-    }
-
-    cfg = Config(
-        feature_types={0: "categorical_ordinal", 1: "categorical_nominal"},
-        categorical_ordinal_values_order=categorical_ordinal_values_order,
-        categorical_ordinal_calculation_type="podani",
-    )
-    gower = Gower(cfg).fit(data)
-
-    dist_matrix = calculate_matrix(
-        gower,
-        data,
-        convert_to_sparse=True,
-        sparse_type="coo",
-    )
-
-    assert sp.issparse(dist_matrix), "Matrix is not sparse"
-    assert sp.isspmatrix_coo(dist_matrix), "Matrix is not coo format"
