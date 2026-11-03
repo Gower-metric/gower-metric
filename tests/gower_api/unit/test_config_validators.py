@@ -8,7 +8,7 @@ import pytest
 from pydantic import ValidationError
 
 from gower_metric import Config
-from gower_metric.core.config import OutOfRangeStrategy, SkipOutOfRangeValidation
+from gower_metric.core.config import OutOfRangeStrategy
 from gower_metric.utils.discretization_types import knn, silverman
 
 DEFAULT_DTYPE = np.float64
@@ -178,7 +178,7 @@ class TestSkipOutOfRangeConfigValidation:
     """Config validation for skip_out_of_range_validation parameter."""
 
     @pytest.mark.parametrize("flag", [True, False])
-    def test_valid_values(self, flag: SkipOutOfRangeValidation) -> None:
+    def test_valid_values(self, flag: bool) -> None:
         cfg = Config(feature_types={0: "numeric"}, skip_out_of_range_validation=flag)
         assert cfg.skip_out_of_range_validation == flag
 
