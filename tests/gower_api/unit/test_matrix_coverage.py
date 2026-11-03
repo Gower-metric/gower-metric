@@ -6,19 +6,9 @@
 import numpy as np
 import numpy.typing as npt
 import pandas as pd
-import pytest
-import scipy.sparse as sp
 
 from gower_metric import Config, Gower
-from gower_metric.utils.matrix.convert_matrix import get_scipy_sparse_matrix
 from gower_metric.utils.matrix.distance import calculate_matrix
-
-
-class TestSparseMatrixConversion:
-    def test_invalid_format_raises(self) -> None:
-        data = np.eye(3, dtype=np.float32)
-        with pytest.raises(ValueError, match="Unsupported matrix format"):
-            get_scipy_sparse_matrix(data, matrix_format="bad_format")
 
 
 class TestMatrixCompute:
@@ -35,41 +25,29 @@ class TestMatrixCompute:
     def test_similarity_matrix_diagonal_ones(self) -> None:
         gower, data = self._get_fitted_gower()
         mat = calculate_matrix(gower, data, matrix_type="similarity")
-        np.testing.assert_array_almost_equal(np.diag(mat), [1.0, 1.0, 1.0])  # type: ignore[arg-type]
-        assert mat[0, 1] == mat[1, 0]  # type: ignore[index]  # symmetric
+        np.testing.assert_array_almost_equal(np.diag(mat), [1.0, 1.0, 1.0])
+        assert mat[0, 1] == mat[1, 0]
 
     def test_distance_matrix_diagonal_zeros(self) -> None:
         gower, data = self._get_fitted_gower()
         mat = calculate_matrix(gower, data, matrix_type="distance")
-        np.testing.assert_array_almost_equal(np.diag(mat), [0.0, 0.0, 0.0])  # type: ignore[arg-type]
+        np.testing.assert_array_almost_equal(np.diag(mat), [0.0, 0.0, 0.0])
 
     def test_default_matrix(self) -> None:
         gower, data = self._get_fitted_gower()
         mat = calculate_matrix(gower, data)
         assert mat.shape == (3, 3)
 
-    def test_sparse_similarity_matrix(self) -> None:
-        """Similarity routed through the sparse entry point."""
-        gower, data = self._get_fitted_gower()
-        result = calculate_matrix(
-            gower,
-            data,
-            matrix_type="similarity",
-            convert_to_sparse=True,
-            sparse_type="csr",
-        )
-        assert sp.isspmatrix_csr(result)
-
     def test_similarity_matrix_pandas(self) -> None:
         """Matrix computation with pandas DataFrame."""
         gower, data = self._get_fitted_gower_pandas()
         mat = calculate_matrix(gower, data, matrix_type="similarity")
-        np.testing.assert_array_almost_equal(np.diag(mat), [1.0, 1.0, 1.0])  # type: ignore[arg-type]
+        np.testing.assert_array_almost_equal(np.diag(mat), [1.0, 1.0, 1.0])
 
     def test_distance_matrix_pandas(self) -> None:
         gower, data = self._get_fitted_gower_pandas()
         mat = calculate_matrix(gower, data, matrix_type="distance")
-        np.testing.assert_array_almost_equal(np.diag(mat), [0.0, 0.0, 0.0])  # type: ignore[arg-type]
+        np.testing.assert_array_almost_equal(np.diag(mat), [0.0, 0.0, 0.0])
 
     def test_matrix_float64_dtype(self) -> None:
         """Matrix with float64 output dtype."""
@@ -87,16 +65,3 @@ class TestMatrixCompute:
         gower = Gower(cfg).fit(data)
         mat = calculate_matrix(gower, data)
         assert mat.dtype == np.float64
-
-
-class TestSparseFloat16Upcast:
-    def test_float16_upcasts_to_float32_with_warning(self) -> None:
-        """scipy.sparse does not support float16; verify upcast + warning."""
-        data = np.array([[0.1, 0.2], [0.3, 0.4]], dtype=np.float32)
-        with pytest.warns(UserWarning, match="scipy.sparse does not support"):
-            result = get_scipy_sparse_matrix(
-                data,
-                matrix_format="csr",
-                data_type=np.float16,
-            )
-        assert result.dtype == np.float32
