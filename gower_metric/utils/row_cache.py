@@ -1,6 +1,7 @@
 # Copyright (c) 2025 - 2026 the gower-metric developers
 # SPDX-License-Identifier: MIT
 
+import threading
 from collections import OrderedDict
 from typing import cast
 
@@ -53,6 +54,7 @@ class RowEncodeCache:
         """
         self.maxsize: int = maxsize
         self._entries: OrderedDict[RecordKey, FloatArray] = OrderedDict()
+        self._lock = threading.Lock()
 
     def __len__(self) -> int:
         """Return the number of memorized records.
@@ -62,10 +64,6 @@ class RowEncodeCache:
 
         """
         return len(self._entries)
-
-    def clear(self) -> None:
-        """Drop every memorized record."""
-        self._entries.clear()
 
     def __getstate__(self) -> dict[str, object]:
         """Return the picklable state without the entries.
@@ -85,6 +83,7 @@ class RowEncodeCache:
         """
         self.maxsize = int(cast("int", state["maxsize"]))
         self._entries = OrderedDict()
+        self._lock = threading.Lock()
 
     def encode_pair(
         self,
@@ -109,18 +108,19 @@ class RowEncodeCache:
         try:
             key_a = _record_key(a)
             key_b = _record_key(b)
-            hit_a, hit_b = self._entries.get(key_a), self._entries.get(key_b)
+            with self._lock:
+                hit_a, hit_b = self._entries.get(key_a), self._entries.get(key_b)
+                if hit_a is not None and hit_b is not None:
+                    self._entries.move_to_end(key_a)
+                    self._entries.move_to_end(key_b)
+                    return hit_a, hit_b
         except TypeError:
             return self._encode(a, b, transform, data_type)
 
-        if hit_a is not None and hit_b is not None:
-            self._entries.move_to_end(key_a)
-            self._entries.move_to_end(key_b)
-            return hit_a, hit_b
-
         encoded_a, encoded_b = self._encode(a, b, transform, data_type)
-        self._store(key_a, encoded_a)
-        self._store(key_b, encoded_b)
+        with self._lock:
+            self._store(key_a, encoded_a)
+            self._store(key_b, encoded_b)
         return encoded_a, encoded_b
 
     @staticmethod
