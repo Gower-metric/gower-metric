@@ -107,18 +107,18 @@ inline void with_clean(const bool clean, Body&& body) {
 }
 
 template <typename T>
-inline auto weight_total(const CppConfig<T>& cfg) -> T {
+inline auto weight_total(const CppConfig<T>& cfg) -> gower_detail::Acc<T> {
   const bool uniform = cfg.uniform_weights;
   const T* weights = cfg.feature_weights.data();
   const auto weight_of = [&](const int f) -> T {
     return uniform ? T(1) : weights[f];
   };
 
-  T cat = 0;
+  gower_detail::Acc<T> cat = 0;
   for (const int f : cfg.nominal_group) cat += weight_of(f);
   for (const int f : cfg.ordinal_group) cat += weight_of(f);
   for (const int f : cfg.binary_symmetric_group) cat += weight_of(f);
-  T num = 0;
+  gower_detail::Acc<T> num = 0;
   for (const int f : cfg.numeric_group) num += weight_of(f);
   return cat + num;
 }
@@ -145,7 +145,7 @@ struct BlockParams {
   std::size_t j0;
   std::size_t len;
   bool similarity;
-  T total_weight;
+  gower_detail::Acc<T> total_weight;
   const unsigned char* clean_cols;
   const unsigned char* level_cols;
 };
@@ -166,10 +166,11 @@ inline void block(const CppConfig<T>& cfg, const BlockParams<T>& params,
   const bool max_dist = cfg.missing_strategy == MissingStrategy::MAX_DISTANCE;
   const T* weights = cfg.feature_weights.data();
 
-  alignas(64) std::array<T, ROWS * BLOCK> cat_diff{};
-  alignas(64) std::array<T, ROWS * BLOCK> num_diff{};
-  alignas(64) std::array<T, ConstDenom ? 1 : ROWS * BLOCK> cat_w{};
-  alignas(64) std::array<T, ConstDenom ? 1 : ROWS * BLOCK> num_w{};
+  using A = gower_detail::Acc<T>;
+  alignas(64) std::array<A, ROWS * BLOCK> cat_diff{};
+  alignas(64) std::array<A, ROWS * BLOCK> num_diff{};
+  alignas(64) std::array<A, ConstDenom ? 1 : ROWS * BLOCK> cat_w{};
+  alignas(64) std::array<A, ConstDenom ? 1 : ROWS * BLOCK> num_w{};
 
   const auto x_at = [&](const int f, const std::size_t r) -> T {
     return x_soa[static_cast<std::size_t>(f) * x_stride + xi + r];
@@ -193,8 +194,8 @@ inline void block(const CppConfig<T>& cfg, const BlockParams<T>& params,
       for (std::size_t r = 0; r < ROWS; ++r) {
         const T xv = x_at(f, r);
         const bool x_ok = Clean || gower_detail::is_present(xv);
-        T* __restrict acc = cat_diff.data() + r * BLOCK;
-        [[maybe_unused]] T* __restrict den =
+        A* __restrict acc = cat_diff.data() + r * BLOCK;
+        [[maybe_unused]] A* __restrict den =
             cat_w.data() + (ConstDenom ? 0 : r * BLOCK);
         for (std::size_t b = 0; b < len; ++b) {
           const T yv = col[b];
@@ -222,8 +223,8 @@ inline void block(const CppConfig<T>& cfg, const BlockParams<T>& params,
       for (std::size_t r = 0; r < ROWS; ++r) {
         const T xv = x_at(f, r);
         const bool x_ok = Clean || gower_detail::is_present(xv);
-        T* __restrict acc = cat_diff.data() + r * BLOCK;
-        [[maybe_unused]] T* __restrict den =
+        A* __restrict acc = cat_diff.data() + r * BLOCK;
+        [[maybe_unused]] A* __restrict den =
             cat_w.data() + (ConstDenom ? 0 : r * BLOCK);
         if (mode == CategoricalOrdinalCalculationTypes::PODANI) {
           with_clean(params.level_cols[f] != 0, [&](auto level_tag) -> void {
@@ -251,7 +252,7 @@ inline void block(const CppConfig<T>& cfg, const BlockParams<T>& params,
               const T clipped =
                   (x_in && y_in) ? static_cast<T>(raw < 1.0 ? raw : 1.0) : T(1);
               const T d = xv == yv ? T(0) : clipped;
-              acc[b] += w * (ok ? d : T(1));
+              acc[b] += A(w) * A(ok ? d : T(1));
               if constexpr (!ConstDenom) den[b] += w;
             }
           });
@@ -263,7 +264,7 @@ inline void block(const CppConfig<T>& cfg, const BlockParams<T>& params,
             const T w = (ok || max_dist) ? wf : T(0);
             const T d = static_cast<T>(gower_detail::abs_diff(xv, yv) / denom);
             const T clipped = d < T(1) ? d : T(1);
-            acc[b] += w * (ok ? clipped : T(1));
+            acc[b] += A(w) * A(ok ? clipped : T(1));
             if constexpr (!ConstDenom) den[b] += w;
           }
         }
@@ -281,8 +282,8 @@ inline void block(const CppConfig<T>& cfg, const BlockParams<T>& params,
         const T xv = x_at(f, r);
         const bool x_ok = Clean || gower_detail::is_present(xv);
         const bool x_pos = xv == positive;
-        T* __restrict acc = cat_diff.data() + r * BLOCK;
-        [[maybe_unused]] T* __restrict den =
+        A* __restrict acc = cat_diff.data() + r * BLOCK;
+        [[maybe_unused]] A* __restrict den =
             cat_w.data() + (ConstDenom ? 0 : r * BLOCK);
         for (std::size_t b = 0; b < len; ++b) {
           const T yv = col[b];
@@ -306,8 +307,8 @@ inline void block(const CppConfig<T>& cfg, const BlockParams<T>& params,
         const T xv = x_at(f, r);
         const bool x_ok = Clean || gower_detail::is_present(xv);
         const bool x_pos = xv == positive;
-        T* __restrict acc = cat_diff.data() + r * BLOCK;
-        [[maybe_unused]] T* __restrict den =
+        A* __restrict acc = cat_diff.data() + r * BLOCK;
+        [[maybe_unused]] A* __restrict den =
             cat_w.data() + (ConstDenom ? 0 : r * BLOCK);
         for (std::size_t b = 0; b < len; ++b) {
           const T yv = col[b];
@@ -335,8 +336,8 @@ inline void block(const CppConfig<T>& cfg, const BlockParams<T>& params,
       for (std::size_t r = 0; r < ROWS; ++r) {
         const T xv = x_at(f, r);
         const bool x_ok = Clean || gower_detail::is_present(xv);
-        T* __restrict acc = num_diff.data() + r * BLOCK;
-        [[maybe_unused]] T* __restrict den =
+        A* __restrict acc = num_diff.data() + r * BLOCK;
+        [[maybe_unused]] A* __restrict den =
             num_w.data() + (ConstDenom ? 0 : r * BLOCK);
         if (scaled && !banded) {
           for (std::size_t b = 0; b < len; ++b) {
@@ -346,7 +347,7 @@ inline void block(const CppConfig<T>& cfg, const BlockParams<T>& params,
             const T w = (ok || max_dist) ? wf : T(0);
             const T d = std::min<T>(
                 static_cast<T>(gower_detail::abs_diff(xv, yv) / range), T(1));
-            acc[b] += w * (ok ? d : T(1));
+            acc[b] += A(w) * A(ok ? d : T(1));
             if constexpr (!ConstDenom) den[b] += w;
           }
         } else if (scaled) {
@@ -358,7 +359,7 @@ inline void block(const CppConfig<T>& cfg, const BlockParams<T>& params,
             const T raw = gower_detail::abs_diff(xv, yv);
             const T scaled = std::min<T>(static_cast<T>(raw / range), T(1));
             const T d = raw <= band ? T(0) : scaled;
-            acc[b] += w * (ok ? d : T(1));
+            acc[b] += A(w) * A(ok ? d : T(1));
             if constexpr (!ConstDenom) den[b] += w;
           }
         } else {
@@ -368,7 +369,7 @@ inline void block(const CppConfig<T>& cfg, const BlockParams<T>& params,
                 NanFree || Clean || (x_ok && gower_detail::is_present(yv));
             const T w = (ok || max_dist) ? wf : T(0);
             const T d = gower_detail::abs_diff(xv, yv) > T(0) ? T(1) : T(0);
-            acc[b] += w * (ok ? d : T(1));
+            acc[b] += A(w) * A(ok ? d : T(1));
             if constexpr (!ConstDenom) den[b] += w;
           }
         }
@@ -379,21 +380,22 @@ inline void block(const CppConfig<T>& cfg, const BlockParams<T>& params,
   const T nan = static_cast<T>(std::numeric_limits<double>::quiet_NaN());
 
   for (std::size_t r = 0; r < ROWS; ++r) {
-    const T* __restrict cat = cat_diff.data() + r * BLOCK;
-    const T* __restrict num = num_diff.data() + r * BLOCK;
+    const A* __restrict cat = cat_diff.data() + r * BLOCK;
+    const A* __restrict num = num_diff.data() + r * BLOCK;
     T* __restrict dst = tile + r * BLOCK;
     if constexpr (ConstDenom) {
-      const T total_w = params.total_weight;
+      const A total_w = params.total_weight;
       for (std::size_t b = 0; b < len; ++b) {
-        const T d = total_w > T(0) ? (cat[b] + num[b]) / total_w : nan;
+        const T d =
+            total_w > T(0) ? static_cast<T>((cat[b] + num[b]) / total_w) : nan;
         dst[b] = similarity ? static_cast<T>(T(1) - d) : d;
       }
     } else {
-      const T* __restrict cw = cat_w.data() + r * BLOCK;
-      const T* __restrict nw = num_w.data() + r * BLOCK;
+      const A* __restrict cw = cat_w.data() + r * BLOCK;
+      const A* __restrict nw = num_w.data() + r * BLOCK;
       for (std::size_t b = 0; b < len; ++b) {
-        const T total_w = cw[b] + nw[b];
-        const T q = (cat[b] + num[b]) / total_w;
+        const A total_w = cw[b] + nw[b];
+        const T q = static_cast<T>((cat[b] + num[b]) / total_w);
         const T d = total_w > T(0) ? q : nan;
         dst[b] = similarity ? static_cast<T>(T(1) - d) : d;
       }

@@ -18,11 +18,11 @@ namespace gower_detail {
 
 template <typename T>
 struct WeightedSum {
-  T diff = 0;
-  T weight = 0;
+  Acc<T> diff = 0;
+  Acc<T> weight = 0;
 
   void add(const T w, const T d) {
-    diff += w * d;
+    diff += static_cast<Acc<T>>(w) * static_cast<Acc<T>>(d);
     weight += w;
   }
 };
@@ -115,7 +115,7 @@ auto CppConfig<T>::calculate_distance(const T* x, const T* y) const -> T {
     if (cat.weight <= T(0)) return nan;
     const T threshold = static_cast<T>(conditional_distances_threshold_coeff) /
                         static_cast<T>(p_cat);
-    const T step_one = cat.diff / cat.weight;
+    const T step_one = static_cast<T>(cat.diff / cat.weight);
     if (step_one > threshold) return T(1);
   }
 
@@ -130,11 +130,11 @@ auto CppConfig<T>::calculate_distance(const T* x, const T* y) const -> T {
   }
 
   if (conditional_distances) {
-    return num.weight > T(0) ? num.diff / num.weight : nan;
+    return num.weight > T(0) ? static_cast<T>(num.diff / num.weight) : nan;
   }
 
-  const T total_w = cat.weight + num.weight;
-  return total_w > T(0) ? (cat.diff + num.diff) / total_w : nan;
+  const gower_detail::Acc<T> total_w = cat.weight + num.weight;
+  return total_w > T(0) ? static_cast<T>((cat.diff + num.diff) / total_w) : nan;
 }
 
 // EOF

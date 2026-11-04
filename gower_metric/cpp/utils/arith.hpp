@@ -10,6 +10,9 @@
 namespace gower_detail {
 
 template <typename T>
+using Acc = std::conditional_t<(sizeof(T) < sizeof(float)), float, T>;
+
+template <typename T>
 inline auto abs_diff(const T a, const T b) -> T {
   if constexpr (std::is_same_v<T, float> || std::is_same_v<T, double>) {
     return std::fabs(a - b);

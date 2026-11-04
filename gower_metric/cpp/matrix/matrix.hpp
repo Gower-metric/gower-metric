@@ -130,7 +130,7 @@ void compute_gower_upper(const CppConfig<T>& cfg, const T* data, TOut* out,
   std::vector<unsigned char> clean;
   std::vector<unsigned char> level_flags;
   gower_blocked::FastPath fast;
-  T total_weight = 0;
+  gower_detail::Acc<T> total_weight = 0;
   if (blocked) {
     gower_blocked::transpose(data, n_rows, nf, soa);
     gower_blocked::mark_clean_columns(soa.data(), n_rows, nf, clean);
@@ -221,7 +221,7 @@ void compute_gower_matrix_xy(const CppConfig<T>& cfg, const T* x_data,
   std::vector<unsigned char> clean;
   std::vector<unsigned char> level_flags;
   gower_blocked::FastPath fast;
-  T total_weight = 0;
+  gower_detail::Acc<T> total_weight = 0;
   if (blocked) {
     gower_blocked::transpose(x_data, n_x, nf, x_soa);
     gower_blocked::transpose(y_data, n_y, nf, y_soa);
