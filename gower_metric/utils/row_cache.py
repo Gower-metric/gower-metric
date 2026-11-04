@@ -18,6 +18,7 @@ from gower_metric._typing import (
 from gower_metric.utils.to_array import to_array
 
 DEFAULT_MAXSIZE = 4096
+MAXSIZE_WIDTH = 256
 
 
 def _record_key(record: Record) -> RecordKey:
@@ -43,13 +44,19 @@ def _record_key(record: Record) -> RecordKey:
 
 
 class RowEncodeCache:
-    """Bounded LRU turning raw records into native rows."""
+    """Bounded LRU turning raw records into native rows.
+
+    It holds at most ``maxsize`` records, and for rows wider than
+    ``MAXSIZE_WIDTH`` features at most ``maxsize * MAXSIZE_WIDTH`` encoded
+    values.
+    """
 
     def __init__(self, maxsize: int = DEFAULT_MAXSIZE) -> None:
         """Initialize an empty cache.
 
         Args:
-            maxsize (int): Maximum number of encoded records retained.
+            maxsize (int): Maximum number of encoded records retained, fewer
+                for rows wider than ``MAXSIZE_WIDTH`` features.
 
         """
         self.maxsize: int = maxsize
@@ -156,5 +163,6 @@ class RowEncodeCache:
         """
         self._entries[key] = row
         self._entries.move_to_end(key)
-        while len(self._entries) > self.maxsize:
+        width = max(row.size, MAXSIZE_WIDTH)
+        while len(self._entries) * width > self.maxsize * MAXSIZE_WIDTH:
             self._entries.popitem(last=False)
