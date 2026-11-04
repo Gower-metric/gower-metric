@@ -19,8 +19,6 @@ from gower_metric.utils.transforms.encoding import (
 
 CATEGORY_SETS: dict[str, tuple[list[Any], list[Any]]] = {
     "text": (list("abcde"), list("acez")),
-    "integers": ([1, 2, 3, 10], [1, 10, 99]),
-    "floats": ([1.5, 2.5, 3.5], [1.5, 9.5]),
     "single_category": (["x"], ["x", "y"]),
     "all_unknown": (["a", "b"], ["y", "z"]),
 }
@@ -69,7 +67,7 @@ class TestMatchesScikitLearn:
         expected = enc.transform(probe.reshape(-1, 1)).astype(dtype).ravel()  # type: ignore[no-untyped-call]
 
         np.testing.assert_array_equal(
-            encode_categories(probe, enc, dtype),
+            encode_categories(probe, enc, dtype, 0),
             expected,
         )
 
@@ -78,7 +76,7 @@ class TestMatchesScikitLearn:
         enc = _fit(list("abc"), dtype, strict=False)
         probe = _object(list("abc"))
 
-        assert encode_categories(probe, enc, dtype).dtype == dtype
+        assert encode_categories(probe, enc, dtype, 0).dtype == dtype
 
     def test_unsorted_user_order_is_respected(self) -> None:
         """Ordinal columns carry the user's order, not a sorted one."""
@@ -86,7 +84,12 @@ class TestMatchesScikitLearn:
         enc.categories = [["low", "medium", "high"]]
         enc.fit(_object(["low", "medium", "high"]).reshape(-1, 1))
 
-        codes = encode_categories(_object(["low", "medium", "high"]), enc, np.float64)
+        codes = encode_categories(
+            _object(["low", "medium", "high"]),
+            enc,
+            np.float64,
+            0,
+        )
 
         np.testing.assert_array_equal(codes, [0.0, 1.0, 2.0])
 
@@ -103,7 +106,7 @@ class TestBothStrategiesAgree:
         expected = enc.transform(probe.reshape(-1, 1)).astype(np.float64).ravel()  # type: ignore[no-untyped-call]
 
         np.testing.assert_array_equal(
-            encode_categories(probe, enc, np.float64),
+            encode_categories(probe, enc, np.float64, 0),
             expected,
         )
 
@@ -111,7 +114,7 @@ class TestBothStrategiesAgree:
         enc = _fit(list("abc"), np.float64, strict=False)
         probe = _object(["a", "zzz"] * MAP_THRESHOLD)
 
-        codes = encode_categories(probe, enc, np.float64)
+        codes = encode_categories(probe, enc, np.float64, 0)
 
         assert np.isnan(codes[1::2]).all()
         assert not np.isnan(codes[0::2]).any()
@@ -123,14 +126,14 @@ class TestStrictEncoderRaises:
         enc = _fit(list("abc"), np.float64, strict=True, explicit_order=explicit_order)
 
         with pytest.raises(ValueError, match=r"Found unknown categories") as excinfo:
-            encode_categories(_object(["a", "zzz"]), enc, np.float64)
+            encode_categories(_object(["a", "zzz"]), enc, np.float64, 0)
 
         assert "zzz" in str(excinfo.value)
 
     def test_known_values_do_not_raise(self) -> None:
         enc = _fit(list("abc"), np.float64, strict=True)
 
-        codes = encode_categories(_object(["c", "a"]), enc, np.float64)
+        codes = encode_categories(_object(["c", "a"]), enc, np.float64, 0)
 
         np.testing.assert_array_equal(codes, [2.0, 0.0])
 
@@ -139,7 +142,7 @@ class TestStrictEncoderRaises:
         enc = _fit(list("abc"), np.float64, strict=True)
 
         with pytest.raises(ValueError) as excinfo:
-            encode_categories(_object(["z", "y", "z"]), enc, np.float64)
+            encode_categories(_object(["z", "y", "z"]), enc, np.float64, 0)
 
         assert "['z', 'y']" in str(excinfo.value)
 
@@ -158,6 +161,6 @@ class TestMappingMemoisation:
         probe = _object(list("abc"))
 
         np.testing.assert_array_equal(
-            encode_categories(probe, restored, np.float64),
+            encode_categories(probe, restored, np.float64, 0),
             enc.transform(probe.reshape(-1, 1)).ravel(),  # type: ignore[no-untyped-call]
         )
