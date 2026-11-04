@@ -38,11 +38,13 @@ Supported and tested numerical scalar types:
 
 | Data type | Linux | macOS | Windows |
 |:---:|:---:|:---:|:---:|
-| `numpy.float16` | ✅ | ✅ | ⚠️ |
+| `numpy.float16` | ✅ | ✅ | ❌<sup>2)</sup> |
 | `numpy.float32` | ✅ | ✅ | ⚠️ |
 | `numpy.float64` | ✅ | ✅ | ⚠️ |
 
 Legend: ✅ - supported and tested, ⚠️ - might work but not tested, ❌ - not supported
+
+<sup>2)</sup> The Windows wheels are built with MSVC, which has no `_Float16`, so `data_type=numpy.float16` raises `NotImplementedError` there. Use `numpy.float32` or `numpy.float64`.
 
 ## Documentation
 
@@ -50,11 +52,19 @@ Documentation is available [here](https://gower-metric.readthedocs.io/en/latest/
 
 ## Installation
 
-The easiest way to install the package:
+Install the package with pip:
+
+```bash
+pip install gower-metric
+```
+
+or with uv:
 
 ```bash
 uv add gower-metric
 ```
+
+Where no prebuilt wheel matches your platform, the package is built from source, which needs a C++17 compiler. OpenMP is optional: without it, matrices are computed on one thread.
 
 ## Quick start
 
