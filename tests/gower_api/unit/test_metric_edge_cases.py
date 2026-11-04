@@ -186,21 +186,13 @@ class TestConditionalDistancesEdgeCases:
         assert not np.isnan(dist)
 
     def test_conditional_with_cat_ordinal_indices(self) -> None:
-        data = np.array(
-            [
-                [1.0, "low"],
-                [2.0, "high"],
-            ],
-            dtype=object,
-        )
-        cfg = Config(
-            feature_types={0: "numeric", 1: "categorical_ordinal"},
-            categorical_ordinal_values_order={1: ["low", "medium", "high"]},
-            conditional_distances=True,
-        )
-        gower = Gower(cfg).fit(data)
-        dist = gower(data[0], data[1])
-        assert not np.isnan(dist)
+        """Numeric and ordinal alone leave D'Orazio's first step empty."""
+        with pytest.raises(ValueError, match="first step"):
+            Config(
+                feature_types={0: "numeric", 1: "categorical_ordinal"},
+                categorical_ordinal_values_order={1: ["low", "medium", "high"]},
+                conditional_distances=True,
+            )
 
     def test_conditional_all_categorical_nan_returns_nan(self) -> None:
         """When all categorical features are NaN, cat_cnt==0 → return NaN."""
