@@ -108,7 +108,7 @@ class TestCoverageValidation:
                 categorical_ordinal_values_order={"Education": EDUCATION_LEVELS},
             ),
         )
-        with pytest.raises(ValueError, match="Missmatched number of feature types"):
+        with pytest.raises(ValueError, match="no type for column"):
             gower.fit(df)
 
 

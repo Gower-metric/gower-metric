@@ -417,5 +417,5 @@ class TestFitValidation:
         data = np.array([[1.0, 2.0], [3.0, 4.0]])
         cfg = Config(feature_types={"a": "numeric", "b": "numeric"})
 
-        with pytest.raises(ValueError, match=r"Missmatched number of feature types"):
+        with pytest.raises(ValueError, match=r"no type for column\(s\) \[0, 1\]"):
             Gower(cfg).fit(data)

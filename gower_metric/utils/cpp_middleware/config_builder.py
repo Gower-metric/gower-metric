@@ -58,8 +58,12 @@ def build_cpp_config(self: "Gower") -> CppConfig | CppConfigF | CppConfigH:
             ``_Float16``.
 
     """
-    if any(i not in self.feature_types for i in range(self.n_feats)):
-        msg = "Missmatched number of feature types"
+    untyped = [i for i in range(self.n_feats) if i not in self.feature_types]
+    if untyped:
+        msg = (
+            f"feature_types has no type for column(s) {untyped}; "
+            "every column needs one."
+        )
         raise ValueError(msg)
 
     itemsize = np.dtype(self.data_type).itemsize
