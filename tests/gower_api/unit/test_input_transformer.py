@@ -7,8 +7,9 @@ import pytest
 
 from gower_metric import Config, Gower
 from gower_metric.core.exceptions import IllegalStateError
+from gower_metric.cpp import HAS_FLOAT16
 
-DTYPE = np.float16
+DTYPE = np.float16 if HAS_FLOAT16 else np.float32
 
 
 def test_transform_before_fit() -> None:

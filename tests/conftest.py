@@ -4,12 +4,18 @@
 import numpy as np
 import pandas as pd
 
+from gower_metric.cpp import HAS_FLOAT16
+
 TYPES_TO_CHECK = [
     "float16",
     "float32",
     "float64",
-]  # here define all numerical types to check
-NUMPY_NUMERIC_TYPES = [getattr(np, t) for t in TYPES_TO_CHECK if hasattr(np, t)]
+]
+NUMPY_NUMERIC_TYPES = [
+    getattr(np, t)
+    for t in TYPES_TO_CHECK
+    if hasattr(np, t) and (HAS_FLOAT16 or t != "float16")
+]
 
 EDUCATION_LEVELS = ["Low", "Medium", "High", "PhD", "Prof"]
 COUNTRIES = ["PL", "DE", "FR", "UK", "US", "IT", "ES", "CZ"]
