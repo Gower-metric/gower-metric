@@ -126,8 +126,9 @@ def make_config_data(dtype: type[np.floating]) -> Callable[..., NativeConfigData
         )
         data.ranges = np.ones(n, dtype=dtype)
         data.bandwidths = np.zeros(n, dtype=dtype)
+        data.lower = np.full(n, -np.inf, dtype=dtype)
+        data.upper = np.full(n, np.inf, dtype=dtype)
         data.missing_strategy = missing_strategy
-        data.scale_method = "range"
         data.categorical_ordinal_calculation_type = calculation_type
         data.conditional_distances = conditional_distances
         data.conditional_distances_threshold_coeff = (
