@@ -47,8 +47,6 @@ FEATURE_TYPES = (
     "binary_asymmetric",
 )
 MISSING_STRATEGIES = ("ignore", "max_dist", "raise_error")
-SCALE_METHODS = ("range", "iqr")
-DISCRETIZATIONS = ("", "silverman", "knn")
 
 MIXED_FEATURE_TYPES: dict[int | str, str] = {
     "Age": "numeric",

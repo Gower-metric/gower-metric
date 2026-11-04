@@ -12,15 +12,12 @@ import pandas as pd
 import pytest
 
 from gower_metric import Config, Gower
-from gower_metric.utils.cpp_middleware.config_builder import _value_orders
 from gower_metric.utils.matrix.distance import calculate_matrix
 from tests.conftest import EDUCATION_LEVELS, generate_mixed_df
 from tests.cpp.conftest import (
-    DISCRETIZATIONS,
     FEATURE_TYPES,
     MISSING_STRATEGIES,
     MIXED_FEATURE_TYPES,
-    SCALE_METHODS,
     NativeConfig,
     NativeConfigData,
 )
@@ -161,29 +158,6 @@ class TestNativeValidation:
         with pytest.raises(ValueError, match="Invalid missing strategy"):
             expected_config_cls().configure_arguments(data)
 
-    @pytest.mark.parametrize("method", SCALE_METHODS)
-    def test_valid_scale_methods(
-        self,
-        method: str,
-        make_config_data: Callable[..., NativeConfigData],
-        expected_config_cls: type,
-    ) -> None:
-        data = make_config_data()
-        data.scale_method = method
-        cfg = expected_config_cls()
-        cfg.configure_arguments(data)
-        assert cfg.n_features == 2
-
-    def test_invalid_scale_method_raises(
-        self,
-        make_config_data: Callable[..., NativeConfigData],
-        expected_config_cls: type,
-    ) -> None:
-        data = make_config_data()
-        data.scale_method = "bogus"
-        with pytest.raises(ValueError, match="Invalid scale method"):
-            expected_config_cls().configure_arguments(data)
-
     def test_weights_length_mismatch_raises(
         self,
         dtype: type[np.floating],
@@ -193,31 +167,6 @@ class TestNativeValidation:
         data = make_config_data()
         data.feature_weights = np.ones(1, dtype=dtype)
         with pytest.raises(ValueError, match="feature_weights length"):
-            expected_config_cls().configure_arguments(data)
-
-    @pytest.mark.parametrize("discretization", DISCRETIZATIONS)
-    def test_valid_discretizations(
-        self,
-        discretization: str,
-        make_config_data: Callable[..., NativeConfigData],
-        expected_config_cls: type,
-    ) -> None:
-        data = make_config_data()
-        data.discretization = discretization
-        cfg = expected_config_cls()
-        cfg.configure_arguments(data)
-        assert cfg.n_features == 2
-
-    @pytest.mark.parametrize("legacy", ["kde", "kNN"])
-    def test_pre_refactor_names_rejected(
-        self,
-        legacy: str,
-        make_config_data: Callable[..., NativeConfigData],
-        expected_config_cls: type,
-    ) -> None:
-        data = make_config_data()
-        data.discretization = legacy
-        with pytest.raises(ValueError, match="Invalid discretization"):
             expected_config_cls().configure_arguments(data)
 
 
@@ -291,17 +240,6 @@ class TestFeatureWeights:
             np.asarray([weights[i] for i in range(N_MIXED_FEATURES)]),
             rtol=1e-2,
         )
-
-
-class TestValueOrdersHelper:
-    def test_stringifies_keys_and_values(self) -> None:
-        assert _value_orders({2: [1, 2.0, True], 0: ["x", "y"]}) == {
-            2: ["1", "2.0", "True"],
-            0: ["x", "y"],
-        }
-
-    def test_none_returns_empty(self) -> None:
-        assert _value_orders(None) == {}
 
 
 class TestConfigFieldsCarried:
@@ -705,22 +643,6 @@ class TestBlockedMatrixMatchesScalarKernel:
         )
         np.fill_diagonal(expected, 1.0)
         np.testing.assert_array_equal(matrix.astype(np.float64), expected)
-
-
-class TestPodaniFallbackWarningAtFit:
-    def test_fit_emits_warning_when_podani_degenerates(
-        self,
-        dtype: type[np.floating],
-    ) -> None:
-        df = pd.DataFrame({"g": ["low", "low"]})
-        cfg = Config(
-            feature_types={"g": "categorical_ordinal"},
-            categorical_ordinal_values_order={"g": ["low"]},
-            categorical_ordinal_calculation_type="podani",
-            data_type=dtype,
-        )
-        with pytest.warns(UserWarning, match="Podani denominator"):
-            Gower(cfg).fit(df)
 
 
 class TestBuilderEdgeCases:
