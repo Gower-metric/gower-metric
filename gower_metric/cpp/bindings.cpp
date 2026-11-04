@@ -156,7 +156,7 @@ void register_matrix_methods(nb::class_<CppConfig<T>>& cls) {
         std::vector<T> fixed;
         Unseen<T> unseen;
         const T* rows = check_rows(self, data.data(), n, fixed, unseen);
-        unseen.warn(4);
+        unseen.warn(2);
         compute_gower_matrix<T, TOut>(self, rows, out.data(), n, similarity);
       },
       "data"_a.noconvert(), "out"_a.noconvert(), "similarity"_a = false,
@@ -183,7 +183,7 @@ void register_matrix_methods(nb::class_<CppConfig<T>>& cls) {
         Unseen<T> unseen;
         const T* x_rows = check_rows(self, x_data.data(), n_x, fixed_x, unseen);
         const T* y_rows = check_rows(self, y_data.data(), n_y, fixed_y, unseen);
-        unseen.warn(4);
+        unseen.warn(2);
         compute_gower_matrix_xy<T, TOut>(self, x_rows, n_x, y_rows, n_y,
                                          out.data(), similarity);
       },
