@@ -255,6 +255,9 @@ class Gower:
             msg = "Sparse matrices are currently not supported as direct input. Please convert to dense."
             raise ValueError(msg)
 
+        self._is_fitted = False  # a refit that fails below leaves no stale model
+        self.cpp_config = None
+
         col_names: Sequence[object] | None = None
         if isinstance(X, pd.DataFrame):
             cols = col_names = list(X.columns)
