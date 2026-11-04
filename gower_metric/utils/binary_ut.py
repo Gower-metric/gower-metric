@@ -92,7 +92,9 @@ def fit_binary_features(
                 observed = sorted({str(v) for v in valid_values})
                 msg = (
                     f"Asymmetric binary feature {name} is coded as {observed}, so it "
-                    "is not clear which value means 'present'."
+                    "is not clear which value means 'present'. Code it 0/1 or "
+                    "False/True, or declare [absent, present] in "
+                    "binary_asymmetric_value_order."
                 )
                 raise ValueError(msg)
             binary_metadata[j] = {

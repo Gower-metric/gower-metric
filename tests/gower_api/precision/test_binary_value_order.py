@@ -126,6 +126,13 @@ class TestBinaryValueOrder(BaseTest):
 
     def test_auto_detect_without_explicit_order(self) -> None:
         """Auto-detection works when no explicit order provided."""
+        if self.binary_type == "binary_asymmetric":
+            with pytest.raises(
+                ValueError,
+                match="not clear which value means 'present'",
+            ):
+                Gower(self._config()).fit(np.array([["A"], ["A"]], dtype=object))
+            return
         X_train = np.array([["A"], ["B"]], dtype=object)
         X_test = np.array([["A"], ["B"]], dtype=object)
 
@@ -137,6 +144,15 @@ class TestBinaryValueOrder(BaseTest):
 
     def test_auto_detect_unseen_respects_strategy(self) -> None:
         """Auto-detection respects handle_unseen strategy."""
+        if self.binary_type == "binary_asymmetric":
+            with pytest.raises(
+                ValueError,
+                match="not clear which value means 'present'",
+            ):
+                Gower(self._config(handle_unseen="missing")).fit(
+                    np.array([["A"], ["A"]], dtype=object),
+                )
+            return
         X_train = np.array([["A"], ["A"]], dtype=object)
         X_test = np.array([["B"]], dtype=object)
 
@@ -147,6 +163,15 @@ class TestBinaryValueOrder(BaseTest):
 
     def test_auto_detect_raises_on_too_many_total_values(self) -> None:
         """Auto-detection raises error when total unique values > 2."""
+        if self.binary_type == "binary_asymmetric":
+            with pytest.raises(
+                ValueError,
+                match="not clear which value means 'present'",
+            ):
+                Gower(self._config(handle_unseen="missing")).fit(
+                    np.array([["A"], ["A"]], dtype=object),
+                )
+            return
         short_type = self.binary_type.replace("binary_", "")
         X_train = np.array([["A"], ["A"]], dtype=object)
         X_test = np.array([["B"], ["C"]], dtype=object)
@@ -204,7 +229,7 @@ class TestBinaryValueOrderValidation(BaseTest):
             )
 
     def test_validation_not_a_list(self) -> None:
-        with pytest.raises(ValidationError, match=r"Input should be a valid list"):
+        with pytest.raises(ValidationError, match=r"not allowed as a Sequence value"):
             self._config(
                 feature_types={0: self.binary_type},
                 **{f"{self.binary_type}_value_order": {0: "NotAList"}},

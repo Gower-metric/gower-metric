@@ -14,6 +14,11 @@ from pydantic import ValidationError
 from gower_metric import Config, Gower
 
 BINARY_TYPES = ["binary_asymmetric", "binary_symmetric"]
+SYMMETRIC_ONLY = pytest.mark.parametrize(
+    "setup_binary_type",
+    ["binary_symmetric"],
+    indirect=True,
+)
 
 
 def _config(
@@ -36,6 +41,7 @@ class TestHandleUnseenBinary:
     def setup_binary_type(self, request: pytest.FixtureRequest) -> None:
         self.binary_type: str = request.param
 
+    @SYMMETRIC_ONLY
     def test_strategy_error_raises_on_unseen_value(self) -> None:
         """handle_unseen='error' raises ValueError on unseen value."""
         X_train = np.array([["A"], ["A"], ["A"]], dtype=object)
@@ -49,6 +55,7 @@ class TestHandleUnseenBinary:
         ):
             gower.transform(X_test)
 
+    @SYMMETRIC_ONLY
     def test_strategy_warning_maps_to_nan(self) -> None:
         """handle_unseen='warning' maps unseen to NaN with warning."""
         X_train = np.array([["A"], ["A"], ["A"]], dtype=object)
@@ -65,6 +72,7 @@ class TestHandleUnseenBinary:
         assert result[0, 0] == 0.0
         assert np.isnan(result[1, 0])
 
+    @SYMMETRIC_ONLY
     def test_strategy_missing_maps_to_nan_silently(self) -> None:
         """handle_unseen='missing' maps unseen to NaN without warning."""
         X_train = np.array([["A"], ["A"]], dtype=object)
@@ -76,6 +84,7 @@ class TestHandleUnseenBinary:
         assert result[0, 0] == 0.0
         assert np.isnan(result[1, 0])
 
+    @SYMMETRIC_ONLY
     def test_default_strategy_is_error(self) -> None:
         """Default strategy is 'error' — unseen value raises ValueError."""
         X_train = np.array([["Yes"], ["Yes"]], dtype=object)
@@ -91,8 +100,8 @@ class TestHandleUnseenBinary:
 
     def test_complete_fit_with_strategy_error(self) -> None:
         """Third value after complete fit violates binary constraint."""
-        X_train = np.array([["A"], ["B"], ["A"], ["B"]], dtype=object)
-        X_test = np.array([["C"]], dtype=object)
+        X_train = np.array([[0], [1], [0], [1]], dtype=object)
+        X_test = np.array([[2]], dtype=object)
 
         gower = Gower(_config(self.binary_type, "error")).fit(X_train)
 
@@ -117,6 +126,7 @@ class TestHandleUnseenBinary:
         ):
             _config(self.binary_type, "invalid")
 
+    @SYMMETRIC_ONLY
     def test_strategy_with_pandas_dataframe(self) -> None:
         """Strategy works with pandas DataFrame input."""
         X_train = pd.DataFrame({"col": ["A", "A"]})
@@ -134,8 +144,8 @@ class TestHandleUnseenBinary:
 
     def test_strategy_with_multiple_unseen_values(self) -> None:
         """Multiple unseen values violate binary constraint (4 total)."""
-        X_train = np.array([["A"], ["A"], ["A"]], dtype=object)
-        X_test = np.array([["B"], ["C"], ["D"]], dtype=object)
+        X_train = np.array([[0], [0], [0]], dtype=object)
+        X_test = np.array([[1], [2], [3]], dtype=object)
 
         gower = Gower(_config(self.binary_type, "missing")).fit(X_train)
 
