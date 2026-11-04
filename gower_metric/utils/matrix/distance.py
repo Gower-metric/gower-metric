@@ -201,8 +201,16 @@ def calculate_matrix(
         raise ValueError(msg)
     similarity = matrix_type == "similarity"
 
-    data = _as_native_matrix(gower, X)
-    data_y = None if Y is None else _as_native_matrix(gower, Y)
+    if Y is not None and not any(
+        np.issubdtype(np.asarray(Z).dtype, np.number) for Z in (X, Y)
+    ):
+        raw = np.vstack([np.asarray(Z, dtype=object) for Z in (X, Y)])
+        both = _as_native_matrix(gower, raw)
+        data = both[: len(X)]
+        data_y: FloatArray | None = both[len(X) :]
+    else:
+        data = _as_native_matrix(gower, X)
+        data_y = None if Y is None else _as_native_matrix(gower, Y)
     shape = (len(data), len(data) if data_y is None else len(data_y))
 
     target = np.dtype(data_type)

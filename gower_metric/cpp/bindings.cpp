@@ -182,7 +182,6 @@ void register_matrix_methods(nb::class_<CppConfig<T>>& cls) {
         std::vector<T> fixed_y;
         Unseen<T> unseen;
         const T* x_rows = check_rows(self, x_data.data(), n_x, fixed_x, unseen);
-        unseen.fresh.clear();
         const T* y_rows = check_rows(self, y_data.data(), n_y, fixed_y, unseen);
         unseen.warn(4);
         compute_gower_matrix_xy<T, TOut>(self, x_rows, n_x, y_rows, n_y,
