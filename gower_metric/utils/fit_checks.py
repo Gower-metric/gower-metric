@@ -30,17 +30,19 @@ def check_precision(model: "Gower", col_names: Sequence[object] | None) -> None:
 
     limit = float(np.finfo(model.data_type).max)
     precision = np.dtype(model.data_type).name
-    for j, lo, hi in (
+    for j, lo, hi, scale in (
         *zip(
             model.numeric_indices,
             model.numeric_mins,
             model.numeric_maxs,
+            model.numeric_ranges,
             strict=True,
         ),
         *zip(
             model.ratio_scale_indices,
             model.ratio_mins,
             model.ratio_maxs,
+            model.ratio_ranges,
             strict=True,
         ),
     ):
@@ -52,6 +54,17 @@ def check_precision(model: "Gower", col_names: Sequence[object] | None) -> None:
                 "data_type."
             )
             raise ValueError(msg)
+        top = model.data_type(max(abs(float(lo)), abs(float(hi))))
+        step = float(top - np.nextafter(top, model.data_type(0)))
+        if float(scale) > 0 and step > 0.01 * float(scale):
+            name = col_names[j] if col_names is not None else j
+            msg = (
+                f"Column {name!r}: {precision} stores its values in steps of "
+                f"{step:g} against a scale of {float(scale):g}, so its scores "
+                f"can be off by up to {step / float(scale):.1%}. Use a wider "
+                "data_type."
+            )
+            warnings.warn(msg, UserWarning, stacklevel=3)
     if sum(model.weights.tolist()) > limit:
         msg = (
             f"feature_weights add up to more than {precision} can hold "
