@@ -149,9 +149,7 @@ void compute_gower_upper(const CppConfig<T>& cfg, const T* data, TOut* out,
   constexpr std::size_t BLOCK = gower_blocked::BLOCK;
   const auto n_tiles = static_cast<std::ptrdiff_t>((n_rows + ROWS - 1) / ROWS);
 
-#pragma omp parallel for schedule(dynamic) if (parallel) default(none)         \
-    shared(data, out, nf, n_rows, n_tiles, cfg, similarity, blocked, soa_data, \
-               clean_cols, level_cols, fast, total_weight)
+#pragma omp parallel for schedule(dynamic) if (parallel)
   for (std::ptrdiff_t ti = 0; ti < n_tiles; ++ti) {
     const auto i0 = static_cast<std::size_t>(ti) * ROWS;
     const std::size_t rows = n_rows - i0 < ROWS ? n_rows - i0 : ROWS;
@@ -244,10 +242,7 @@ void compute_gower_matrix_xy(const CppConfig<T>& cfg, const T* x_data,
   constexpr std::size_t BLOCK = gower_blocked::BLOCK;
   const auto n_tiles = static_cast<std::ptrdiff_t>((n_x + ROWS - 1) / ROWS);
 
-#pragma omp parallel for schedule(dynamic) if (parallel) default(none)        \
-    shared(x_data, y_data, out, nf, n_x, n_y, n_tiles, cfg, similarity,       \
-               blocked, x_soa_data, y_soa_data, clean_cols, level_cols, fast, \
-               total_weight)
+#pragma omp parallel for schedule(dynamic) if (parallel)
   for (std::ptrdiff_t ti = 0; ti < n_tiles; ++ti) {
     const auto i0 = static_cast<std::size_t>(ti) * ROWS;
     const std::size_t rows = n_x - i0 < ROWS ? n_x - i0 : ROWS;
