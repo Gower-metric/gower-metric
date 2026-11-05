@@ -26,7 +26,6 @@ constexpr auto rows_per_tile() -> std::size_t {
 template <typename T>
 auto supports_blocked(const CppConfig<T>& cfg) -> bool {
   if (cfg.conditional_distances) return false;
-  if (cfg.missing_strategy == MissingStrategy::RAISE_ERROR) return false;
   return true;
 }
 
@@ -368,7 +367,7 @@ inline void block(const CppConfig<T>& cfg, const BlockParams<T>& params,
             const bool ok =
                 NanFree || Clean || (x_ok && gower_detail::is_present(yv));
             const T w = (ok || max_dist) ? wf : T(0);
-            const T d = gower_detail::abs_diff(xv, yv) > T(0) ? T(1) : T(0);
+            const T d = gower_detail::abs_diff(xv, yv) > band ? T(1) : T(0);
             acc[b] += A(w) * A(ok ? d : T(1));
             if constexpr (!ConstDenom) den[b] += w;
           }
