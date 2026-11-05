@@ -19,6 +19,9 @@ include = [
     "docs/**/*.rst",
 ]
 
+exclude = ["gower_metric/cpp/cpp_engine.pyi"]
+force-exclude = true
+
 [lint]
 select = ["ALL"]
 ignore = [
@@ -33,6 +36,8 @@ ignore = [
 ]
 
 [lint.per-file-ignores]
+"**/*.ipynb" = ["CPY001"]
+
 "examples/**" = [
     "D101",
     "D103",

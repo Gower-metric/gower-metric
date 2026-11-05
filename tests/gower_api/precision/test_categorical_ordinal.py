@@ -1,10 +1,13 @@
+# Copyright (c) 2025 - 2026 the gower-metric developers
+# SPDX-License-Identifier: MIT
+
 import numpy as np
 import pandas as pd
 import pytest
 from pydantic import ValidationError
 
 from gower_metric import Config, Gower
-from tests.gower_api.precision.conftest import BaseTest
+from tests.gower_api.precision.base import BaseTest
 
 
 class TestCategoricalOrdinal(BaseTest):

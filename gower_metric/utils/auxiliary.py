@@ -1,12 +1,17 @@
+# Copyright (c) 2025 - 2026 the gower-metric developers
+# SPDX-License-Identifier: MIT
+
 import numpy as np
 import pandas as pd
 
+from gower_metric._typing import AnyArray, DataFrameOrArray
 
-def all_ones_off_diagonal(X: pd.DataFrame | np.ndarray) -> bool:
+
+def all_ones_off_diagonal(X: DataFrameOrArray) -> bool:
     """Return True if all off-diagonal elements are 1 (diagonal ignored).
 
     Args:
-        X (np.ndarray | pd.DataFrame): shape of (n_samples, n_features).
+        X (DataFrameOrArray): shape of (n_samples, n_features).
             For DataFrame inputs, column names in feature_types are converted to indices.
 
     Returns:
@@ -33,6 +38,7 @@ def all_ones_off_diagonal(X: pd.DataFrame | np.ndarray) -> bool:
         >>> all_ones_off_diagonal(pairwise_dist_result)
 
     """
+    arr: AnyArray
     if isinstance(X, pd.DataFrame):
         arr = X.to_numpy()
     elif isinstance(X, np.ndarray):

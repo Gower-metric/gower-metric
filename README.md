@@ -26,15 +26,25 @@ Implementation of Gower's Metric in Python.
 
 ## Compatibility matrix
 
-| | Python 3.10 | Python 3.11 | Python 3.12 | Python 3.13 | Python 3.14 |
-|:---:|:-----------:|:-----------:|:-----------:|:-----------:|:-----------:|
-| Linux | ✅ | ✅ | ✅ | ✅ | ✅ |
-| Windows | ✅ | ✅ | ✅ | ✅ | ✅ |
-| macOS | ✅ | ✅ | ✅ | ✅ | ✅ |
+| | Python 3.10 | Python 3.11 | Python 3.12 | Python 3.13 | Python 3.13t<sup>1)</sup> | Python 3.14 | Python 3.14t |
+|:---:|:-----------:|:-----------:|:-----------:|:-----------:|:-----------:|:-----------:|:-----------:|
+| Linux | ✅ | ✅ | ✅ | ✅ | ❌ | ✅ | ✅ |
+| Windows | ✅ | ✅ | ✅ | ✅ | ❌ | ✅ | ✅ |
+| macOS | ✅ | ✅ | ✅ | ✅ | ❌ | ✅ | ✅ |
 
-Legend: ✅ - supported and tested, 🚧 - work in progress
+<sup>1)</sup> No wheels: [cibuildwheel v4.0.0](https://cibuildwheel.pypa.io/en/stable/changelog/#v400) removed the experimental free-threaded CPython 3.13 builds. Free-threaded CPython 3.14t is still supported.
 
-Supported and tested numerical scalar types: `numpy.float16`, `np.float32`, `np.float64`.
+Supported and tested numerical scalar types:
+
+| Data type | Linux | macOS | Windows |
+|:---:|:---:|:---:|:---:|
+| `numpy.float16` | ✅ | ✅ | ❌<sup>2)</sup> |
+| `numpy.float32` | ✅ | ✅ | ⚠️ |
+| `numpy.float64` | ✅ | ✅ | ⚠️ |
+
+Legend: ✅ - supported and tested, ⚠️ - might work but not tested, ❌ - not supported
+
+<sup>2)</sup> The Windows wheels are built with MSVC, which has no `_Float16`, so `data_type=numpy.float16` raises `NotImplementedError` there. Use `numpy.float32` or `numpy.float64`.
 
 ## Documentation
 
@@ -42,15 +52,19 @@ Documentation is available [here](https://gower-metric.readthedocs.io/en/latest/
 
 ## Installation
 
-The easiest way to install the package is via pip:
+Install the package with pip:
+
 ```bash
 pip install gower-metric
 ```
 
-or via uv:
+or with uv:
+
 ```bash
 uv add gower-metric
 ```
+
+Where no prebuilt wheel matches your platform, the package is built from source, which needs a C++17 compiler. OpenMP is optional: without it, matrices are computed on one thread.
 
 ## Quick start
 

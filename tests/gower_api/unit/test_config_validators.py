@@ -1,11 +1,14 @@
-"""Tests for Config field validators - covers every validation error branch."""
+# Copyright (c) 2025 - 2026 the gower-metric developers
+# SPDX-License-Identifier: MIT
+
+"""Tests for Config field validators."""
 
 import numpy as np
 import pytest
 from pydantic import ValidationError
 
 from gower_metric import Config
-from gower_metric.core.config import OutOfRangeStrategy, SkipOutOfRangeValidation
+from gower_metric.core.config import OutOfRangeStrategy
 from gower_metric.utils.discretization_types import knn, silverman
 
 DEFAULT_DTYPE = np.float64
@@ -175,7 +178,7 @@ class TestSkipOutOfRangeConfigValidation:
     """Config validation for skip_out_of_range_validation parameter."""
 
     @pytest.mark.parametrize("flag", [True, False])
-    def test_valid_values(self, flag: SkipOutOfRangeValidation) -> None:
+    def test_valid_values(self, flag: bool) -> None:
         cfg = Config(feature_types={0: "numeric"}, skip_out_of_range_validation=flag)
         assert cfg.skip_out_of_range_validation == flag
 
@@ -243,4 +246,13 @@ class TestSilvermanConstantConfigValidation:
                 feature_types={0: "numeric"},
                 silverman_constant=invalid_value,
                 discretization=silverman.NAME,
+            )
+
+
+class TestEmptyOrdinalOrder:
+    def test_empty_values_order_is_rejected(self) -> None:
+        with pytest.raises(ValidationError, match=r"Empty values order for column"):
+            Config(
+                feature_types={0: "categorical_ordinal"},
+                categorical_ordinal_values_order={0: []},
             )

@@ -1,11 +1,15 @@
+# Copyright (c) 2025 - 2026 the gower-metric developers
+# SPDX-License-Identifier: MIT
+
 import numpy as np
 import pandas as pd
 import pytest
 
 from gower_metric import Config, Gower
 from gower_metric.core.exceptions import IllegalStateError
+from gower_metric.cpp import HAS_FLOAT16
 
-DTYPE = np.float16
+DTYPE = np.float16 if HAS_FLOAT16 else np.float32
 
 
 def test_transform_before_fit() -> None:
@@ -104,7 +108,7 @@ def test_transform_with_df() -> None:
         dtype=DTYPE,
     )
 
-    pd.testing.assert_frame_equal(transformed_data, expected_data)
+    pd.testing.assert_frame_equal(transformed_data, expected_data)  # type: ignore[arg-type]
 
 
 def test_validate_transformation_pandas() -> None:
@@ -141,4 +145,4 @@ def test_fit_transform() -> None:
     gower = Gower(cfg)
     transformed_data = gower.fit_transform(data)
     expected_data = pd.DataFrame({"level": [0.0, 1.0, 2.0]}, dtype=DTYPE)
-    pd.testing.assert_frame_equal(transformed_data, expected_data)
+    pd.testing.assert_frame_equal(transformed_data, expected_data)  # type: ignore[arg-type]

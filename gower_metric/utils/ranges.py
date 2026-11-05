@@ -1,15 +1,20 @@
+# Copyright (c) 2025 - 2026 the gower-metric developers
+# SPDX-License-Identifier: MIT
+
 import warnings
 
 import numpy as np
+import pandas as pd
 
+from gower_metric._typing import DataFrameOrArray, FloatArray, FloatDType
 from gower_metric.core.config import OutOfRangeStrategy
 
 
-def scale_span(valid: np.ndarray, method: str) -> float:
+def scale_span(valid: FloatArray, method: str) -> float:
     """Compute the scaling span for a 1D array of valid (non-NaN) values.
 
     Args:
-        valid (np.ndarray): 1D array of floats (no NaNs).
+        valid (FloatArray): 1D array of floats (no NaNs).
         method (str): 'range' or 'iqr'.
 
     Returns:
@@ -36,21 +41,21 @@ def scale_span(valid: np.ndarray, method: str) -> float:
 
 
 def get_numeric_ranges(
-    X: np.ndarray,
+    X: FloatArray,
     indices: list[int],
     method: str = "range",
-) -> np.ndarray:
+) -> FloatArray:
     """Compute the range for each numeric column in X based on selected scale method.
 
     Applied only to ratio-scale and interval-scale data types.
 
     Args:
-        X (np.ndarray): array of shape (n_samples, n_features).
+        X (FloatArray): array of shape (n_samples, n_features).
         indices (list[int]): list of column indices to treat as numeric.
         method (str): method for scaling, either 'range' or 'iqr'.
 
     Returns:
-        np.ndarray:
+        FloatArray:
             - 1D array of length len(indices), where each entry is max(X[:, idx]) - min(X[:, idx]). For now we ignore NaNs. If all values are NaN or constant, range is set to 0.0.
 
     """
@@ -63,17 +68,17 @@ def get_numeric_ranges(
 
 
 def get_numeric_bounds(
-    X: np.ndarray,
+    X: FloatArray,
     indices: list[int],
-) -> tuple[np.ndarray, np.ndarray]:
+) -> tuple[FloatArray, FloatArray]:
     """Compute per-column min and max for numeric columns, ignoring NaNs.
 
     Args:
-        X (np.ndarray): array of shape (n_samples, n_features).
+        X (FloatArray): array of shape (n_samples, n_features).
         indices (list[int]): list of column indices.
 
     Returns:
-        tuple[np.ndarray, np.ndarray]: (mins, maxs), each 1D of length len(indices).
+        tuple[FloatArray, FloatArray]: (mins, maxs), each 1D of length len(indices).
 
     """
     mins = np.empty(len(indices), dtype=float)
@@ -90,53 +95,92 @@ def get_numeric_bounds(
     return mins, maxs
 
 
-def check_out_of_range(
-    X: np.ndarray,
+def _extract_float_columns(
+    X: DataFrameOrArray,
     indices: list[int],
-    mins: np.ndarray,
-    maxs: np.ndarray,
+) -> FloatArray:
+    """Return the selected columns as a (n_samples, len(indices)) float64 array."""
+    if isinstance(X, pd.DataFrame):
+        return np.asarray(X.iloc[:, indices].to_numpy(dtype=np.float64))
+    arr = np.asarray(X)
+    return arr[:, indices].astype(np.float64)
+
+
+def bounds_in_precision(
+    mins: FloatArray,
+    maxs: FloatArray,
+    data_type: FloatDType,
+) -> tuple[FloatArray, FloatArray]:
+    """Widen fitted bounds to what they round to in the model's precision.
+
+    Args:
+        mins (FloatArray): fitted minimums in float64.
+        maxs (FloatArray): fitted maximums in float64.
+        data_type (FloatDType): the precision the model computes in.
+
+    Returns:
+        tuple[FloatArray, FloatArray]: lower and upper bounds to compare with.
+
+    """
+    with np.errstate(over="ignore"):
+        rounded_mins = mins.astype(data_type).astype(np.float64)
+        rounded_maxs = maxs.astype(data_type).astype(np.float64)
+    return np.minimum(mins, rounded_mins), np.maximum(maxs, rounded_maxs)
+
+
+def check_out_of_range(
+    X: DataFrameOrArray,
+    indices: list[int],
+    mins: FloatArray,
+    maxs: FloatArray,
     feature_label: str,
+    data_type: FloatDType,
 ) -> list[str]:
     """Check which columns have values outside the fitted [min, max].
 
     Args:
-        X (np.ndarray): array of shape (n_samples, n_features).
+        X (DataFrameOrArray): input of shape (n_samples, n_features).
         indices (list[int]): column indices to check.
-        mins (np.ndarray): fitted minimums, length len(indices).
-        maxs (np.ndarray): fitted maximums, length len(indices).
+        mins (FloatArray): fitted minimums, length len(indices).
+        maxs (FloatArray): fitted maximums, length len(indices).
         feature_label (str): label like "numeric" or "ratio_scale".
+        data_type (FloatDType): the model's precision.
 
     Returns:
         list[str]: detail strings for offending columns (empty if all in range).
 
     """
-    details: list[str] = []
-    for pos, j in enumerate(indices):
-        if np.isnan(mins[pos]):
-            continue
-        col = X[:, j].astype(float)
-        valid = col[~np.isnan(col)]
-        if valid.size == 0:
-            continue
-        col_min, col_max = valid.min(), valid.max()
-        if col_min < mins[pos] or col_max > maxs[pos]:
-            details.append(
-                f"{feature_label} column {j}: "
-                f"values in [{col_min}, {col_max}], "
-                f"fitted range [{mins[pos]}, {maxs[pos]}]",
-            )
-    return details
+    sub = _extract_float_columns(X, indices)
+    if sub.shape[0] == 0:
+        return []
+
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore", RuntimeWarning)
+        col_mins = np.nanmin(sub, axis=0)
+        col_maxs = np.nanmax(sub, axis=0)
+
+    varies = np.asarray(maxs) > np.asarray(mins)
+    lower, upper = bounds_in_precision(np.asarray(mins), np.asarray(maxs), data_type)
+    violated = varies & ((col_mins < lower) | (col_maxs > upper))
+    return [
+        f"{feature_label} column {j}: "
+        f"values in [{col_mins[pos]}, {col_maxs[pos]}], "
+        f"fitted range [{mins[pos]}, {maxs[pos]}]"
+        for pos, j in enumerate(indices)
+        if violated[pos]
+    ]
 
 
 def enforce_oor_policy(
-    *arrays: np.ndarray,
+    *arrays: DataFrameOrArray,
     strategy: OutOfRangeStrategy,
     numeric_indices: list[int],
-    numeric_mins: np.ndarray,
-    numeric_maxs: np.ndarray,
+    numeric_mins: FloatArray,
+    numeric_maxs: FloatArray,
     ratio_scale_indices: list[int],
-    ratio_mins: np.ndarray,
-    ratio_maxs: np.ndarray,
+    ratio_mins: FloatArray,
+    ratio_maxs: FloatArray,
+    data_type: FloatDType,
     stacklevel: int = 3,
 ) -> None:
     """Enforce the out-of-range policy for numeric and ratio-scale columns.
@@ -147,14 +191,15 @@ def enforce_oor_policy(
     Does nothing when strategy is 'clip'.
 
     Args:
-        *arrays (np.ndarray): one or more object arrays of shape (n_samples, n_features).
+        *arrays (DataFrameOrArray): one or more inputs of shape (n_samples, n_features).
         strategy (OutOfRangeStrategy): 'clip', 'warning', or 'error'.
         numeric_indices (list[int]): fitted numeric column indices.
-        numeric_mins (np.ndarray): fitted minimums for numeric columns.
-        numeric_maxs (np.ndarray): fitted maximums for numeric columns.
+        numeric_mins (FloatArray): fitted minimums for numeric columns.
+        numeric_maxs (FloatArray): fitted maximums for numeric columns.
         ratio_scale_indices (list[int]): fitted ratio-scale column indices.
-        ratio_mins (np.ndarray): fitted minimums for ratio-scale columns.
-        ratio_maxs (np.ndarray): fitted maximums for ratio-scale columns.
+        ratio_mins (FloatArray): fitted minimums for ratio-scale columns.
+        ratio_maxs (FloatArray): fitted maximums for ratio-scale columns.
+        data_type (FloatDType): the model's precision, in which the bounds are compared.
         stacklevel (int): stack depth for warnings.warn.
 
     Raises:
@@ -174,6 +219,7 @@ def enforce_oor_policy(
                     numeric_mins,
                     numeric_maxs,
                     "numeric",
+                    data_type,
                 ),
             )
         if ratio_scale_indices and ratio_mins.size > 0:
@@ -184,6 +230,7 @@ def enforce_oor_policy(
                     ratio_mins,
                     ratio_maxs,
                     "ratio_scale",
+                    data_type,
                 ),
             )
     if not oor_details:

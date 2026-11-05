@@ -1,6 +1,7 @@
 # Ignore Python cache files
 __pycache__/
 *.py[cod]
+*.so
 *$py.class
 .pip_audit_cache/
 .ruff_cache/
@@ -58,3 +59,5 @@ poetry.lock
 
 # Other
 results/
+scripts/
+.license-header.generated.txt

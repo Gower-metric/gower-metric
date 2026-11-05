@@ -1,22 +1,21 @@
-import os
-import sys
+# Copyright (c) 2025 - 2026 the gower-metric developers
+# SPDX-License-Identifier: MIT
 
 import numpy as np
 import pandas as pd
 
-# assuming all main files and imports are one level above "tests" subfolder
-main_repo_root: str = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
-
-# if not present, add it
-if main_repo_root not in sys.path:
-    sys.path.insert(0, main_repo_root)
+from gower_metric.cpp import HAS_FLOAT16
 
 TYPES_TO_CHECK = [
     "float16",
     "float32",
     "float64",
-]  # here define all numerical types to check
-NUMPY_NUMERIC_TYPES = [getattr(np, t) for t in TYPES_TO_CHECK if hasattr(np, t)]
+]
+NUMPY_NUMERIC_TYPES = [
+    getattr(np, t)
+    for t in TYPES_TO_CHECK
+    if hasattr(np, t) and (HAS_FLOAT16 or t != "float16")
+]
 
 EDUCATION_LEVELS = ["Low", "Medium", "High", "PhD", "Prof"]
 COUNTRIES = ["PL", "DE", "FR", "UK", "US", "IT", "ES", "CZ"]
@@ -97,7 +96,7 @@ def generate_mixed_df(n: int, rng: np.random.Generator) -> pd.DataFrame:
     return pd.DataFrame(
         {
             "Age": np.clip(rng.normal(35, 12, n), 18, 80).astype(int),
-            "Salary": np.round(rng.exponential(45000, n), 2),
+            "Salary": np.round(np.clip(rng.exponential(45000, n), 0, 60000), 2),
             "Have_children": have_children,
             "Is_smoking": is_smoking,
             "Birth": rng.choice(COUNTRIES, n),

@@ -1,9 +1,11 @@
+# Copyright (c) 2025 - 2026 the gower-metric developers
+# SPDX-License-Identifier: MIT
+
 from gower_metric.utils import (
     auxiliary,
     binary_ut,
     cat_ord_ut,
     categorical_ut,
-    missing,
     ranges,
     to_array,
     transforms,
@@ -14,7 +16,6 @@ __all__ = [
     "binary_ut",
     "cat_ord_ut",
     "categorical_ut",
-    "missing",
     "ranges",
     "to_array",
     "transforms",

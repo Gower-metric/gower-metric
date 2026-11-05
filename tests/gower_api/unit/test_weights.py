@@ -1,4 +1,7 @@
-"""Tests for weights.py — uniform, None, dict, and invalid config."""
+# Copyright (c) 2025 - 2026 the gower-metric developers
+# SPDX-License-Identifier: MIT
+
+"""Tests for weights.py — uniform, None, dict[str, Any], and invalid config."""
 
 import numpy as np
 import pytest
@@ -27,3 +30,8 @@ def test_weights_dict_applies_values() -> None:
 def test_weights_invalid_config_raises() -> None:
     with pytest.raises(ValueError, match="config must be None"):
         get_weights(3, config=42)  # type: ignore[arg-type]
+
+
+def test_weights_index_out_of_bounds_raises() -> None:
+    with pytest.raises(ValueError, match=r"out of bounds for 3 features"):
+        get_weights(3, config={5: 2.0})

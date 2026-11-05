@@ -35,7 +35,7 @@ jobs:
         run: uv sync --group tests
 
       - name: Run tests with pytest
-        run: uv run pytest tests/gower_api
+        run: uv run pytest tests/gower_api tests/cpp
   
   comparison_with_R:
     strategy:

@@ -1,3 +1,6 @@
+# Copyright (c) 2025 - 2026 the gower-metric developers
+# SPDX-License-Identifier: MIT
+
 import numpy as np
 import pandas as pd
 import pytest
@@ -9,7 +12,7 @@ DEFAULT_DTYPE = np.float64
 
 class TestBinaryAbMapping:
     @pytest.mark.parametrize("bin_type", ["binary_symmetric", "binary_asymmetric"])
-    def test_binary_ab_mapping(self, bin_type) -> None:
+    def test_binary_ab_mapping(self, bin_type: str) -> None:
         """Test that arbitrary binary values (e.g., 'A', 'B') are correctly mapped."""
         data = pd.DataFrame(
             {
@@ -21,7 +24,14 @@ class TestBinaryAbMapping:
             "feature1": bin_type,
             "feature2": bin_type,
         }
-        cfg = Config(feature_types=feature_types, data_type=DEFAULT_DTYPE)
+
+        extra: dict[str, object] = {}
+        if bin_type == "binary_asymmetric":
+            extra["binary_asymmetric_value_order"] = {
+                "feature1": ["A", "B"],
+                "feature2": ["A", "B"],
+            }
+        cfg = Config(feature_types=feature_types, data_type=DEFAULT_DTYPE, **extra)  # type: ignore[arg-type]
         gower = Gower(cfg)
 
         gower.fit(data)
@@ -29,9 +39,9 @@ class TestBinaryAbMapping:
 
         # features are sorted alphabetically, so A -> 0.0 and B -> 1.0
 
-        res1 = transformed["feature1"].to_numpy()  # type: ignore[union-attr]
+        res1 = transformed["feature1"].to_numpy()  # type: ignore[call-overload]
         np.testing.assert_array_equal(res1, [0.0, 1.0, 0.0, 1.0])
-        res2 = transformed["feature2"].to_numpy()  # type: ignore[union-attr]
+        res2 = transformed["feature2"].to_numpy()  # type: ignore[call-overload]
         np.testing.assert_array_equal(res2, [0.0, 0.0, 1.0, 1.0])
 
 
@@ -57,20 +67,20 @@ class TestOrdinalConsistency:
         gower.fit(X_train)
 
         t_train = gower.transform(X_train)
-        res_train = t_train["ord"].to_numpy()  # type: ignore[union-attr]
+        res_train = t_train["ord"].to_numpy()  # type: ignore[call-overload]
 
         np.testing.assert_array_equal(res_train, [0.0, 1.0])
 
         # high->2, extra->NaN
         t_test = gower.transform(X_test)
-        res_test = t_test["ord"].to_numpy()  # type: ignore[union-attr]
+        res_test = t_test["ord"].to_numpy()  # type: ignore[call-overload]
 
         np.testing.assert_array_equal(res_test, [2.0, np.nan])
 
 
 class TestBinaryTooManyValues:
     @pytest.mark.parametrize("bin_type", ["binary_symmetric", "binary_asymmetric"])
-    def test_binary_too_many_values(self, bin_type) -> None:
+    def test_binary_too_many_values(self, bin_type: str) -> None:
         """Test that fit raises ValueError if a binary column has > 2 unique values."""
         data = pd.DataFrame(
             {
@@ -88,24 +98,20 @@ class TestBinaryTooManyValues:
 
 
 class TestBinaryUnseenValueDegenerateFit:
-    @pytest.mark.parametrize("bin_type", ["binary_symmetric", "binary_asymmetric"])
-    def test_binary_unseen_value_degenerate_fit(self, bin_type) -> None:
-        """Test that transform maps to NaN if fit saw only 1 value (degenerate)."""
+    def test_binary_unseen_value_degenerate_fit(self) -> None:
+        """Test that transform maps to NaN if fit saw only 1 value (degenerate).
+
+        Symmetric only: an asymmetric mapping always holds both values, declared
+        or 0/1 (Gower 1971, Table 2), so a value it lacks is a third value.
+        """
         data_fit = pd.DataFrame({"feature1": ["A"]})
         data_transform = pd.DataFrame({"feature1": ["B"]})
 
-        if bin_type == "binary_asymmetric":
-            cfg = Config(
-                feature_types={"feature1": bin_type},
-                handle_unseen_binary_asymmetric="missing",
-                data_type=DEFAULT_DTYPE,
-            )
-        else:
-            cfg = Config(
-                feature_types={"feature1": bin_type},
-                handle_unseen_binary_symmetric="missing",
-                data_type=DEFAULT_DTYPE,
-            )
+        cfg = Config(
+            feature_types={"feature1": "binary_symmetric"},
+            handle_unseen_binary_symmetric="missing",
+            data_type=DEFAULT_DTYPE,
+        )
 
         gower = Gower(cfg)
         gower.fit(data_fit)
@@ -115,17 +121,17 @@ class TestBinaryUnseenValueDegenerateFit:
         # 'A' -> {A: 0.0}. 'B' is unseen, maps to NaN
         expected = np.array([np.nan])
 
-        res = transformed["feature1"].to_numpy()  # type: ignore[union-attr]
+        res = transformed["feature1"].to_numpy()  # type: ignore[call-overload]
 
         np.testing.assert_array_equal(res, expected)
 
 
 class TestBinaryUnseenValueCompleteFit:
     @pytest.mark.parametrize("bin_type", ["binary_symmetric", "binary_asymmetric"])
-    def test_binary_unseen_value_complete_fit(self, bin_type) -> None:
+    def test_binary_unseen_value_complete_fit(self, bin_type: str) -> None:
         """Test that transform raises ValueError if fit saw 2 values (complete)."""
-        data_fit = pd.DataFrame({"feature1": ["A", "B"]})
-        data_transform = pd.DataFrame({"feature1": ["C"]})
+        data_fit = pd.DataFrame({"feature1": [0, 1]})
+        data_transform = pd.DataFrame({"feature1": [2]})
 
         if bin_type == "binary_asymmetric":
             cfg = Config(

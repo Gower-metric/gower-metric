@@ -1,36 +1,40 @@
+# Copyright (c) 2025 - 2026 the gower-metric developers
+# SPDX-License-Identifier: MIT
+
 import warnings
-from typing import Any
 
 import numpy as np
 import pandas as pd
 
-MAX_BINARY_UNIQUE_VALUES = 2
+from gower_metric._typing import AnyArray, BinaryMetadata, FloatArray
+from gower_metric.utils.binary_ut import MAX_BINARY_UNIQUE_VALUES
+from gower_metric.utils.transforms.encoding import own_codes
 
 
 def _transform_binary(
-    col: np.ndarray,
+    col: AnyArray,
     col_idx: int,
-    metadata: dict[str, Any],
+    metadata: BinaryMetadata,
     handle_unseen: str,
     binary_type: str,
-) -> np.ndarray:
+) -> FloatArray:
     """Transform a binary feature column into its numeric representation.
 
     Maps each value to 0.0 or 1.0 based on the fitted mapping, and handles
     missing values (``NaN``) and unseen values according to ``handle_unseen``.
 
     Args:
-        col (np.ndarray): 1-D array of raw values for a single column.
+        col (AnyArray): 1-D array of raw values for a single column.
         col_idx (int): Column index, used in error and warning messages.
-        metadata (dict[str, Any]): Fitted metadata produced by
+        metadata (BinaryMetadata): Fitted metadata produced by
             :func:`~gower_metric.utils.binary_ut.fit_binary_features`, containing
-            ``"mapping"``, ``"values"``, and ``"is_explicit_order"`` keys.
+            ``"mapping"`` and ``"is_explicit_order"`` keys.
         handle_unseen (str): Strategy for unseen values — ``"error"``,
             ``"warning"``, or ``"missing"``.
         binary_type (str): The binary feature type name (e.g. ``"binary_asymmetric"``).
 
     Returns:
-        np.ndarray: 1-D float array of the same length as *col*, with values
+        FloatArray: 1-D float array of the same length as *col*, with values
         mapped to 0.0, 1.0, or ``np.nan``.
 
     Raises:
@@ -38,12 +42,12 @@ def _transform_binary(
             ``"error"``, or if an explicit value order is violated.
 
     """
-    transformed_col = np.zeros(col.shape[0], dtype=float)
     mapping = metadata["mapping"]
     is_explicit = metadata.get("is_explicit_order", False)
 
+    non_null_mask = ~pd.isna(col)
+
     if not is_explicit:
-        non_null_mask = ~pd.isna(col)
         unique_transform_vals = set(np.unique(col[non_null_mask]))
         fitted_vals = set(mapping.keys())
         unseen_vals = unique_transform_vals - fitted_vals
@@ -53,17 +57,23 @@ def _transform_binary(
             short_type = binary_type.replace("binary_", "")
             msg = (
                 f"Binary {short_type} column {col_idx} has {total_unique} unique values total "
-                f"(fitted: {sorted(fitted_vals)}, unseen: {sorted(unseen_vals)}). "
+                f"(fitted: {sorted(fitted_vals, key=str)}, "
+                f"unseen: {sorted(unseen_vals, key=str)}). "
                 f"Binary features must have at most {MAX_BINARY_UNIQUE_VALUES} values. "
                 f"Consider using {binary_type}_value_order to explicitly define the expected binary values, "
                 "or change the feature type if this is not actually a binary feature."
             )
             raise ValueError(msg)
 
-    for i, v in enumerate(col):
-        if pd.isna(v):
-            transformed_col[i] = np.nan
-        elif v not in mapping:
+    transformed_col = np.full(col.shape[0], np.nan, dtype=float)
+    matched = ~non_null_mask
+    for v, code in (own_codes(mapping) or mapping).items():
+        value_mask = non_null_mask & (col == v)
+        transformed_col[value_mask] = code
+        matched |= value_mask
+
+    if not matched.all():
+        for v in pd.unique(col[~matched]):
             if is_explicit:
                 unseen_msg = (
                     f"Value '{v}' in column {col_idx} violates {binary_type}_value_order. "
@@ -82,28 +92,25 @@ def _transform_binary(
                     UserWarning,
                     stacklevel=3,
                 )
-            transformed_col[i] = np.nan
-        else:
-            transformed_col[i] = mapping[v]
 
     return transformed_col
 
 
 def transform_binary_asymmetric(
-    col: np.ndarray,
+    col: AnyArray,
     col_idx: int,
-    metadata: dict[str, Any],
+    metadata: BinaryMetadata,
     handle_unseen: str,
-) -> np.ndarray:
+) -> FloatArray:
     """Transform a binary asymmetric feature column into its numeric representation."""
     return _transform_binary(col, col_idx, metadata, handle_unseen, "binary_asymmetric")
 
 
 def transform_binary_symmetric(
-    col: np.ndarray,
+    col: AnyArray,
     col_idx: int,
-    metadata: dict[str, Any],
+    metadata: BinaryMetadata,
     handle_unseen: str,
-) -> np.ndarray:
+) -> FloatArray:
     """Transform a binary symmetric feature column into its numeric representation."""
     return _transform_binary(col, col_idx, metadata, handle_unseen, "binary_symmetric")

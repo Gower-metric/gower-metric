@@ -1,3 +1,6 @@
+# Copyright (c) 2025 - 2026 the gower-metric developers
+# SPDX-License-Identifier: MIT
+
 from gower_metric.utils.discretization_types import knn, silverman
 
 __all__ = ["knn", "silverman"]
