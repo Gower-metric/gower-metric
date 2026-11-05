@@ -12,6 +12,7 @@ import numpy as np
 import pandas as pd
 
 from gower_metric._typing import (
+    AnyArray,
     DataFrameOrArray,
     FloatArray,
     FloatDType,
@@ -32,6 +33,19 @@ SKIPPING_OOR: ContextVar["Gower | None"] = ContextVar("SKIPPING_OOR", default=No
 """The model whose ``transform`` leaves the range check to the kernel here."""
 
 
+def categories_survive(model: "Gower", arr: AnyArray) -> bool:
+    """Whether the nominal and binary columns of ``arr`` survive the cast to data_type."""
+    cols = [
+        *model.categorical_nominal_indices,
+        *model.binary_symmetric_indices,
+        *model.binary_asymmetric_indices,
+    ]
+    if not cols or arr.dtype == np.dtype(model.data_type):
+        return True
+    part = arr[..., cols]
+    return bool((part == part.astype(model.data_type)).all())
+
+
 def _as_native_matrix(model: "Gower", X: DataFrameOrArray) -> FloatArray:
     """Return a C-contiguous ``(n, n_features)`` array of ``model.data_type``.
 
@@ -45,7 +59,7 @@ def _as_native_matrix(model: "Gower", X: DataFrameOrArray) -> FloatArray:
     """
     arr = X.to_numpy() if isinstance(X, pd.DataFrame) else np.asarray(X)
 
-    if not np.issubdtype(arr.dtype, np.number):
+    if not np.issubdtype(arr.dtype, np.number) or not categories_survive(model, arr):
         with temporary_skip_oor(model):  # the kernel checks the range
             transformed = model.transform(X)
         arr = (
@@ -202,7 +216,9 @@ def calculate_matrix(
     similarity = matrix_type == "similarity"
 
     if Y is not None and not any(
-        np.issubdtype(np.asarray(Z).dtype, np.number) for Z in (X, Y)
+        np.issubdtype(np.asarray(Z).dtype, np.number)
+        and categories_survive(gower, np.asarray(Z))
+        for Z in (X, Y)
     ):
         raw = np.vstack([np.asarray(Z, dtype=object) for Z in (X, Y)])
         both = _as_native_matrix(gower, raw)

@@ -41,7 +41,11 @@ from gower_metric.utils.fit_checks import (
     constant_features,
     report_constant_features,
 )
-from gower_metric.utils.matrix.distance import SKIPPING_OOR, temporary_skip_oor
+from gower_metric.utils.matrix.distance import (
+    SKIPPING_OOR,
+    categories_survive,
+    temporary_skip_oor,
+)
 from gower_metric.utils.ranges import (
     enforce_oor_policy,
     get_numeric_bounds,
@@ -668,6 +672,8 @@ class Gower:
         if (
             a_arr.dtype.kind in _NUMERIC_DTYPE_KINDS
             and b_arr.dtype.kind in _NUMERIC_DTYPE_KINDS
+            and categories_survive(self, a_arr)
+            and categories_survive(self, b_arr)
         ):
             x = np.ascontiguousarray(a_arr, dtype=self.data_type).reshape(-1)
             y = np.ascontiguousarray(b_arr, dtype=self.data_type).reshape(-1)
