@@ -241,18 +241,21 @@ void compute_gower_matrix_xy(const CppConfig<T>& cfg, const T* x_data,
   constexpr std::size_t ROWS = gower_blocked::rows_per_tile<T>();
   constexpr std::size_t BLOCK = gower_blocked::BLOCK;
   const auto n_tiles = static_cast<std::ptrdiff_t>((n_x + ROWS - 1) / ROWS);
+  const auto n_jb = static_cast<std::ptrdiff_t>((n_y + BLOCK - 1) / BLOCK);
 
 #pragma omp parallel for schedule(dynamic) if (parallel)
-  for (std::ptrdiff_t ti = 0; ti < n_tiles; ++ti) {
-    const auto i0 = static_cast<std::size_t>(ti) * ROWS;
+  for (std::ptrdiff_t t = 0; t < n_tiles * n_jb; ++t) {
+    const auto i0 = static_cast<std::size_t>(t / n_jb) * ROWS;
     const std::size_t rows = n_x - i0 < ROWS ? n_x - i0 : ROWS;
+    const auto j_begin = static_cast<std::size_t>(t % n_jb) * BLOCK;
+    const std::size_t j_end = n_y - j_begin < BLOCK ? n_y : j_begin + BLOCK;
 
     if (!blocked) {
       for (std::size_t r = 0; r < rows; ++r) {
         const std::size_t i = i0 + r;
         const T* row_i = x_data + (i * nf);
         TOut* out_i = out + (i * n_y);
-        for (std::size_t j = 0; j < n_y; ++j) {
+        for (std::size_t j = j_begin; j < j_end; ++j) {
           const T d = cfg.calculate_distance(row_i, y_data + (j * nf));
           out_i[j] =
               static_cast<TOut>(similarity ? static_cast<T>(T(1) - d) : d);
@@ -262,7 +265,7 @@ void compute_gower_matrix_xy(const CppConfig<T>& cfg, const T* x_data,
     }
 
     alignas(64) std::array<T, ROWS * BLOCK> tile{};
-    for (std::size_t j0 = 0; j0 < n_y; j0 += BLOCK) {
+    for (std::size_t j0 = j_begin; j0 < j_end; j0 += BLOCK) {
       const std::size_t len = n_y - j0 < BLOCK ? n_y - j0 : BLOCK;
       const gower_blocked::BlockParams<T> params{
           x_soa_data, n_x,        i0,           y_soa_data, n_y,       j0,
