@@ -30,7 +30,7 @@ auto compute_numeric_diff(const NumericParams<T>& params) -> T {
     return diff;
   }
 
-  return abs_diff > T(0) ? T(1.0) : T(0.0);
+  return abs_diff > params.bandwidths[i] ? T(1.0) : T(0.0);
 }
 
 // EOF
