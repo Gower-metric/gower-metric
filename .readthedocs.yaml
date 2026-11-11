@@ -9,8 +9,8 @@ build:
 
 python:
   install:
-    - method: pip
-      path: .
+    - method: uv
+      command: sync
       groups:
         - docs
     
